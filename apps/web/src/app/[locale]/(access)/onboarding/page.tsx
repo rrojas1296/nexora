@@ -1,14 +1,11 @@
 import { ArrowUpLeft } from "lucide-react";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import { LocaleSelect } from "@/components/layout/locale-select";
 import { ThemeSelect } from "@/components/layout/theme-select";
 import { OnboardingWizard } from "@/features/onboarding/components/onboarding-wizard";
 import { Link } from "@/i18n/navigation";
-import { validateLocale } from "@/i18n/validate-locale";
 
-export default async function OnboardingPage({ params }: PageProps<"/[locale]/onboarding">) {
-  const { locale } = await params;
-  setRequestLocale(validateLocale(locale));
+export default async function OnboardingPage() {
   const t = await getTranslations("Onboarding");
   return (
     <div className="mx-auto min-h-dvh w-full max-w-357 bg-background">

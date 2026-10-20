@@ -1,5 +1,3 @@
-import { setRequestLocale } from "next-intl/server";
-import { validateLocale } from "@/i18n/validate-locale";
 import { ResourceWorkspace } from "./resource-workspace";
 
 export async function ResourceEditRoute({
@@ -7,7 +5,6 @@ export async function ResourceEditRoute({
 }: {
   params: Promise<{ locale: string; module: string; id: string }>;
 }) {
-  const { locale, module, id } = await params;
-  setRequestLocale(validateLocale(locale));
+  const { module, id } = await params;
   return <ResourceWorkspace module={module} id={id} />;
 }

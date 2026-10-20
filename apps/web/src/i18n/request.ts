@@ -1,6 +1,6 @@
-import { hasLocale } from "next-intl";
+import { locale as getRootLocale } from "next/root-params";
 import { getRequestConfig } from "next-intl/server";
-import { routing } from "./routing";
+import { validateLocale } from "./validate-locale";
 
 const catalogs = {
   es: async () => {
@@ -19,10 +19,7 @@ const catalogs = {
   },
 };
 
-export default getRequestConfig(async ({ requestLocale }) => {
-  const requestedLocale = await requestLocale;
-  const locale = hasLocale(routing.locales, requestedLocale)
-    ? requestedLocale
-    : routing.defaultLocale;
-  return { locale, messages: await catalogs[locale]() };
+export default getRequestConfig(async ({ locale: localeOverride }) => {
+  const locale = validateLocale(localeOverride ?? (await getRootLocale()));
+  return { locale, messages: await catalogs[locale](), timeZone: "UTC" };
 });

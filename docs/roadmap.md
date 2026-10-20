@@ -86,6 +86,20 @@ Por instrucción del usuario, no implementar ni ejecutar tests por ahora, inclui
 
 Los seis pasos están completados: frontend funcional con mocks y revisiones visuales solicitadas, backend exclusivamente estructural, configuración independiente y documentación técnica. No equivale a un producto listo para producción ni a seguridad/persistencia verificadas.
 
+## Corrección posterior — Prerenderizado e idioma
+
+- Inicialmente restaurada la inicialización del locale con `setRequestLocale` para evitar lecturas de headers; esta solución transitoria queda sustituida por la migración a root params descrita a continuación.
+- Retirados el `console.log` de depuración y el límite `Suspense` con fallback nulo de la página de módulos; no cubría el `await params` de la propia página ni accesos del layout padre. Se conservan los límites de streaming de las rutas de edición.
+- Añadido `[module]/loading.tsx` con skeleton sin lecturas de petición: envuelve la página y sus rutas hijas para resolver los parámetros de URL bajo `Suspense` con Partial Prefetching, conservando el shell exterior. `generateStaticParams` no elimina ese requisito del shell compartido.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck` y `pnpm build` correctos tras la corrección; Next.js genera 53 páginas. Sin ejecución de tests ni navegador; no se verificó el overlay de desarrollo.
+
+## Refactor posterior — next-intl con root params
+
+- Consultada la documentación actual de next-intl mediante Context7 y la API instalada de Next.js 16.4.2. Configuración de idioma migrada a `next/root-params`; eliminadas todas las llamadas a `setRequestLocale` y las lecturas de `params` usadas solo para inicializarlo.
+- Validación centralizada antes de cargar catálogos y overrides explícitos preservados sin invocar el getter raíz. Los valores de locale inválidos ahora producen `notFound()` en la configuración en lugar de un fallback silencioso a español; el proxy conserva su idioma por defecto.
+- Conservados catálogos tipados y comerciales, proxy, navegación, selector es/en, provider cliente, `generateStaticParams`, Cache Components, Partial Prefetching y los límites de carga/edición. Zona horaria por defecto fijada a UTC para los datos demo.
+- Sin dependencias nuevas ni cambios de versiones. `pnpm lint`, `pnpm format:check`, `pnpm typecheck` y `pnpm build` correctos: frontend compilado sin caché y 53 páginas generadas; tareas de API reutilizadas desde caché válida de Turbo. Sin implementar ni ejecutar tests ni navegador; overlay de desarrollo no verificado.
+
 ## Fase posterior, fuera del alcance actual
 
 Autenticación real con jose y argon2; sesiones y cookies seguras; autorización RBAC y tenant; endpoints de negocio; persistencia real; WhatsApp Cloud API y proveedores de IA.

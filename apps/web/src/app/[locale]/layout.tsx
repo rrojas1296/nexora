@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { notFound } from "next/navigation";
-import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { themeBootstrapScript } from "@/lib/theme/theme-bootstrap";
 import { QueryProvider } from "@/providers/query-provider";
@@ -21,11 +20,12 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-export default async function LocaleLayout({ children, params }: LayoutProps<"/[locale]">) {
-  const { locale } = await params;
-  if (!hasLocale(routing.locales, locale)) notFound();
-  setRequestLocale(locale);
-  const [messages, t] = await Promise.all([getMessages(), getTranslations("Common")]);
+export default async function LocaleLayout({ children }: LayoutProps<"/[locale]">) {
+  const [locale, messages, t] = await Promise.all([
+    getLocale(),
+    getMessages(),
+    getTranslations("Common"),
+  ]);
 
   return (
     <html lang={locale} suppressHydrationWarning className={`${geistSans.variable} min-h-full`}>
