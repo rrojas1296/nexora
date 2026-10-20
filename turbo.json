@@ -3,7 +3,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "env": ["NEXT_PUBLIC_API_URL"],
+      "env": ["API_INTERNAL_URL"],
       "outputs": [
         ".next/**",
         "!.next/cache/**",
@@ -22,12 +22,27 @@
     "dev": {
       "persistent": true,
       "cache": false,
-      "passThroughEnv": ["NEXT_PUBLIC_API_URL"]
+      "passThroughEnv": ["API_INTERNAL_URL"]
     },
     "@whatsapp/api#dev": {
       "persistent": true,
       "cache": false,
-      "passThroughEnv": ["HOST", "PORT", "DATABASE_URL", "CORS_ORIGINS"]
+      "passThroughEnv": [
+        "HOST",
+        "PORT",
+        "DATABASE_URL",
+        "CORS_ORIGINS",
+        "AUTH_ACCESS_SECRET",
+        "AUTH_REFRESH_SECRET",
+        "AUTH_CSRF_SECRET",
+        "AUTH_ISSUER",
+        "AUTH_AUDIENCE",
+        "AUTH_ACCESS_TTL_SECONDS",
+        "AUTH_REFRESH_TTL_SECONDS",
+        "AUTH_SESSION_TTL_SECONDS",
+        "AUTH_CSRF_TTL_SECONDS",
+        "BCRYPT_ROUNDS"
+      ]
     }
   }
 }

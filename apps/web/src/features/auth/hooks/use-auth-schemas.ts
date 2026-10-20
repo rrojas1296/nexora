@@ -8,6 +8,8 @@ export function useAuthSchemas() {
   return createAuthSchemas({
     email: t("email"),
     password: t("password"),
+    registerPassword: t("registerPassword"),
+    businessName: t("businessName"),
     name: t("name"),
     confirm: t("confirm"),
   });

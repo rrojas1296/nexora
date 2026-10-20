@@ -6,6 +6,7 @@ allowBuilds:
   "@prisma/engines": true
   "@swc/core": false
   prisma: true
+  bcrypt: true
 minimumReleaseAgeExclude:
   - "@oxfmt/binding-android-arm-eabi@0.74.0"
   - "@oxfmt/binding-android-arm64@0.74.0"
@@ -56,3 +57,4 @@ minimumReleaseAgeExclude:
   - "@tanstack/query-core@5.104.5"
   - "@tanstack/react-query@5.104.5"
   - "@hookform/resolvers@6.0.0"
+  - jose@6.2.13

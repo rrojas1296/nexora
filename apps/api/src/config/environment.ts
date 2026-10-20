@@ -39,8 +39,41 @@ export const environmentSchema = z
     PORT: z.coerce.number().int().min(1).max(65535).default(8000),
     DATABASE_URL: z.string().refine(isPostgresUrl),
     CORS_ORIGINS: originsSchema,
+    AUTH_ACCESS_SECRET: z.string().min(64),
+    AUTH_REFRESH_SECRET: z.string().min(64),
+    AUTH_CSRF_SECRET: z.string().min(64),
+    AUTH_ISSUER: z.string().trim().min(1).max(200).default("nexora-api"),
+    AUTH_AUDIENCE: z.string().trim().min(1).max(200).default("nexora-web"),
+    AUTH_ACCESS_TTL_SECONDS: z.coerce.number().int().min(60).max(3600).default(900),
+    AUTH_REFRESH_TTL_SECONDS: z.coerce.number().int().min(3600).max(2592000).default(604800),
+    AUTH_SESSION_TTL_SECONDS: z.coerce.number().int().min(3600).max(7776000).default(2592000),
+    AUTH_CSRF_TTL_SECONDS: z.coerce.number().int().min(60).max(86400).default(3600),
+    BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
   })
   .superRefine((environment, context) => {
+    if (
+      new Set([
+        environment.AUTH_ACCESS_SECRET,
+        environment.AUTH_REFRESH_SECRET,
+        environment.AUTH_CSRF_SECRET,
+      ]).size !== 3
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["AUTH_ACCESS_SECRET"],
+        message: "Authentication secrets must be distinct",
+      });
+    }
+    if (
+      environment.AUTH_ACCESS_TTL_SECONDS >= environment.AUTH_REFRESH_TTL_SECONDS ||
+      environment.AUTH_REFRESH_TTL_SECONDS > environment.AUTH_SESSION_TTL_SECONDS
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["AUTH_REFRESH_TTL_SECONDS"],
+        message: "TTL must satisfy access < refresh <= session",
+      });
+    }
     if (
       environment.NODE_ENV === "production" &&
       environment.CORS_ORIGINS.some((origin) => !origin.startsWith("https://"))

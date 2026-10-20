@@ -1,0 +1,34 @@
+import { Injectable, type CanActivate, type ExecutionContext } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { AuthService } from "../application/auth.service.js";
+import { AuthError } from "../domain/auth.js";
+import { AuthCookies } from "./auth.cookies.js";
+import type { AuthRequest } from "./auth.request.js";
+import { CsrfProtection } from "./csrf.protection.js";
+import { PUBLIC_ROUTE } from "./public.decorator.js";
+
+@Injectable()
+export class AuthGuard implements CanActivate {
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly auth: AuthService,
+    private readonly cookies: AuthCookies,
+    private readonly csrf: CsrfProtection,
+  ) {}
+
+  async canActivate(context: ExecutionContext): Promise<boolean> {
+    const request = context.switchToHttp().getRequest<AuthRequest>();
+    context.switchToHttp().getResponse().setHeader("Cache-Control", "no-store");
+    const isPublic = this.reflector.getAllAndOverride<boolean>(PUBLIC_ROUTE, [
+      context.getHandler(),
+      context.getClass(),
+    ]);
+    if (!isPublic) {
+      const token = this.cookies.read(request, "access");
+      if (!token) throw new AuthError("unauthorized");
+      request.auth = await this.auth.authenticate(token);
+    }
+    if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) await this.csrf.protect(request);
+    return true;
+  }
+}

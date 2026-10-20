@@ -1,8 +1,7 @@
 import axios from "axios";
 import { apiConfig } from "./config";
 
-// Business services will use this instance once their real endpoints exist.
-// Do not add token storage or a mock refresh interceptor here.
+// Auth uses cookies. Never store JWTs or automatically replay mutations here.
 export const apiClient = axios.create({
   baseURL: apiConfig.apiUrl,
   withCredentials: true,

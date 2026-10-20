@@ -1,6 +1,13 @@
+import { Suspense } from "react";
 import { AppShell } from "@/components/layout/app-shell";
-
-// This layout is a UI boundary, not an authentication or authorization guard.
+import { AuthenticatedContent } from "@/features/auth/components/authenticated-content";
+import { SessionStatus } from "@/features/auth/components/session-status";
 export default function WorkspaceLayout({ children }: LayoutProps<"/[locale]">) {
-  return <AppShell>{children}</AppShell>;
+  return (
+    <Suspense fallback={<SessionStatus />}>
+      <AuthenticatedContent>
+        <AppShell>{children}</AppShell>
+      </AuthenticatedContent>
+    </Suspense>
+  );
 }

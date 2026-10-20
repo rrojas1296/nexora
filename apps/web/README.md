@@ -1,36 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Web
 
-## Getting Started
+Next.js App Router, React, Tailwind v4 y next-intl es/en. Auth real por cookies HttpOnly; onboarding y módulos comerciales siguen usando mocks en memoria.
 
-First, run the development server:
+Desde la raíz del monorepo:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```sh
+cp apps/web/.env.example apps/web/.env.local
+pnpm --filter @whatsapp/web dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+El workspace requiere API y PostgreSQL configurados. `pnpm dev` inicia ambas aplicaciones; ver la [preparación del repositorio](../../README.md). No hay cuentas precreadas ni seeds.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Topología
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+El navegador llama `/api/v1` en el mismo origen de web. Next reenvía al destino privado `API_INTERNAL_URL` (por defecto `http://localhost:8000/api/v1`), también usado por la comprobación SSR sin caché. Cambiarlo exige rebuild. `CORS_ORIGINS` de API debe incluir el origen público exacto de web (`http://localhost:3000` en desarrollo). Producción requiere HTTPS y API en `NODE_ENV=production`; no se soportan hosts públicos separados con este flujo.
 
-## Learn More
+No publicar secretos bajo `NEXT_PUBLIC_`, guardar JWT en almacenamiento web ni reintentar refresh con resultado incierto. Los formularios de login/registro crean sesiones reales; el wizard no actualiza los datos del negocio persistido.
 
-To learn more about Next.js, take a look at the following resources:
+## Guías
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [Frontend](../../docs/frontend.md)
+- [Autenticación y límites](../../docs/authentication.md)
+- [Roadmap](../../docs/roadmap.md)
+- [Reglas de aplicación](./AGENTS.md)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Verificar con lint, formato, typecheck y build desde la raíz. Por instrucción vigente no implementar ni ejecutar tests, smoke checks, HTTP de prueba ni navegador.

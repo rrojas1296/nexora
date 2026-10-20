@@ -78,4 +78,4 @@ Se pueden crear/editar pedidos mock; no conversaciones nuevas. Tampoco hay elimi
 
 ## Verificación y pendientes
 
-La verificación de esta etapa se limita a formato, lint, tipos y build. No se han implementado ni ejecutado tests ni comprobaciones en navegador por la restricción vigente. La compilación no verifica interacciones, disposición responsive, accesibilidad efectiva ni seguridad. Próximo paso: base modular de NestJS, configuración validada y Prisma/PostgreSQL, sin autenticación ni endpoints de negocio reales.
+La verificación de esta etapa se limita a formato, lint, tipos y build. No se han implementado ni ejecutado tests ni comprobaciones en navegador por la restricción vigente. La compilación no verifica interacciones, disposición responsive, accesibilidad efectiva ni seguridad. El backend ya incorpora base NestJS/Prisma y autenticación real independiente; la integración de estas pantallas con auth sigue pendiente. No hay endpoints comerciales reales. Ver `authentication.md` y `backend.md`.

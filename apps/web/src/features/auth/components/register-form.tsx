@@ -7,18 +7,17 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { Link } from "@/i18n/navigation";
-import { isMockRequestCancelled } from "@/lib/mocks/mock-delay";
-import { useMockRequest } from "@/lib/mocks/use-mock-request";
+import { useAuthError } from "../hooks/use-auth-error";
 import { useAuthSchemas } from "../hooks/use-auth-schemas";
-import { useDemoAccess } from "../hooks/use-demo-access";
+import { useAuthAccess } from "../hooks/use-auth-access";
 import type { RegisterValues } from "../schemas/auth-schema";
-import { DemoAuthError, mockAuthService } from "../services/mock-auth-service";
+import { authService } from "../services/auth-service";
 
 export function RegisterForm() {
   const t = useTranslations("Auth");
   const schemas = useAuthSchemas();
-  const acceptSession = useDemoAccess();
-  const request = useMockRequest();
+  const acceptSession = useAuthAccess();
+  const errorMessage = useAuthError();
   const {
     register,
     handleSubmit,
@@ -27,19 +26,18 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterValues>({
     resolver: zodResolver(schemas.register),
-    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { name: "", businessName: "", email: "", password: "", confirmPassword: "" },
   });
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const session = await request((signal) => mockAuthService.register(values, signal));
+      const session = await authService.register(values);
       resetField("password");
       resetField("confirmPassword");
-      acceptSession(session);
+      await acceptSession(session, "/onboarding");
     } catch (error) {
-      if (isMockRequestCancelled(error)) return;
-      setError("root", {
-        message: error instanceof DemoAuthError ? t("errors.emailTaken") : t("errors.unexpected"),
-      });
+      resetField("password");
+      resetField("confirmPassword");
+      setError("root", { message: errorMessage(error) });
     }
   });
   return (
@@ -55,9 +53,16 @@ export function RegisterForm() {
         <InputField
           label={t("name")}
           autoComplete="name"
-          maxLength={80}
+          maxLength={100}
           {...register("name")}
           error={errors.name?.message}
+        />
+        <InputField
+          label={t("businessName")}
+          autoComplete="organization"
+          maxLength={120}
+          {...register("businessName")}
+          error={errors.businessName?.message}
         />
         <InputField
           label={t("email")}
@@ -71,7 +76,7 @@ export function RegisterForm() {
           label={t("password")}
           type="password"
           autoComplete="new-password"
-          maxLength={128}
+          maxLength={72}
           {...register("password")}
           error={errors.password?.message}
           hint={t("passwordHint")}
@@ -80,7 +85,7 @@ export function RegisterForm() {
           label={t("confirmPassword")}
           type="password"
           autoComplete="new-password"
-          maxLength={128}
+          maxLength={72}
           {...register("confirmPassword")}
           error={errors.confirmPassword?.message}
         />

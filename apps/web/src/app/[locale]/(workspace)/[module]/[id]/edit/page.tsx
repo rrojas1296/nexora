@@ -1,6 +1,9 @@
 import { Suspense } from "react";
 import { ResourceEditRoute } from "@/features/demo/components/resource-edit-route";
 
+// Auth may omit this segment; do not validate navigation through the session gate.
+export const instant = false;
+
 export default function EditResourcePage({ params }: PageProps<"/[locale]/[module]/[id]/edit">) {
   return (
     <Suspense

@@ -2,6 +2,9 @@ import { notFound } from "next/navigation";
 import { navigationGroups } from "@/components/layout/navigation";
 import { ModuleWorkspace } from "@/features/workspace/components/module-workspace";
 
+// Auth may omit this segment; do not validate navigation through the session gate.
+export const instant = false;
+
 const modules = navigationGroups
   .flatMap((group) => [...group.items])
   .filter((item) => item.key !== "dashboard");

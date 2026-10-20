@@ -7,18 +7,17 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { Link } from "@/i18n/navigation";
-import { isMockRequestCancelled } from "@/lib/mocks/mock-delay";
-import { useMockRequest } from "@/lib/mocks/use-mock-request";
+import { useAuthError } from "../hooks/use-auth-error";
 import { useAuthSchemas } from "../hooks/use-auth-schemas";
-import { useDemoAccess } from "../hooks/use-demo-access";
+import { useAuthAccess } from "../hooks/use-auth-access";
 import type { LoginValues } from "../schemas/auth-schema";
-import { DemoAuthError, mockAuthService } from "../services/mock-auth-service";
+import { authService } from "../services/auth-service";
 
 export function LoginForm() {
   const t = useTranslations("Auth");
   const { login } = useAuthSchemas();
-  const acceptSession = useDemoAccess();
-  const request = useMockRequest();
+  const acceptSession = useAuthAccess();
+  const errorMessage = useAuthError();
   const {
     register,
     handleSubmit,
@@ -31,14 +30,12 @@ export function LoginForm() {
   });
   const onSubmit = handleSubmit(async (values) => {
     try {
-      const session = await request((signal) => mockAuthService.login(values, signal));
+      const session = await authService.login(values);
       resetField("password");
-      acceptSession(session);
+      await acceptSession(session, "/dashboard");
     } catch (error) {
-      if (isMockRequestCancelled(error)) return;
-      setError("root", {
-        message: error instanceof DemoAuthError ? t("errors.rejected") : t("errors.unexpected"),
-      });
+      resetField("password");
+      setError("root", { message: errorMessage(error) });
     }
   });
   return (
@@ -63,7 +60,7 @@ export function LoginForm() {
           label={t("password")}
           type="password"
           autoComplete="current-password"
-          maxLength={128}
+          maxLength={72}
           {...register("password")}
           error={errors.password?.message}
         />

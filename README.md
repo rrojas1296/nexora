@@ -1,11 +1,11 @@
 # WhatsApp AI Sales SaaS
 
-Monorepo de ventas y atención por WhatsApp con agentes AI. **El frontend funciona con datos ficticios en memoria; el backend es únicamente una base estructural.** No hay cuentas reales, persistencia comercial, conexión WhatsApp ni proveedor de IA.
+Monorepo de ventas y atención por WhatsApp con agentes AI. **Frontend y backend integran autenticación real con cookies HttpOnly, jose/bcrypt y PostgreSQL; los módulos comerciales siguen usando datos ficticios en memoria.** Workspace/onboarding requieren sesión. La base configurada recibió la migración inicial; no se crearon cuentas ni seeds durante implementación. No hay API comercial, conexión WhatsApp ni proveedor de IA.
 
 ## Stack y estructura
 
 - `apps/web`: Next.js App Router, React, Tailwind v4, next-intl es/en, Zustand, React Query, Axios, RHF/Zod, Radix y Recharts.
-- `apps/api`: NestJS modular, Zod, Prisma 7 estable y adaptador PostgreSQL. Capas hexagonales reservadas, sin endpoints de negocio.
+- `apps/api`: NestJS modular, Zod, Prisma 7 estable y adaptador PostgreSQL. Auth hexagonal real, cookies HttpOnly, access/refresh rotativos, CSRF y sesiones revocables; otros módulos sin endpoints de negocio.
 - `packages/typescript-config`: TypeScript strict compartido.
 - pnpm Workspaces, Turborepo y Oxc exclusivamente.
 
@@ -20,9 +20,12 @@ pnpm install --frozen-lockfile
 cp apps/web/.env.example apps/web/.env.local
 cp apps/api/.env.example apps/api/.env
 # Editar cada archivo para el entorno local, sin compartir secretos entre apps.
+pnpm --filter @whatsapp/api auth:configure
+# En la base autorizada: aplicar migraciones revisadas (no hay seeds).
+pnpm --filter @whatsapp/api db:migrate:deploy
 ```
 
-Para explorar solo la demo frontend, no es necesario arrancar API ni PostgreSQL:
+Para arrancar solo el frontend (el acceso al workspace requiere API/PostgreSQL disponibles):
 
 ```sh
 pnpm --filter @whatsapp/web dev
@@ -34,15 +37,15 @@ Para arrancar ambas aplicaciones después de configurar la API:
 pnpm dev
 ```
 
-Web usa el puerto de desarrollo Next (3000 por defecto); API usa `127.0.0.1:8000` por defecto. La API necesita `DATABASE_URL` válida y orígenes CORS exactos, pero no conecta ni migra al arrancar. Proveer PostgreSQL y aplicar una migración inicial es trabajo posterior explícito; ver [database.md](./docs/database.md). `GET /` del backend es el ejemplo `Hello World!`, no un health check. `NEXT_PUBLIC_API_URL` es público y todavía no recibe llamadas de negocio.
+Web usa el puerto de desarrollo Next (3000 por defecto); API usa `127.0.0.1:8000` por defecto. La API necesita `DATABASE_URL`, orígenes CORS exactos y tres secretos independientes de autenticación. Las consultas conectan bajo demanda; no hay migraciones ni seeds al arrancar. La migración inicial ya se aplicó explícitamente al destino configurado; otras bases necesitan el deploy revisado. Ver [database.md](./docs/database.md). `GET /` conserva `Hello World!` pero requiere sesión por el guard global; no es un health check. Web reenvía `/api/v1` al destino privado `API_INTERNAL_URL` (por defecto `http://localhost:8000/api/v1`); cambiarlo exige rebuild. `CORS_ORIGINS` debe admitir el origen público exacto de web, por defecto `http://localhost:3000`. Producción exige HTTPS y API `NODE_ENV=production`. No usar hosts públicos separados para web/API en esta integración.
 
 Los comandos de arranque son instrucciones para el operador: no se han ejecutado como verificación de esta fase, por la restricción de tests y smoke checks.
 
 ## Qué incluye la demo
 
-Shell responsive con sidebar izquierdo colapsable, contenido limitado a 1428px, temas propios light/dark/system y español/inglés. Login/registro mock y onboarding de cinco pasos. Dashboard con comparativa de ventas; conversaciones locales; configuración de agente; productos, clientes, pedidos y tiendas con páginas de creación/edición; reportes diferenciados con filtros y CSV; ajustes y ayuda. Productos, pedidos y clientes incluyen KPIs de colección.
+Shell responsive con sidebar izquierdo colapsable, contenido limitado a 1428px, temas propios light/dark/system y español/inglés. Login/registro reales y onboarding mock de cinco pasos. Dashboard con comparativa de ventas; conversaciones locales; configuración de agente; productos, clientes, pedidos y tiendas con páginas de creación/edición; reportes diferenciados con filtros y CSV; ajustes y ayuda. Productos, pedidos y clientes incluyen KPIs de colección.
 
-Usar únicamente credenciales ficticias: cualquier email válido y contraseña de 8–128 caracteres simulan acceso; `error@example.com` activa un error reproducible. **No hay protección de rutas ni identidad verificada.** Los escenarios comerciales permiten normal/vacío/error; el vacío es de solo lectura. Recargar, cambiar de perfil o restablecer descarta cambios. Solo se persiste el tema, nunca datos comerciales ni tokens.
+Registrar una cuenta crea usuario y negocio reales; exige contraseña de al menos 12 caracteres y como máximo 72 bytes UTF-8. La sesión se recupera al recargar por cookies, con renovación coordinada entre pestañas y cierre actual/global en el header. No hay credenciales precreadas ni emails especiales. Los escenarios comerciales permiten normal/vacío/error; el vacío es de solo lectura. Recargar, cambiar de identidad o restablecer descarta cambios mock; completar el wizard no actualiza el negocio real. No se persisten tokens ni datos comerciales en almacenamiento web: solo tema y una marca booleana conservadora contra replay de refresh incierto.
 
 ## Verificaciones permitidas
 
@@ -66,9 +69,9 @@ pnpm --filter @whatsapp/api db:validate
 - [Features y límites de los mocks](./docs/features.md)
 - [Design system](./docs/design-system.md)
 - [Backend y contratos REST futuros](./docs/backend.md)
-- [Autenticación y seguridad futura](./docs/authentication.md)
+- [Autenticación y sesiones actuales](./docs/authentication.md)
 - [Plan de implementación del login real](./docs/login-plan.md)
-- [Base de datos y migraciones futuras](./docs/database.md)
+- [Base de datos y migraciones](./docs/database.md)
 - [Reglas de trabajo](./AGENTS.md)
 
-La siguiente fase requerirá autorización separada: autenticación real con jose/argon2, sesiones y cookies seguras, CSRF, RBAC y repositorios tenant-scoped, API comercial, persistencia e integraciones externas. No conectar datos privados antes de completar y verificar esas garantías.
+Siguiente fase: RBAC y selección autorizada de negocio, repositorios business-scoped, API comercial e integraciones externas. Auditoría, límites distribuidos, recuperación/verificación de email y verificaciones de seguridad siguen pendientes. No declarar listo para producción: compilar no comprueba seguridad ni interacciones.

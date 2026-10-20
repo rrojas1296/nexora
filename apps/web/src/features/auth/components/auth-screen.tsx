@@ -72,8 +72,8 @@ export async function AuthScreen({ mode }: { mode: "login" | "register" }) {
               aria-hidden="true"
             />
             <div className="text-xs leading-5 text-muted-foreground">
-              <p>{t("demoWarning")}</p>
-              <p className="mt-2">{t("errorHint")}</p>
+              <p>{t("securityNotice")}</p>
+              <p className="mt-2">{t("scopeNotice")}</p>
             </div>
           </div>
         </main>

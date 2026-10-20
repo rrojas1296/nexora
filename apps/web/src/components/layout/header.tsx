@@ -6,7 +6,7 @@ import { getActiveModule } from "./navigation";
 import { LocaleSelect } from "./locale-select";
 import { ThemeSelect } from "./theme-select";
 import { MobileNavigation } from "./mobile-navigation";
-import { DemoSessionControl } from "@/features/auth/components/demo-session-control";
+import { SessionControl } from "@/features/auth/components/session-control";
 
 export function Header() {
   const nav = useTranslations("Nav");
@@ -22,7 +22,7 @@ export function Header() {
       <div className="flex flex-wrap items-center gap-2">
         <LocaleSelect />
         <ThemeSelect />
-        <DemoSessionControl />
+        <SessionControl />
       </div>
     </header>
   );

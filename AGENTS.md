@@ -2,13 +2,13 @@
 
 ## Objetivo y estado
 
-SaaS multi-tenant de ventas y atención por WhatsApp con agentes AI. Priorizar frontend funcional con mocks; no implementar autenticación real, integraciones externas ni endpoints de negocio en esta fase. Consultar `docs/roadmap.md` antes de comenzar. Los seis pasos del alcance inicial están completados: monorepo, shell frontend, acceso/onboarding, módulos comerciales mock, base backend y documentación. La API solo incorpora módulos vacíos, configuración y Prisma, no lógica de negocio ni autenticación. Los datos comerciales son ficticios y solo viven en memoria del navegador; no hay API de negocio. Ver `docs/authentication.md`: los perfiles demo y el progreso son solo memoria y no protegen rutas.
+SaaS multi-tenant de ventas y atención por WhatsApp con agentes AI. Frontend comercial con mocks y autenticación real integrada con backend jose/bcrypt. No implementar integraciones externas ni endpoints comerciales sin ampliar el alcance. Consultar `docs/roadmap.md` antes de comenzar. Los seis pasos del alcance inicial están completados: monorepo, shell frontend, acceso/onboarding, módulos comerciales mock, base backend y documentación. La API incorpora auth real, configuración y Prisma; los otros módulos siguen vacíos y sin lógica comercial. Los datos comerciales son ficticios y solo viven en memoria del navegador; no hay API de negocio. Ver `docs/authentication.md`: perfil real en React Query, cookies HttpOnly, comprobación SSR/cliente de workspace/onboarding; progreso y datos comerciales siguen solo en memoria.
 
 ## Workspace
 
 - Un único repositorio Git y lockfile `pnpm-lock.yaml` en la raíz.
 - `apps/web`: Next.js App Router, React y Tailwind CSS v4.
-- `apps/api`: NestJS modular, capas hexagonales reservadas, configuración Zod, CORS y Prisma/PostgreSQL. Sin autenticación ni endpoints de negocio; se conserva la raíz del starter.
+- `apps/api`: NestJS modular, capas hexagonales reservadas, configuración Zod, CORS y Prisma/PostgreSQL. Auth real con cookies/sesiones revocables; sin endpoints comerciales. La raíz del starter queda protegida por el guard global.
 - `packages/typescript-config`: configuración TypeScript estricta compartida.
 - Node.js >=24; usar pnpm según `packageManager` en la raíz.
 - Usar las últimas versiones estables de dependencias. Verificar `pnpm view <paquete> version` y, si el tag latest es prerelease, consultar `versions`/`dist-tags` para elegir la última estable (como Prisma 7.10.1 frente a 8.0.0-rc.23); `pnpm update --latest` puede omitir publicaciones recientes por las políticas de seguridad de pnpm. No desactivar globalmente esas políticas. Cualquier excepción debe quedar acotada a una versión y registrada en `pnpm-workspace.yaml`.
@@ -46,10 +46,10 @@ Oxc exclusivamente: no añadir ESLint, Prettier ni Biome. Configuración central
 ## Convenciones backend y seguridad
 
 - Clean/Hexagonal Architecture por módulo: domain, application, infrastructure y presentation.
-- Prisma 7.10.1 estable con adaptador PostgreSQL, esquema tenant y cliente generado antes de build/typecheck/dev. No conectar, migrar ni sembrar datos automáticamente. Ver `docs/backend.md` y `docs/database.md`.
+- Prisma 7.10.1 estable con adaptador PostgreSQL, esquema tenant y cliente generado antes de build/typecheck/dev. La migración inicial ya está aplicada al destino autorizado. No conectar, migrar ni sembrar datos automáticamente en install/build/dev/start; cambios posteriores requieren migración revisada y ejecución explícita. Ver `docs/backend.md` y `docs/database.md`.
 - El negocio del backend se llama `Business`: módulo singular `business`/`BusinessModule`, archivo Prisma `business.prisma`, relación `business` y clave `businessId`. «Multi-tenant» sigue describiendo la arquitectura; las rutas REST propuestas usan `/businesses/:businessId`.
 - Las FK compuestas tenant no sustituyen autorización ni filtros: los futuros repositorios deben aislar tenants; nunca confiar en un tenant enviado por el cliente sin autorización. Las capas domain/application permanecen sin Nest ni Prisma.
-- Futura autenticación: jose, argon2, cookies HttpOnly, Secure en producción, refresh rotativo revocable, CSRF y CORS con credenciales y orígenes explícitos. Nunca JWT en localStorage.
+- Autenticación: jose y bcrypt (elección explícita del usuario), hashes no reversibles, máximo 72 bytes UTF-8; cookies HttpOnly, Secure en producción, refresh rotativo revocable, CSRF firmado ligado a sesión y CORS con orígenes explícitos. Nunca JWT en localStorage. El frontend consume auth bajo el mismo origen público (`/api/v1` proxy a `API_INTERNAL_URL` privada); CORS debe admitir el origen web. Refresh coordinado con Web Locks y sin retries inciertos; nunca reenviar mutaciones automáticamente. Ver `docs/authentication.md` para límites y operación; no declarar listo para producción sin verificaciones autorizadas.
 - Variables independientes: web `.env.local`, api `.env`, ejemplos sin secretos. Solo valores públicos bajo `NEXT_PUBLIC_`.
 - TypeScript 7 no expone la API programática que Nest CLI necesita: build mediante `tsc -p tsconfig.build.json`, no `nest build`. El script de desarrollo compila primero y coordina los watchers de TypeScript y Node sin dependencias adicionales.
 

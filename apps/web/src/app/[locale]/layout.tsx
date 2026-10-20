@@ -5,6 +5,7 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { routing } from "@/i18n/routing";
 import { themeBootstrapScript } from "@/lib/theme/theme-bootstrap";
 import { QueryProvider } from "@/providers/query-provider";
+import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import "../globals.css";
 
@@ -41,7 +42,9 @@ export default async function LocaleLayout({ children }: LayoutProps<"/[locale]"
         </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider>
-            <QueryProvider>{children}</QueryProvider>
+            <QueryProvider>
+              <AuthProvider>{children}</AuthProvider>
+            </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>
