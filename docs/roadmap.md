@@ -100,6 +100,36 @@ Los seis pasos están completados: frontend funcional con mocks y revisiones vis
 - Conservados catálogos tipados y comerciales, proxy, navegación, selector es/en, provider cliente, `generateStaticParams`, Cache Components, Partial Prefetching y los límites de carga/edición. Zona horaria por defecto fijada a UTC para los datos demo.
 - Sin dependencias nuevas ni cambios de versiones. `pnpm lint`, `pnpm format:check`, `pnpm typecheck` y `pnpm build` correctos: frontend compilado sin caché y 53 páginas generadas; tareas de API reutilizadas desde caché válida de Turbo. Sin implementar ni ejecutar tests ni navegador; overlay de desarrollo no verificado.
 
+## Ajuste posterior — Select compartido
+
+- Adaptado Select de shadcn sobre `radix-ui` a los tokens actuales light/dark, con opciones seleccionadas en verde, menú en portal, foco visible, tamaños estándar/compacto y truncado de valores largos. Primitivas separadas para conservar un componente por archivo.
+- Sustituidos todos los `<select>` escritos en la aplicación por `SelectField`: tema/idioma, filtros de módulos, escenarios demo, dashboard, reportes, conversaciones y formularios. Conservadas etiquetas es/en, conversiones numéricas, cambios de precio de líneas de pedido y bloqueos durante guardado.
+- `FormSelectField` usa Controller de React Hook Form para valor, blur, referencia de foco y errores, compatible con los valores iniciales y reset del formulario sin doble registro nativo.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck` y `pnpm build` correctos; Next.js genera 53 páginas. Revisión estática adicional sin otros hallazgos pendientes. Sin implementar ni ejecutar tests ni comprobaciones de navegador; apariencia e interacción no verificadas visualmente.
+
+## Rediseño posterior — Dashboard comercial y operativo
+
+- Conservadas las cuatro KPIs y sus cálculos: ventas totales, conversaciones, proporción de pedidos cobrados y ticket promedio, con comparativas anuales existentes.
+- Reorganizado el dashboard con barra global de año/alcance y acceso a reportes; gráfica mensual con total destacado y botones de métrica; seguimiento operativo y agente; tabla de pedidos de ancho completo con fecha UTC; productos y mensajes en dos paneles amplios. Se conserva el encabezado compartido y los tokens/controles light/dark del resto de módulos.
+- Seguimiento calculado sobre toda la demo: pedidos pendientes, conversaciones abiertas asignadas al equipo y productos activos sin stock. Alcance sin filtro anual explícito; los enlaces llevan a sus módulos completos, no aplican filtros automáticos. Ventas, pedidos recientes y ranking siguen el año seleccionado.
+- Traducciones es/en y alternativa tabular de la gráfica conservadas; sin dependencias ni APIs nuevas. Revisión estática realizada y corregida la navegación ambigua de filas de mensajes: solo el acceso general al módulo permite navegar.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y `git diff --check` correctos; Next.js genera 53 páginas. No se implementaron ni ejecutaron tests ni verificaciones de navegador; diseño responsive revisado en código, no visualmente.
+
+## Ajuste posterior — PEN como moneda predeterminada
+
+- Añadido PEN (sol peruano) a las opciones de onboarding y tiendas, conservando USD/EUR/MXN/COP. Configuración frontend compartida en `src/lib/config/currency.ts`; PEN es el valor inicial de onboarding, tiendas, fixtures y pedidos nuevos.
+- Catálogo, KPIs, dashboard, gráficas, tooltips, reportes y exportación CSV usan PEN; etiquetas y mensajes actualizados en es/en. Se conservan valores numéricos, sin conversión de divisas; las preferencias de tienda no cambian el historial ni los importes de la demo.
+- Defaults del esquema Prisma de `Store`, `Product` y `Order` alineados a PEN. Sin migraciones, seeds, conexión a PostgreSQL ni modificación de datos persistidos.
+- Las menciones de USD en las etapas anteriores registran el estado histórico, sustituido por este ajuste. `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build`, `pnpm --filter @whatsapp/api db:validate` y `git diff --check` correctos; 53 páginas generadas. Sin tests ni verificaciones de navegador por la restricción vigente.
+
+## Refactor posterior — Business y plan de login
+
+- Renombrado el módulo backend `tenants` a `business`, con `BusinessModule`; modelo Prisma `Business`, relación `business` y claves `businessId` en recursos, membresías y sesiones. Se conservan las relaciones, PK/FK e índices compuestos y las capas hexagonales vacías.
+- Actualizados los contratos documentados a `/businesses/:businessId` y el perfil propuesto a memberships con `businessId`. «Multi-tenant» se conserva como término arquitectónico; las menciones de los módulos anteriores describen el estado histórico.
+- Sin migraciones ni cambios sobre una base; una base externa con los nombres anteriores requeriría una migración de renombrado revisada. Los defaults PEN existentes se mantienen.
+- Añadido [plan de login real](./login-plan.md): contratos/topología, persistencia, Argon2id/jose, cookies, CSRF, sesiones revocables y rotación, guards/rate limits, integración frontend y verificación. Solo planificado: no se han instalado dependencias ni implementado endpoints/auth real.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build`, `pnpm --filter @whatsapp/api db:validate` y `git diff --check` correctos. API regenerada y compilada; frontend reutiliza caché válida de Turbo. Sin tests, navegador ni conexión a PostgreSQL.
+
 ## Fase posterior, fuera del alcance actual
 
 Autenticación real con jose y argon2; sesiones y cookies seguras; autorización RBAC y tenant; endpoints de negocio; persistencia real; WhatsApp Cloud API y proveedores de IA.

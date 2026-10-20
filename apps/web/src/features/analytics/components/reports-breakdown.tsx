@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { DataTable } from "@/features/demo/components/data-table";
 import type { ReportRow, ReportView } from "../lib/report-metrics";
 
@@ -35,7 +36,8 @@ export function ReportsBreakdown({
         {
           key: "revenue",
           label: t("revenue"),
-          render: (row) => format.number(row.revenue, { style: "currency", currency: "USD" }),
+          render: (row) =>
+            format.number(row.revenue, { style: "currency", currency: defaultCurrency }),
         },
         {
           key: "share",

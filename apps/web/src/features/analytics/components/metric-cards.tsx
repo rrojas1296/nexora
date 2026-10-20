@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { cn } from "@/lib/utils/cn";
 import type { MonthlySalesComparison as SalesComparison } from "../lib/sales-comparison";
 
@@ -18,7 +19,8 @@ export function MetricCards({
   const previousShare = previous.orders.length ? previous.sales.length / previous.orders.length : 0;
   const relative = (value: number, baseline: number) =>
     baseline > 0 ? (value - baseline) / baseline : null;
-  const currency = (value: number) => format.number(value, { style: "currency", currency: "USD" });
+  const currency = (value: number) =>
+    format.number(value, { style: "currency", currency: defaultCurrency });
   const cards = [
     { key: "sales", value: currency(current.revenue), change: comparison.change },
     { key: "conversations", value: format.number(conversations), change: null },

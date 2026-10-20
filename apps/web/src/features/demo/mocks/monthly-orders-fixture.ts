@@ -1,3 +1,4 @@
+import { defaultCurrency } from "@/lib/config/currency";
 import type { Order } from "../types/workspace";
 
 // Synthetic calendar-year examples, including future months. Not actual sales or forecasts.
@@ -32,7 +33,7 @@ export const monthlyOrdersFixture: Order[] = annualVolumes.flatMap(
           storeId: "s1",
           status: index % 3 === 0 ? "paid" : "shipped",
           createdAt: `${year}-${monthLabel}-${day}T12:00:00Z`,
-          currency: "USD",
+          currency: defaultCurrency,
           items: [
             {
               productId: "p1",

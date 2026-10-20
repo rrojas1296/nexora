@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const currencies = ["USD", "EUR", "MXN", "COP"] as const;
+import { currencies } from "@/lib/config/currency";
+
+export { currencies } from "@/lib/config/currency";
 export const timezones = [
   "America/Mexico_City",
   "America/Bogota",

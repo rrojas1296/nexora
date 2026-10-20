@@ -3,8 +3,9 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { cn } from "@/lib/utils/cn";
-import { fieldClassName } from "@/components/ui/input-field";
+import { Button } from "@/components/ui/button";
 import {
   getMonthlyMetricSeries,
   type SalesMetric,
@@ -17,17 +18,7 @@ const SalesComparisonChart = dynamic(
   { loading: ChartPlaceholder },
 );
 
-export function SalesSummary({
-  comparison,
-  year,
-  years,
-  onYearChange,
-}: {
-  comparison: SalesComparison;
-  year: number;
-  years: number[];
-  onYearChange: (year: number) => void;
-}) {
+export function SalesSummary({ comparison, year }: { comparison: SalesComparison; year: number }) {
   const t = useTranslations("SalesSummary");
   const dashboard = useTranslations("Dashboard");
   const analytics = useTranslations("Analytics");
@@ -36,7 +27,7 @@ export function SalesSummary({
   const series = getMonthlyMetricSeries(comparison, metric);
   const numberOptions =
     metric === "revenue"
-      ? { style: "currency" as const, currency: "USD" }
+      ? { style: "currency" as const, currency: defaultCurrency }
       : { maximumFractionDigits: 0 };
   const metricLabel = dashboard(metric === "revenue" ? "metricRevenue" : "metricOrders");
   const chartTitle = dashboard(metric === "revenue" ? "monthlySales" : "monthlySoldOrders");
@@ -47,46 +38,42 @@ export function SalesSummary({
       timeZone: "UTC",
     });
   return (
-    <section className="min-w-0 rounded-3xl border bg-card p-4 sm:p-5">
+    <section className="min-w-0 rounded-3xl border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h2 className="text-sm font-semibold">{chartTitle}</h2>
           <p className="mt-1 text-xs text-muted-foreground">{dashboard("salesHint")}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{dashboard("year")}</span>
-            <select
-              className={cn(fieldClassName, "w-auto rounded-full bg-background py-1.5 text-xs")}
-              value={year}
-              onChange={(event) => onYearChange(Number(event.target.value))}
+        <fieldset className="flex flex-wrap gap-1 rounded-2xl border bg-background p-1">
+          <legend className="sr-only">{dashboard("metric")}</legend>
+          {(["revenue", "orders"] as const).map((value) => (
+            <Button
+              key={value}
+              size="sm"
+              variant={metric === value ? "secondary" : "ghost"}
+              aria-pressed={metric === value}
+              onClick={() => setMetric(value)}
             >
-              {years.map((value) => (
-                <option key={value} value={value}>
-                  {value}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span>{dashboard("metric")}</span>
-            <select
-              className={cn(fieldClassName, "w-auto rounded-full bg-background py-1.5 text-xs")}
-              value={metric}
-              onChange={(event) =>
-                setMetric(event.target.value === "orders" ? "orders" : "revenue")
-              }
-            >
-              <option value="revenue">{dashboard("metricRevenue")}</option>
-              <option value="orders">{dashboard("metricOrders")}</option>
-            </select>
-          </label>
-        </div>
+              {dashboard(value === "revenue" ? "metricRevenue" : "metricOrders")}
+            </Button>
+          ))}
+        </fieldset>
       </div>
-      <div className="mb-3 mt-5 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
+      <div className="my-6" aria-live="polite" aria-atomic="true">
+        <p className="text-xs text-muted-foreground">
+          {dashboard("annualMetric", { metric: metricLabel, year })}
+        </p>
+        <p className="mt-2 text-3xl font-semibold tracking-tight tabular-nums sm:text-4xl">
+          {format.number(
+            metric === "revenue" ? comparison.current.revenue : comparison.current.sales.length,
+            numberOptions,
+          )}
+        </p>
+      </div>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
         <span>
           {date(comparison.current.startDate)} — {date(comparison.current.endDate)} ·{" "}
-          {metric === "revenue" ? "USD" : dashboard("ordersUnit")} · UTC
+          {metric === "revenue" ? defaultCurrency : dashboard("ordersUnit")} · UTC
         </span>
         <div className="flex gap-4">
           {(["current", "previous"] as const).map((period) => (
@@ -103,15 +90,6 @@ export function SalesSummary({
           ))}
         </div>
       </div>
-      <p className="mb-4 text-sm text-muted-foreground" aria-live="polite" aria-atomic="true">
-        {dashboard("annualTotal", {
-          metric: metricLabel,
-          value: format.number(
-            metric === "revenue" ? comparison.current.revenue : comparison.current.sales.length,
-            numberOptions,
-          ),
-        })}
-      </p>
       <SalesComparisonChart data={series} metric={metric} />
       <p className="mt-3 text-xs leading-5 text-muted-foreground">
         {dashboard("monthlyHint", { year, previous: year - 1 })}

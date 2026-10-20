@@ -7,6 +7,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fieldClassName } from "@/components/ui/input-field";
+import { SelectField } from "@/components/ui/select-field";
 import { cn } from "@/lib/utils/cn";
 import { useWorkspaceMutation } from "@/features/demo/hooks/use-workspace";
 import { useValidationMessage } from "@/features/demo/hooks/use-validation-message";
@@ -47,12 +48,11 @@ export function ConversationPanel({
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           <label className="space-y-2 text-xs">
             <span className="block">{common("statusLabel")}</span>
-            <select
-              className={fieldClassName}
+            <SelectField
               value={conversation.status}
               disabled={mutation.isPending}
-              onChange={(event) => {
-                const status = conversationStatuses.find((value) => value === event.target.value);
+              onValueChange={(value) => {
+                const status = conversationStatuses.find((status) => status === value);
                 if (status)
                   mutation.mutate({
                     type: "conversation.update",
@@ -61,22 +61,18 @@ export function ConversationPanel({
                     assignedTo: conversation.assignedTo,
                   });
               }}
-            >
-              {conversationStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {common(`status.${status}`)}
-                </option>
-              ))}
-            </select>
+              options={conversationStatuses.map((status) => ({
+                value: status,
+                label: common(`status.${status}`),
+              }))}
+            />
           </label>
           <label className="space-y-2 text-xs">
             <span className="block">{t("assignedTo")}</span>
-            <select
-              className={fieldClassName}
+            <SelectField
               value={conversation.assignedTo}
               disabled={mutation.isPending}
-              onChange={(event) => {
-                const assignedTo = event.target.value;
+              onValueChange={(assignedTo) => {
                 if (assignedTo === "agent" || assignedTo === "human")
                   mutation.mutate({
                     type: "conversation.update",
@@ -85,10 +81,11 @@ export function ConversationPanel({
                     assignedTo,
                   });
               }}
-            >
-              <option value="agent">{common("status.agent")}</option>
-              <option value="human">{common("status.human")}</option>
-            </select>
+              options={[
+                { value: "agent", label: common("status.agent") },
+                { value: "human", label: common("status.human") },
+              ]}
+            />
           </label>
         </div>
       </div>

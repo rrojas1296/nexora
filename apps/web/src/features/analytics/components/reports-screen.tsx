@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Download, FileChartColumn } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { Button } from "@/components/ui/button";
-import { fieldClassName } from "@/components/ui/input-field";
+import { SelectField } from "@/components/ui/select-field";
 import { useWorkspace } from "@/features/demo/hooks/use-workspace";
 import { QueryState } from "@/features/demo/components/query-state";
 import { demoPeriodEnd, getMetrics } from "@/features/demo/lib/metrics";
@@ -43,29 +44,25 @@ export function ReportsScreen() {
         <div className="flex flex-wrap gap-4">
           <label className="space-y-2 text-xs">
             <span className="block">{analytics("period")}</span>
-            <select
-              className={fieldClassName}
-              value={days}
-              onChange={(event) => setDays(event.target.value === "7" ? 7 : 30)}
-            >
-              <option value={7}>{analytics("sevenDays")}</option>
-              <option value={30}>{analytics("thirtyDays")}</option>
-            </select>
+            <SelectField
+              value={String(days)}
+              onValueChange={(value) => setDays(value === "7" ? 7 : 30)}
+              options={[
+                { value: "7", label: analytics("sevenDays") },
+                { value: "30", label: analytics("thirtyDays") },
+              ]}
+            />
           </label>
           <label className="space-y-2 text-xs">
             <span className="block">{t("store")}</span>
-            <select
-              className={fieldClassName}
+            <SelectField
               value={store}
-              onChange={(event) => setStore(event.target.value)}
-            >
-              <option value="all">{common("all")}</option>
-              {workspace?.stores.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
+              onValueChange={setStore}
+              options={[
+                { value: "all", label: common("all") },
+                ...(workspace?.stores ?? []).map((row) => ({ value: row.id, label: row.name })),
+              ]}
+            />
           </label>
         </div>
         <Button
@@ -77,7 +74,7 @@ export function ReportsScreen() {
                 t(view === "products" ? "product" : "client"),
                 t("units"),
                 t("orders"),
-                `${t("revenue")} (USD)`,
+                `${t("revenue")} (${defaultCurrency})`,
                 `${t("share")} (%)`,
                 t("periodDays"),
                 t("cutoff"),

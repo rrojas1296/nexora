@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 import { InputField, fieldClassName } from "@/components/ui/input-field";
+import { FormSelectField } from "@/components/ui/form-select-field";
 import {
   agentTones,
   currencies,
@@ -35,19 +36,14 @@ export function OnboardingFields({ fields, form }: Props) {
                 <label htmlFor={id} className="block text-xs font-medium">
                   {t(`fields.${field}`)}
                 </label>
-                <select
-                  {...form.register(field)}
+                <FormSelectField
+                  control={form.control}
+                  name={field}
                   id={id}
-                  className={fieldClassName}
-                  aria-invalid={Boolean(error)}
+                  options={options}
+                  disabled={form.formState.isSubmitting}
                   aria-describedby={error ? `${id}-error` : undefined}
-                >
-                  {options.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                />
                 {error ? (
                   <p id={`${id}-error`} className="text-xs text-destructive">
                     {error}

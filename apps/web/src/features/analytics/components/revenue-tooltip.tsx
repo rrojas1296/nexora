@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 
 export function RevenueTooltip({
   active,
@@ -21,7 +22,7 @@ export function RevenueTooltip({
         {format.dateTime(new Date(`${label}T12:00:00Z`), { dateStyle: "medium", timeZone: "UTC" })}
       </p>
       <p className="mt-2 text-primary">
-        {t("revenue")}: {format.number(value, { style: "currency", currency: "USD" })}
+        {t("revenue")}: {format.number(value, { style: "currency", currency: defaultCurrency })}
       </p>
     </div>
   );

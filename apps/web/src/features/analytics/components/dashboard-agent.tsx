@@ -13,9 +13,9 @@ export function DashboardAgent({ workspace }: { workspace: Workspace }) {
     (row) => row.assignedTo === "agent" && row.status !== "closed",
   ).length;
   return (
-    <section className="rounded-3xl border bg-card p-4">
+    <section className="rounded-3xl border bg-card p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xs font-medium">{t("yourAgent")}</h2>
+        <h2 className="text-sm font-semibold">{t("yourAgent")}</h2>
         <span className="rounded-full bg-accent px-2 py-1 text-xs text-accent-foreground">
           {workspace.agent.enabled ? t("enabledDemo") : t("pausedDemo")}
         </span>
@@ -36,7 +36,7 @@ export function DashboardAgent({ workspace }: { workspace: Workspace }) {
         </div>
         <p className="mt-2 text-xs leading-5 text-muted-foreground">{t("agentScope")}</p>
       </div>
-      <Button asChild size="sm" className="mt-4 w-full">
+      <Button asChild variant="outline" size="sm" className="mt-4 w-full">
         <Link href="/agent">
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           {t("configureAgent")}

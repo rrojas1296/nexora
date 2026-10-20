@@ -14,6 +14,8 @@ Ninguna ruta está protegida: el dashboard y el onboarding pueden abrirse direct
 
 ## Previsto: autenticación real (fuera de esta fase)
 
+El tenant arquitectónico se representa ahora mediante `Business` y `businessId` en el backend. Ver [plan de implementación del login](./login-plan.md) para la siguiente etapa propuesta; este documento no implica que ya esté implementada.
+
 La API solo configura CORS explícito con credenciales; no lee cookies ni comprueba CSRF. El esquema Prisma incluye User, Membership y RefreshSession, pero no crea cuentas ni realiza rotación. `jose` y `argon2` no están instalados: se incorporarán al implementar esta fase.
 
 Estas medidas todavía no están implementadas:
@@ -38,7 +40,7 @@ Base `/api/v1`; JSON, credenciales incluidas y respuestas de sesión con `Cache-
 | `POST /auth/login`    | `{ email, password }`; 200 con usuario y memberships autorizadas, cookies nuevas y errores genéricos. Elegir tenant por pertenencia comprobada.                                                    |
 | `POST /auth/refresh`  | Sin JWT en body; usa cookie refresh y CSRF, rota ambos tokens; 204.                                                                                                                                |
 | `POST /auth/logout`   | Revoca sesión/familia actual y borra cookies con los mismos atributos; 204 idempotente.                                                                                                            |
-| `GET /auth/me`        | 200 con `{ data: { user: { id, name, email }, memberships: [{ tenantId, role }] } }`; 401 sin sesión válida. No devuelve hashes ni datos de otros tenants.                                         |
+| `GET /auth/me`        | 200 con `{ data: { user: { id, name, email }, memberships: [{ businessId, role }] } }`; 401 sin sesión válida. No devuelve hashes ni datos de otros tenants.                                       |
 
 Registro/login también son mutaciones que requieren defensa frente a login CSRF. Email normalizado y validación de contraseñas en servidor; errores sin enumeración, rate limits y hashing argon2id con parámetros medidos en el entorno real. Los TTL se acordarán antes de implementar (access corto, refresh con límite absoluto e inactividad), no se han configurado valores de seguridad por defecto.
 

@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { Button } from "@/components/ui/button";
-import { fieldClassName } from "@/components/ui/input-field";
+import { SelectField } from "@/components/ui/select-field";
 import { useWorkspace, useWorkspaceMutation } from "@/features/demo/hooks/use-workspace";
 import { usePagedRows } from "@/features/demo/hooks/use-paged-rows";
 import { QueryState } from "@/features/demo/components/query-state";
@@ -48,18 +49,18 @@ export function ProductsScreen() {
       >
         <label className="space-y-2 text-xs">
           <span className="block">{common("statusLabel")}</span>
-          <select
-            className={fieldClassName}
+          <SelectField
             value={status}
-            onChange={(event) => {
-              setStatus(event.target.value);
+            onValueChange={(value) => {
+              setStatus(value);
               paging.setPage(1);
             }}
-          >
-            <option value="all">{common("all")}</option>
-            <option value="active">{common("status.active")}</option>
-            <option value="inactive">{common("status.inactive")}</option>
-          </select>
+            options={[
+              { value: "all", label: common("all") },
+              { value: "active", label: common("status.active") },
+              { value: "inactive", label: common("status.inactive") },
+            ]}
+          />
         </label>
         <Button asChild>
           <Link href="/products/new">
@@ -97,7 +98,7 @@ export function ProductsScreen() {
               key: "price",
               label: t("price"),
               render: (product) =>
-                format.number(product.price, { style: "currency", currency: "USD" }),
+                format.number(product.price, { style: "currency", currency: defaultCurrency }),
             },
             { key: "stock", label: t("stock"), render: (product) => product.stock },
             {

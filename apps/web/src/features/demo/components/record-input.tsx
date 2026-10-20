@@ -2,20 +2,26 @@
 
 import type { FieldValues, UseFormReturn } from "react-hook-form";
 import { InputField, fieldClassName } from "@/components/ui/input-field";
+import { FormSelectField } from "@/components/ui/form-select-field";
 import { useValidationMessage } from "../hooks/use-validation-message";
 import type { RecordField } from "./record-form";
 
 export function RecordInput<T extends FieldValues>({
   form,
   field,
+  disabled,
 }: {
   form: UseFormReturn<T>;
   field: RecordField<T>;
+  disabled?: boolean;
 }) {
   const validationMessage = useValidationMessage();
   const id = `record-${field.name}`;
   const message = validationMessage(form.getFieldState(field.name, form.formState).error);
-  const registration = form.register(field.name, { valueAsNumber: field.kind === "number" });
+  const registration =
+    field.kind === "select"
+      ? undefined
+      : form.register(field.name, { valueAsNumber: field.kind === "number" });
   if (field.kind === "checkbox")
     return (
       <label htmlFor={id} className="flex min-h-11 items-center gap-3 text-xs">
@@ -30,19 +36,14 @@ export function RecordInput<T extends FieldValues>({
           {field.label}
         </label>
         {field.kind === "select" ? (
-          <select
+          <FormSelectField
+            control={form.control}
+            name={field.name}
             id={id}
-            {...registration}
-            className={fieldClassName}
-            aria-invalid={Boolean(message)}
+            options={field.options ?? []}
+            disabled={disabled}
             aria-describedby={message ? `${id}-error` : undefined}
-          >
-            {field.options?.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          />
         ) : (
           <textarea
             id={id}

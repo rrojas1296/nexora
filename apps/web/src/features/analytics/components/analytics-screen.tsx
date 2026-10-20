@@ -11,6 +11,8 @@ import { DashboardOrders } from "./dashboard-orders";
 import { DashboardAgent } from "./dashboard-agent";
 import { DashboardProducts } from "./dashboard-products";
 import { DashboardInbox } from "./dashboard-inbox";
+import { DashboardToolbar } from "./dashboard-toolbar";
+import { DashboardAttention } from "./dashboard-attention";
 
 export function AnalyticsScreen() {
   const query = useWorkspace();
@@ -34,23 +36,22 @@ export function AnalyticsScreen() {
       }}
     >
       {query.data && comparison ? (
-        <div className="space-y-4">
+        <div className="space-y-5">
+          <DashboardToolbar year={year} years={years} onYearChange={setYear} />
           <MetricCards comparison={comparison} conversations={query.data.conversations.length} />
-          <div className="grid items-start gap-4 xl:grid-cols-4">
-            <div className="min-w-0 space-y-4 xl:col-span-3">
-              <SalesSummary
-                comparison={comparison}
-                year={year}
-                years={years}
-                onYearChange={setYear}
-              />
-              <DashboardOrders workspace={query.data} orders={comparison.current.orders} />
+          <div className="grid items-start gap-5 xl:grid-cols-3">
+            <div className="min-w-0 xl:col-span-2">
+              <SalesSummary comparison={comparison} year={year} />
             </div>
-            <aside className="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-1">
+            <aside className="grid min-w-0 gap-5 md:grid-cols-2 xl:grid-cols-1">
+              <DashboardAttention workspace={query.data} />
               <DashboardAgent workspace={query.data} />
-              <DashboardProducts workspace={query.data} sales={comparison.current.sales} />
-              <DashboardInbox workspace={query.data} />
             </aside>
+          </div>
+          <DashboardOrders workspace={query.data} orders={comparison.current.orders} />
+          <div className="grid items-start gap-5 lg:grid-cols-2">
+            <DashboardProducts workspace={query.data} sales={comparison.current.sales} />
+            <DashboardInbox workspace={query.data} />
           </div>
         </div>
       ) : null}

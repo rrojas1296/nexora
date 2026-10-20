@@ -2,6 +2,7 @@
 
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import type {
   MonthlySalesComparison as SalesComparison,
   SalesMetric,
@@ -48,7 +49,7 @@ export function SalesComparisonChart({
                 metric === "revenue"
                   ? {
                       style: "currency",
-                      currency: "USD",
+                      currency: defaultCurrency,
                       notation: "compact",
                       maximumFractionDigits: 1,
                     }

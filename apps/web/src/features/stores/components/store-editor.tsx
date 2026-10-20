@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { currencies, storeInputSchema } from "@/features/demo/schemas/workspace-schema";
 import type { Store, StoreInput } from "@/features/demo/types/workspace";
 import { useWorkspaceMutation } from "@/features/demo/hooks/use-workspace";
@@ -16,7 +17,7 @@ export function StoreEditor({ store, onClose }: { store?: Store; onClose: () => 
     defaultValues: store ?? {
       name: "",
       address: "",
-      currency: "USD",
+      currency: defaultCurrency,
       timezone: "America/Mexico_City",
       active: true,
     },

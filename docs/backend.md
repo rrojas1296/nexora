@@ -2,7 +2,7 @@
 
 ## Estado implementado
 
-Base NestJS 12 con TypeScript strict, ESM y compilación mediante el ejecutable `tsc` de TypeScript 7. No hay autenticación real, repositorios, casos de uso ni endpoints de negocio. Los módulos de `auth`, `users`, `tenants`, `stores`, `products`, `orders`, `clients`, `conversations` y `agents` están registrados, pero vacíos de comportamiento.
+Base NestJS 12 con TypeScript strict, ESM y compilación mediante el ejecutable `tsc` de TypeScript 7. No hay autenticación real, repositorios, casos de uso ni endpoints de negocio. Los módulos de `auth`, `users`, `business`, `stores`, `products`, `orders`, `clients`, `conversations` y `agents` están registrados, pero vacíos de comportamiento.
 
 Se conserva el controlador original `GET /` → `Hello World!` como ejemplo del starter. No es un health check, no comprueba PostgreSQL y no acredita disponibilidad del SaaS. Las rutas futuras usarán `/api/v1`; la raíz del starter está excluida del prefijo.
 
@@ -27,6 +27,8 @@ apps/api/
       infrastructure/                 Adaptadores de puertos
       presentation/                   Controladores y contratos HTTP
 ```
+
+El concepto de negocio se llama `Business`, con módulo singular `src/modules/business/business.module.ts` (`BusinessModule`) y referencias `businessId`. Sigue siendo la unidad de aislamiento multi-tenant; las rutas de colecciones propuestas usan el plural `/businesses`. No hay endpoints nuevos por este renombrado.
 
 Las capas están reservadas mediante `.gitkeep`: **no contienen entidades, puertos, adaptadores ni controladores implementados**. Evitar implementaciones ficticias que simulen seguridad. Las dependencias futuras fluyen de presentation/infrastructure hacia application/domain; Prisma no debe importarse en domain o application. Inyectar adaptadores mediante tokens explícitos en cada módulo. `DatabaseModule` no es global: los futuros adaptadores deben importarlo expresamente.
 
@@ -75,16 +77,16 @@ Validar el esquema, generar tipos y compilar no conectan a una base ni verifican
 
 La propuesta usa JSON y `/api/v1`. Las entidades de base no se devolverán directamente: validar DTOs Zod, filtrar campos sensibles y serializar Decimal como string. Los identificadores de la futura API serán UUID, no los IDs cortos de las fixtures frontend.
 
-| Recurso                            | Operaciones propuestas                                                                                          |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `/auth/*`                          | Registro, login, refresh, logout, sesión actual y bootstrap CSRF. Ver [authentication.md](./authentication.md). |
-| `/tenants/:tenantId/stores`        | GET/POST colección; GET/PATCH `/:id`.                                                                           |
-| `/tenants/:tenantId/products`      | GET/POST colección; GET/PATCH/DELETE `/:id`, con protección del historial.                                      |
-| `/tenants/:tenantId/clients`       | GET/POST colección; GET/PATCH `/:id`; historial vinculado autorizado.                                           |
-| `/tenants/:tenantId/orders`        | GET/POST colección; GET/PATCH `/:id`; reglas de transición e idempotencia por diseñar.                          |
-| `/tenants/:tenantId/conversations` | GET colección/detalle; PATCH estado/asignación; GET/POST `/:id/messages`. No implica envío real.                |
-| `/tenants/:tenantId/agents`        | GET/POST colección; GET/PATCH `/:id`. Activación futura requiere integración real.                              |
-| `/tenants/:tenantId/reports/sales` | GET con rango UTC y tienda autorizada; agregaciones en servidor.                                                |
+| Recurso                                 | Operaciones propuestas                                                                                          |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `/auth/*`                               | Registro, login, refresh, logout, sesión actual y bootstrap CSRF. Ver [authentication.md](./authentication.md). |
+| `/businesses/:businessId/stores`        | GET/POST colección; GET/PATCH `/:id`.                                                                           |
+| `/businesses/:businessId/products`      | GET/POST colección; GET/PATCH/DELETE `/:id`, con protección del historial.                                      |
+| `/businesses/:businessId/clients`       | GET/POST colección; GET/PATCH `/:id`; historial vinculado autorizado.                                           |
+| `/businesses/:businessId/orders`        | GET/POST colección; GET/PATCH `/:id`; reglas de transición e idempotencia por diseñar.                          |
+| `/businesses/:businessId/conversations` | GET colección/detalle; PATCH estado/asignación; GET/POST `/:id/messages`. No implica envío real.                |
+| `/businesses/:businessId/agents`        | GET/POST colección; GET/PATCH `/:id`. Activación futura requiere integración real.                              |
+| `/businesses/:businessId/reports/sales` | GET con rango UTC y tienda autorizada; agregaciones en servidor.                                                |
 
 Listas previstas: `page`, `pageSize` (máximo 100), `search` y filtros tipados; respuesta `{ data: T[], pagination: { page, pageSize, total } }`. Detalle: `{ data: T }`; eliminación sin cuerpo: 204. Errores previstos `{ code, message, requestId?, details? }`, sin stack ni secretos; `details` solo errores de validación de campos, no datos privados. Estados 400/401/403/404/409/429 según validación, sesión, permisos, pertenencia, conflicto y límites. Nada de esto está expuesto todavía, ni existe un filtro global que garantice ese formato.
 

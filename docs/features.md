@@ -71,7 +71,7 @@ La fixture `apps/web/src/features/demo/mocks/monthly-orders-fixture.ts` añade 1
 - **Compradores**: clientes únicos con pedidos pagados o enviados dentro del periodo.
 - **Por atender (panel de agente)**: conversaciones asignadas al agente y no cerradas de toda la demo, independiente del año.
 - Rankings de productos/clientes: ingresos de pedidos pagados o enviados del periodo. Los productos muestran además unidades vendidas.
-- Todos los importes del catálogo y pedidos están en **USD**. Las fechas de pedidos, mensajes y reportes se muestran en **UTC**. La moneda/zona de cada tienda no convierte ni reinterpreta los datos históricos.
+- Todos los importes del catálogo y pedidos están en **PEN (sol peruano)**, la moneda predeterminada de la aplicación. Onboarding y tiendas ofrecen PEN, USD, EUR, MXN y COP; PEN se selecciona inicialmente. Los valores numéricos de las fixtures se conservan, sin conversión de divisas. Las fechas de pedidos, mensajes y reportes se muestran en **UTC**. La moneda/zona de cada tienda no convierte ni reinterpreta los datos históricos.
 - Los pedidos conservan sus líneas/precios aunque cambie el catálogo; cambiar estado recalcula las vistas sin pagos, envíos, impuestos ni ajustes de inventario.
 
 Se pueden crear/editar pedidos mock; no conversaciones nuevas. Tampoco hay eliminación de clientes/tiendas, inventario por tienda, IA generativa, mensajería externa, archivos, webhooks, suscripciones ni notificaciones reales. La exportación CSV de reportes es local y no conecta servicios externos. Activación, inicio de semana y notificaciones son valores de configuración simulados, sin efectos operativos.

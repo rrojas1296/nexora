@@ -12,7 +12,8 @@
 - `src/features/demo`: contratos Zod compartidos, fixtures enlazadas, servicio en memoria, hooks React Query, escenarios y primitivas de listas/formularios/diálogos.
 - `src/features/{analytics,conversations,agent,products,orders,clients,settings,stores,help}`: módulos funcionales frontend. Ver [features.md](./features.md).
 - `src/components/layout`: sidebar, header, navegación responsive y preferencias.
-- `src/components/ui`: botón con CVA y Slot de Radix e input con etiquetas, errores y descripciones asociadas. Configuración `components.json` para futuras incorporaciones shadcn; no es un catálogo completo.
+- Dashboard: barra común de año/alcance y enlace a reportes, las cuatro KPIs existentes sin cambios de cálculo, gráfica mensual con selector de métrica por botones, seguimiento operativo y agente, pedidos recientes de ancho completo y paneles amplios de productos/mensajes. Ventas/pedidos/productos siguen el año seleccionado; conversaciones y seguimiento usan toda la demo, con alcance explícito. No hay actividad externa ni nuevas APIs.
+- `src/components/ui`: botón con CVA y Slot de Radix, input con etiquetas/errores y Select de shadcn adaptado sobre `radix-ui`, dividido en un componente por archivo. `SelectField` recibe opciones, valor y `onValueChange`; `FormSelectField` integra Controller de React Hook Form, referencia de foco, blur y estado inválido. Los selectores de tema/idioma, filtros, dashboard y formularios usan esta base en lugar de `<select>` nativos escritos en las pantallas. Configuración `components.json` para futuras incorporaciones shadcn; no es un catálogo completo.
 - `src/lib`: utilidades, cliente Axios, configuración validada con Zod, normalización de errores y QueryClient.
 
 ## Idiomas
@@ -26,6 +27,10 @@ La configuración respeta un locale explícito (`localeOverride ?? await getRoot
 Referencias: [migración de next-intl a root params](https://next-intl.dev/blog/nextjs-root-params), [configuración de routing](https://next-intl.dev/docs/routing/setup) y [API de Next.js](https://nextjs.org/docs/app/api-reference/functions/next-root-params).
 
 Con `partialPrefetching`, los parámetros de URL que no son root params (como `module`) también deben resolverse bajo `Suspense`, incluso si están enumerados en `generateStaticParams`. `[module]/loading.tsx` proporciona ese límite alrededor de la página y sus rutas hijas, con un skeleton independiente de traducciones y sin incluir el shell del workspace. El `await params` de la página queda dentro del límite; añadir `Suspense` solo en su JSX después del `await` no lo cubre. La validación del shell compartido puede mostrar avisos en desarrollo que no bloquean el build. El selector conserva pathname, query y hash; las rutas desconocidas no se convierten en módulos válidos.
+
+## Moneda
+
+`src/lib/config/currency.ts` centraliza `defaultCurrency = "PEN"` y las opciones PEN/USD/EUR/MXN/COP. Onboarding y tiendas nuevas seleccionan PEN; las fixtures y los pedidos nuevos usan PEN, al igual que el catálogo, KPIs, gráficas y exportaciones de reportes. El formato monetario sigue el idioma activo mediante next-intl. Las monedas de tienda siguen siendo preferencias mock: no convierten importes ni cambian la moneda de los pedidos. No se han convertido valores numéricos ni datos persistidos; la demo continúa en memoria.
 
 ## Estado y API
 

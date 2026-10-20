@@ -2,12 +2,14 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { ScanLine } from "lucide-react";
+import { defaultCurrency } from "@/lib/config/currency";
 import type { getMetrics } from "@/features/demo/lib/metrics";
 
 export function ReportSummary({ metrics }: { metrics: ReturnType<typeof getMetrics> }) {
   const t = useTranslations("Reports");
   const format = useFormatter();
-  const money = (value: number) => format.number(value, { style: "currency", currency: "USD" });
+  const money = (value: number) =>
+    format.number(value, { style: "currency", currency: defaultCurrency });
   return (
     <section className="rounded-3xl border bg-card p-6">
       <div className="flex items-center gap-2 text-xs text-muted-foreground">

@@ -1,3 +1,4 @@
+import { defaultCurrency } from "@/lib/config/currency";
 import type { Workspace } from "../types/workspace";
 import { monthlyOrdersFixture } from "./monthly-orders-fixture";
 
@@ -24,7 +25,7 @@ const clientDefaults = {
   marketingConsent: false,
 };
 
-// Fictional, linked fixtures. Amounts for products/orders are always demo USD.
+// Fictional, linked fixtures. Amounts for products/orders use the demo default currency.
 export const workspaceFixture: Workspace = {
   products: [
     {
@@ -115,7 +116,7 @@ export const workspaceFixture: Workspace = {
       id: "s1",
       name: "Conversa Studio",
       address: "123 Demo Street",
-      currency: "USD",
+      currency: defaultCurrency,
       timezone: "America/New_York",
       active: true,
     },
@@ -123,7 +124,7 @@ export const workspaceFixture: Workspace = {
       id: "s2",
       name: "Conversa Norte",
       address: "456 Example Avenue",
-      currency: "USD",
+      currency: defaultCurrency,
       timezone: "America/Mexico_City",
       active: false,
     },
@@ -136,7 +137,7 @@ export const workspaceFixture: Workspace = {
       storeId: "s1",
       status: "shipped",
       createdAt: "2026-06-02T12:00:00Z",
-      currency: "USD",
+      currency: defaultCurrency,
       items: [{ productId: "p1", name: "Luna Tote", quantity: 2, unitPrice: 29 }],
     },
     {
@@ -145,7 +146,7 @@ export const workspaceFixture: Workspace = {
       storeId: "s1",
       status: "paid",
       createdAt: "2026-06-05T15:00:00Z",
-      currency: "USD",
+      currency: defaultCurrency,
       items: [
         { productId: "p2", name: "Terra Cup", quantity: 2, unitPrice: 18.5 },
         { productId: "p4", name: "Oliva Notebook", quantity: 1, unitPrice: 14 },
@@ -157,7 +158,7 @@ export const workspaceFixture: Workspace = {
       storeId: "s1",
       status: "pending",
       createdAt: "2026-06-08T09:00:00Z",
-      currency: "USD",
+      currency: defaultCurrency,
       items: [{ productId: "p3", name: "Aura Candle", quantity: 1, unitPrice: 24 }],
     },
     {
@@ -166,7 +167,7 @@ export const workspaceFixture: Workspace = {
       storeId: "s1",
       status: "paid",
       createdAt: "2026-06-09T17:00:00Z",
-      currency: "USD",
+      currency: defaultCurrency,
       items: [{ productId: "p4", name: "Oliva Notebook", quantity: 3, unitPrice: 14 }],
     },
     {
@@ -175,7 +176,7 @@ export const workspaceFixture: Workspace = {
       storeId: "s2",
       status: "cancelled",
       createdAt: "2026-06-10T10:00:00Z",
-      currency: "USD",
+      currency: defaultCurrency,
       items: [{ productId: "p1", name: "Luna Tote", quantity: 1, unitPrice: 29 }],
     },
     {
@@ -184,7 +185,7 @@ export const workspaceFixture: Workspace = {
       storeId: "s1",
       status: "paid",
       createdAt: "2026-06-12T16:00:00Z",
-      currency: "USD",
+      currency: defaultCurrency,
       items: [
         { productId: "p1", name: "Luna Tote", quantity: 1, unitPrice: 29 },
         { productId: "p2", name: "Terra Cup", quantity: 1, unitPrice: 18.5 },
@@ -196,7 +197,7 @@ export const workspaceFixture: Workspace = {
       storeId: "s1",
       status: "pending",
       createdAt: "2026-06-14T11:00:00Z",
-      currency: "USD",
+      currency: defaultCurrency,
       items: [{ productId: "p4", name: "Oliva Notebook", quantity: 2, unitPrice: 14 }],
     },
   ],

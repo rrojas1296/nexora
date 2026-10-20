@@ -1,7 +1,8 @@
 "use client";
 
-import { ArrowUpRight, Package } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { Link } from "@/i18n/navigation";
 import type { Order, Workspace } from "@/features/demo/types/workspace";
 import { getReportRows } from "../lib/report-metrics";
@@ -13,9 +14,12 @@ export function DashboardProducts({ workspace, sales }: { workspace: Workspace; 
     .toSorted((a, b) => b.quantity - a.quantity || b.revenue - a.revenue)
     .slice(0, 4);
   return (
-    <section className="rounded-3xl border bg-card p-4">
+    <section className="min-w-0 rounded-3xl border bg-card p-5 sm:p-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xs font-medium">{t("topProducts")}</h2>
+        <div>
+          <h2 className="text-sm font-semibold">{t("topProducts")}</h2>
+          <p className="mt-1 text-xs text-muted-foreground">{t("productRanking")}</p>
+        </div>
         <Link
           href="/products"
           aria-label={t("viewProducts")}
@@ -24,33 +28,36 @@ export function DashboardProducts({ workspace, sales }: { workspace: Workspace; 
           <ArrowUpRight className="size-4" aria-hidden="true" />
         </Link>
       </div>
-      <ul className="mt-2 space-y-3">
-        {products.map((product) => (
+      <ol className="mt-5 divide-y divide-border">
+        {products.map((product, index) => (
           <li key={product.id}>
             <Link
               href={`/products/${product.id}/edit`}
-              className="flex items-center gap-2 rounded-xl py-1 hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
+              className="flex items-center gap-3 rounded-xl py-4 hover:bg-muted/40 focus-visible:outline-2 focus-visible:outline-ring"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-accent text-accent-foreground">
-                <Package className="size-4" aria-hidden="true" />
+              <span
+                aria-hidden="true"
+                className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-secondary text-sm font-medium text-muted-foreground tabular-nums"
+              >
+                {format.number(index + 1, { minimumIntegerDigits: 2 })}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs">{product.name}</span>
+                <span className="block truncate text-sm font-medium">{product.name}</span>
                 <span className="mt-1 block text-xs text-muted-foreground">
                   {t("unitsSold", { count: product.quantity })}
                 </span>
               </span>
-              <span className="text-xs font-medium tabular-nums">
+              <span className="shrink-0 text-sm font-medium tabular-nums">
                 {format.number(product.revenue, {
                   style: "currency",
-                  currency: "USD",
+                  currency: defaultCurrency,
                   maximumFractionDigits: 0,
                 })}
               </span>
             </Link>
           </li>
         ))}
-      </ul>
+      </ol>
       <p className="mt-3 text-xs leading-5 text-muted-foreground">
         {products.length ? t("productsScope") : t("noProducts")}
       </p>

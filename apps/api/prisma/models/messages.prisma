@@ -13,15 +13,15 @@ enum MessageStatus {
 
 model Message {
   id             String           @id @default(uuid()) @db.Uuid
-  tenantId       String           @db.Uuid
+  businessId     String           @db.Uuid
   conversationId String           @db.Uuid
   direction      MessageDirection
   status         MessageStatus    @default(PENDING)
   body           String           @db.Text
   createdAt      DateTime         @default(now()) @db.Timestamptz(3)
-  tenant         Tenant           @relation(fields: [tenantId], references: [id], onDelete: Restrict)
-  conversation   Conversation     @relation(fields: [tenantId, conversationId], references: [tenantId, id], onDelete: Restrict)
+  business       Business         @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  conversation   Conversation     @relation(fields: [businessId, conversationId], references: [businessId, id], onDelete: Restrict)
 
-  @@unique([tenantId, id])
-  @@index([tenantId, conversationId, createdAt])
+  @@unique([businessId, id])
+  @@index([businessId, conversationId, createdAt])
 }

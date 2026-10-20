@@ -3,7 +3,7 @@
 import { useIsMutating, useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { fieldClassName } from "@/components/ui/input-field";
+import { SelectField } from "@/components/ui/select-field";
 import { useDemoScenarioStore } from "../stores/demo-scenario-store";
 import { resetMockWorkspace } from "../services/workspace-service";
 import { workspaceQueryKey } from "../hooks/use-workspace";
@@ -27,22 +27,18 @@ export function DemoToolbar() {
         <label className="text-xs" htmlFor="demo-scenario">
           {t("scenario")}
         </label>
-        <select
+        <SelectField
           id="demo-scenario"
-          className={`${fieldClassName} w-auto py-1.5 text-xs`}
+          size="sm"
+          className="w-auto text-xs"
           value={scenario}
           disabled={busy}
-          onChange={(event) => {
-            const next = scenarios.find((value) => value === event.target.value);
+          onValueChange={(value) => {
+            const next = scenarios.find((scenario) => scenario === value);
             if (next) setScenario(next);
           }}
-        >
-          {scenarios.map((value) => (
-            <option key={value} value={value}>
-              {t(`scenarios.${value}`)}
-            </option>
-          ))}
-        </select>
+          options={scenarios.map((value) => ({ value, label: t(`scenarios.${value}`) }))}
+        />
         <Button variant="ghost" size="sm" disabled={busy} onClick={() => setConfirmReset(true)}>
           {t("reset")}
         </Button>

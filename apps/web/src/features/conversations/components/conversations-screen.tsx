@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
-import { fieldClassName } from "@/components/ui/input-field";
+import { SelectField } from "@/components/ui/select-field";
 import { useWorkspace } from "@/features/demo/hooks/use-workspace";
 import { conversationStatuses } from "@/features/demo/schemas/workspace-schema";
 import { QueryState } from "@/features/demo/components/query-state";
@@ -33,18 +33,14 @@ export function ConversationsScreen() {
       <ListToolbar search={search} onSearch={setSearch} count={conversations.length}>
         <label className="space-y-2 text-xs">
           <span className="block">{common("statusLabel")}</span>
-          <select
-            className={fieldClassName}
+          <SelectField
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
-          >
-            <option value="all">{common("all")}</option>
-            {conversationStatuses.map((value) => (
-              <option key={value} value={value}>
-                {common(`status.${value}`)}
-              </option>
-            ))}
-          </select>
+            onValueChange={setStatus}
+            options={[
+              { value: "all", label: common("all") },
+              ...conversationStatuses.map((value) => ({ value, label: common(`status.${value}`) })),
+            ]}
+          />
         </label>
       </ListToolbar>
       <QueryState

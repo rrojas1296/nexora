@@ -4,7 +4,8 @@ import type { UseFormReturn } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { InputField, fieldClassName } from "@/components/ui/input-field";
+import { InputField } from "@/components/ui/input-field";
+import { FormSelectField } from "@/components/ui/form-select-field";
 import type { Product } from "@/features/demo/types/workspace";
 import { useValidationMessage } from "@/features/demo/hooks/use-validation-message";
 import type { OrderDraft } from "../schemas/order-draft-schema";
@@ -15,12 +16,14 @@ export function OrderLineField({
   index,
   onRemove,
   canRemove,
+  disabled,
 }: {
   form: UseFormReturn<OrderDraft>;
   products: Product[];
   index: number;
   onRemove: () => void;
   canRemove: boolean;
+  disabled?: boolean;
 }) {
   const t = useTranslations("Orders");
   const common = useTranslations("Demo");
@@ -36,26 +39,21 @@ export function OrderLineField({
         <label htmlFor={`${id}-product`} className="block text-xs font-medium">
           {t("product")}
         </label>
-        <select
+        <FormSelectField
+          control={form.control}
+          name={`items.${index}.productId`}
           id={`${id}-product`}
-          className={fieldClassName}
-          {...form.register(`items.${index}.productId`, {
-            onChange: (event) => {
-              const product = products.find((row) => row.id === event.target.value);
-              if (product)
-                form.setValue(`items.${index}.unitPrice`, product.price, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                });
-            },
-          })}
-        >
-          {products.map((row) => (
-            <option key={row.id} value={row.id}>
-              {row.name} · {row.sku}
-            </option>
-          ))}
-        </select>
+          disabled={disabled}
+          options={products.map((row) => ({ value: row.id, label: `${row.name} · ${row.sku}` }))}
+          onValueChange={(value) => {
+            const product = products.find((row) => row.id === value);
+            if (product)
+              form.setValue(`items.${index}.unitPrice`, product.price, {
+                shouldDirty: true,
+                shouldValidate: true,
+              });
+          }}
+        />
       </div>
       <InputField
         id={`${id}-quantity`}

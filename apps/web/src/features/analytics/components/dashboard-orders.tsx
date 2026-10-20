@@ -13,7 +13,7 @@ export function DashboardOrders({ workspace, orders }: { workspace: Workspace; o
   const recent = orders.toSorted((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 5);
   return (
     <section className="min-w-0 overflow-hidden rounded-3xl border bg-card">
-      <div className="flex items-center justify-between gap-3 px-5 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-5 sm:px-6">
         <div>
           <h2 className="text-sm font-semibold">{t("recentOrders")}</h2>
           <p className="mt-1 text-xs text-muted-foreground">{t("ordersHint")}</p>
@@ -27,15 +27,17 @@ export function DashboardOrders({ workspace, orders }: { workspace: Workspace; o
         </Link>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-144 text-start text-xs">
+        <table className="w-full min-w-192 text-start text-sm">
           <caption className="sr-only">{t("recentOrders")}</caption>
-          <thead className="border-y bg-background/40 text-muted-foreground">
+          <thead className="border-y bg-muted/30 text-xs text-muted-foreground">
             <tr>
-              {(["order", "client", "product", "total", "status"] as const).map((key) => (
-                <th key={key} scope="col" className="px-5 py-3 text-start font-normal">
-                  {t(key)}
-                </th>
-              ))}
+              {(["order", "client", "product", "orderDate", "total", "status"] as const).map(
+                (key) => (
+                  <th key={key} scope="col" className="px-5 py-3 text-start font-normal">
+                    {t(key)}
+                  </th>
+                ),
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40">
@@ -70,6 +72,16 @@ export function DashboardOrders({ workspace, orders }: { workspace: Workspace; o
                         {t("moreItems", { count: order.items.length - 1 })}
                       </span>
                     ) : null}
+                  </td>
+                  <td className="whitespace-nowrap px-5 py-4 text-xs text-muted-foreground">
+                    <time dateTime={order.createdAt}>
+                      {format.dateTime(new Date(order.createdAt), {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        timeZone: "UTC",
+                      })}
+                    </time>
                   </td>
                   <td className="whitespace-nowrap px-5 py-4 font-medium tabular-nums">
                     {format.number(orderTotal(order), {

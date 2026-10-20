@@ -54,7 +54,7 @@ export function RecordForm<T extends FieldValues>({
                 </h2>
               ) : null}
               <div className={columns && field.kind === "textarea" ? "sm:col-span-2" : undefined}>
-                <RecordInput form={form} field={field} />
+                <RecordInput form={form} field={field} disabled={pending || readOnly} />
               </div>
             </Fragment>
           ))}

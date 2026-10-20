@@ -1,13 +1,14 @@
 "use client";
 
 import { create } from "zustand";
+import { defaultCurrency } from "@/lib/config/currency";
 import type { OnboardingValues } from "../schemas/onboarding-schema";
 
 export const initialOnboardingDraft: OnboardingValues = {
   businessName: "",
   businessDescription: "",
   storeName: "",
-  currency: "USD",
+  currency: defaultCurrency,
   timezone: "America/Mexico_City",
   openingTime: "09:00",
   closingTime: "18:00",

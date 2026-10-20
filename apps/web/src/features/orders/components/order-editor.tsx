@@ -4,8 +4,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
 import { useFormatter, useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
+import { defaultCurrency } from "@/lib/config/currency";
 import { Button } from "@/components/ui/button";
-import { fieldClassName } from "@/components/ui/input-field";
+import { FormSelectField } from "@/components/ui/form-select-field";
 import { Link } from "@/i18n/navigation";
 import { orderStatuses } from "@/features/demo/schemas/workspace-schema";
 import { useWorkspaceMutation } from "@/features/demo/hooks/use-workspace";
@@ -74,7 +75,7 @@ export function OrderEditor({
               id: order?.id,
               input: {
                 ...values,
-                currency: "USD",
+                currency: defaultCurrency,
                 createdAt: order?.createdAt ?? new Date().toISOString(),
                 items: values.items.map((item) => ({
                   ...item,
@@ -98,37 +99,40 @@ export function OrderEditor({
             <label htmlFor="order-client" className="block text-xs font-medium">
               {t("client")}
             </label>
-            <select id="order-client" className={fieldClassName} {...form.register("clientId")}>
-              {workspace.clients.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
+            <FormSelectField
+              control={form.control}
+              name="clientId"
+              id="order-client"
+              disabled={mutation.isPending}
+              options={workspace.clients.map((row) => ({ value: row.id, label: row.name }))}
+            />
           </div>
           <div className="space-y-2">
             <label htmlFor="order-store" className="block text-xs font-medium">
               {t("store")}
             </label>
-            <select id="order-store" className={fieldClassName} {...form.register("storeId")}>
-              {workspace.stores.map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
+            <FormSelectField
+              control={form.control}
+              name="storeId"
+              id="order-store"
+              disabled={mutation.isPending}
+              options={workspace.stores.map((row) => ({ value: row.id, label: row.name }))}
+            />
           </div>
           <div className="space-y-2">
             <label htmlFor="order-status" className="block text-xs font-medium">
               {common("statusLabel")}
             </label>
-            <select id="order-status" className={fieldClassName} {...form.register("status")}>
-              {orderStatuses.map((status) => (
-                <option key={status} value={status}>
-                  {common(`status.${status}`)}
-                </option>
-              ))}
-            </select>
+            <FormSelectField
+              control={form.control}
+              name="status"
+              id="order-status"
+              disabled={mutation.isPending}
+              options={orderStatuses.map((status) => ({
+                value: status,
+                label: common(`status.${status}`),
+              }))}
+            />
           </div>
         </div>
         <h2 className="border-b pb-3 text-base font-medium">{t("items")}</h2>
@@ -141,6 +145,7 @@ export function OrderEditor({
               index={index}
               onRemove={() => remove(index)}
               canRemove={fields.length > 1}
+              disabled={mutation.isPending}
             />
           ))}
         </div>
@@ -151,7 +156,7 @@ export function OrderEditor({
         <div className="flex items-center justify-between border-t pt-5">
           <span className="text-sm text-muted-foreground">{t("total")}</span>
           <output className="text-2xl tabular-nums">
-            {format.number(total, { style: "currency", currency: "USD" })}
+            {format.number(total, { style: "currency", currency: defaultCurrency })}
           </output>
         </div>
         <p className="text-xs leading-6 text-muted-foreground">{t("editorHint")}</p>

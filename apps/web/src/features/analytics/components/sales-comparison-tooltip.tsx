@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import type {
   MonthlySalesComparison as SalesComparison,
   SalesMetric,
@@ -37,7 +38,7 @@ export function SalesComparisonTooltip({
             {format.number(
               row[period],
               metric === "revenue"
-                ? { style: "currency", currency: "USD" }
+                ? { style: "currency", currency: defaultCurrency }
                 : { maximumFractionDigits: 0 },
             )}{" "}
             · {dashboard(metric === "revenue" ? "metricRevenue" : "metricOrders")}

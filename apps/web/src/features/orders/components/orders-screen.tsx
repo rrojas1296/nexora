@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { ResourceKpis } from "@/features/demo/components/resource-kpis";
 import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { fieldClassName } from "@/components/ui/input-field";
+import { SelectField } from "@/components/ui/select-field";
 import { useWorkspace } from "@/features/demo/hooks/use-workspace";
 import { usePagedRows } from "@/features/demo/hooks/use-paged-rows";
 import { orderStatuses } from "@/features/demo/schemas/workspace-schema";
@@ -54,39 +54,31 @@ export function OrdersScreen() {
       >
         <label className="space-y-2 text-xs">
           <span className="block">{common("statusLabel")}</span>
-          <select
-            className={fieldClassName}
+          <SelectField
             value={status}
-            onChange={(event) => {
-              setStatus(event.target.value);
+            onValueChange={(value) => {
+              setStatus(value);
               paging.setPage(1);
             }}
-          >
-            <option value="all">{common("all")}</option>
-            {orderStatuses.map((value) => (
-              <option key={value} value={value}>
-                {common(`status.${value}`)}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "all", label: common("all") },
+              ...orderStatuses.map((value) => ({ value, label: common(`status.${value}`) })),
+            ]}
+          />
         </label>
         <label className="space-y-2 text-xs">
           <span className="block">{t("store")}</span>
-          <select
-            className={fieldClassName}
+          <SelectField
             value={store}
-            onChange={(event) => {
-              setStore(event.target.value);
+            onValueChange={(value) => {
+              setStore(value);
               paging.setPage(1);
             }}
-          >
-            <option value="all">{common("all")}</option>
-            {query.data?.stores.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "all", label: common("all") },
+              ...(query.data?.stores ?? []).map((item) => ({ value: item.id, label: item.name })),
+            ]}
+          />
         </label>
         <Button asChild>
           <Link href="/orders/new">

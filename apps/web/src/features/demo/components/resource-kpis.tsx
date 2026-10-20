@@ -2,6 +2,7 @@
 
 import { useFormatter, useTranslations } from "next-intl";
 import { ArrowUpRight } from "lucide-react";
+import { defaultCurrency } from "@/lib/config/currency";
 import { isSale, orderTotal } from "../lib/metrics";
 import type { Workspace } from "../types/workspace";
 
@@ -18,7 +19,8 @@ export function ResourceKpis({
   const orders = workspace?.orders ?? [];
   const clients = workspace?.clients ?? [];
   const sales = orders.filter(isSale);
-  const money = (value: number) => format.number(value, { style: "currency", currency: "USD" });
+  const money = (value: number) =>
+    format.number(value, { style: "currency", currency: defaultCurrency });
   const cards = {
     products: [
       { key: "catalog", value: format.number(products.length) },

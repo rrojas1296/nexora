@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useFormatter, useTranslations } from "next-intl";
+import { defaultCurrency } from "@/lib/config/currency";
 import { orderStatuses } from "@/features/demo/schemas/workspace-schema";
 import type { Order, Workspace } from "@/features/demo/types/workspace";
 import { StatusBadge } from "@/features/demo/components/status-badge";
@@ -54,7 +55,7 @@ export function ReportCharts({
             <div key={row.id} className="flex justify-between gap-4 py-3 text-xs">
               <dt>{row.name}</dt>
               <dd className="tabular-nums">
-                {format.number(row.revenue, { style: "currency", currency: "USD" })}
+                {format.number(row.revenue, { style: "currency", currency: defaultCurrency })}
               </dd>
             </div>
           ))}

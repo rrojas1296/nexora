@@ -67,6 +67,7 @@ pnpm --filter @whatsapp/api db:validate
 - [Design system](./docs/design-system.md)
 - [Backend y contratos REST futuros](./docs/backend.md)
 - [Autenticación y seguridad futura](./docs/authentication.md)
+- [Plan de implementación del login real](./docs/login-plan.md)
 - [Base de datos y migraciones futuras](./docs/database.md)
 - [Reglas de trabajo](./AGENTS.md)
 

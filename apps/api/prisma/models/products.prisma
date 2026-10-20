@@ -1,6 +1,6 @@
 model Product {
   id                String      @id @default(uuid()) @db.Uuid
-  tenantId          String      @db.Uuid
+  businessId        String      @db.Uuid
   name              String
   sku               String
   description       String      @default("") @db.Text
@@ -11,17 +11,17 @@ model Product {
   price             Decimal     @db.Decimal(18, 2)
   cost              Decimal     @default(0) @db.Decimal(18, 2)
   compareAtPrice    Decimal?    @db.Decimal(18, 2)
-  currency          String      @default("USD") @db.Char(3)
+  currency          String      @default("PEN") @db.Char(3)
   stock             Int         @default(0)
   lowStockThreshold Int         @default(0)
   weightGrams       Int         @default(0)
   active            Boolean     @default(true)
   createdAt         DateTime    @default(now()) @db.Timestamptz(3)
   updatedAt         DateTime    @updatedAt @db.Timestamptz(3)
-  tenant            Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  business          Business    @relation(fields: [businessId], references: [id], onDelete: Restrict)
   orderItems        OrderItem[]
 
-  @@unique([tenantId, id])
-  @@unique([tenantId, sku])
-  @@index([tenantId, active])
+  @@unique([businessId, id])
+  @@unique([businessId, sku])
+  @@index([businessId, active])
 }

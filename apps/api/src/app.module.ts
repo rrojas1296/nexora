@@ -4,7 +4,7 @@ import { validateEnvironment } from "./config/environment.js";
 import { DatabaseModule } from "./infrastructure/database/database.module.js";
 import { AuthModule } from "./modules/auth/auth.module.js";
 import { UsersModule } from "./modules/users/users.module.js";
-import { TenantsModule } from "./modules/tenants/tenants.module.js";
+import { BusinessModule } from "./modules/business/business.module.js";
 import { StoresModule } from "./modules/stores/stores.module.js";
 import { ProductsModule } from "./modules/products/products.module.js";
 import { OrdersModule } from "./modules/orders/orders.module.js";
@@ -25,7 +25,7 @@ import { AppService } from "./app.service.js";
     DatabaseModule,
     AuthModule,
     UsersModule,
-    TenantsModule,
+    BusinessModule,
     StoresModule,
     ProductsModule,
     OrdersModule,

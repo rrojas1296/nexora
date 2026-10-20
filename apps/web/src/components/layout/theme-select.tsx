@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { SelectField } from "@/components/ui/select-field";
 import { isThemePreference, themePreferences } from "@/lib/theme/theme-config";
 import { useThemeStore } from "@/stores/theme-store";
 
@@ -9,21 +10,15 @@ export function ThemeSelect() {
   const preference = useThemeStore((state) => state.preference);
   const setPreference = useThemeStore((state) => state.setPreference);
   return (
-    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-      <span className="sr-only">{t("label")}</span>
-      <select
-        value={preference}
-        onChange={(event) => {
-          if (isThemePreference(event.target.value)) setPreference(event.target.value);
-        }}
-        className="h-8 max-w-28 rounded-full border border-border bg-card/60 px-3 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      >
-        {themePreferences.map((value) => (
-          <option key={value} value={value}>
-            {t(value)}
-          </option>
-        ))}
-      </select>
-    </label>
+    <SelectField
+      aria-label={t("label")}
+      value={preference}
+      onValueChange={(value) => {
+        if (isThemePreference(value)) setPreference(value);
+      }}
+      size="sm"
+      className="w-fit max-w-36 rounded-full bg-card/60 text-xs"
+      options={themePreferences.map((value) => ({ value, label: t(value) }))}
+    />
   );
 }

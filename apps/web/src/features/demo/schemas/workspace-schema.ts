@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { currencies, defaultCurrency } from "@/lib/config/currency";
+
+export { currencies } from "@/lib/config/currency";
 
 const id = z.string().min(1);
 const name = z.string().trim().min(2, "name").max(100, "name");
@@ -12,7 +15,6 @@ const money = z
 const inventory = z.number({ error: "stock" }).int("stock").min(0, "stock").max(1000000, "stock");
 export const clientSegments = ["retail", "wholesale", "vip"] as const;
 export const clientCountries = ["US", "MX", "CO", "ES", "AR", "CL", "PE"] as const;
-export const currencies = ["USD", "EUR", "MXN", "COP"] as const;
 export const orderStatuses = ["pending", "paid", "shipped", "cancelled"] as const;
 export const conversationStatuses = ["open", "pending", "closed"] as const;
 export const tones = ["friendly", "professional", "concise"] as const;
@@ -76,7 +78,7 @@ export const orderInputSchema = z.object({
   storeId: id,
   status: z.enum(orderStatuses),
   createdAt: z.iso.datetime(),
-  currency: z.literal("USD"),
+  currency: z.literal(defaultCurrency),
   items: z.array(orderItemInputSchema).min(1, "required").max(100, "text"),
 });
 export const orderSchema = orderInputSchema.extend({ id });

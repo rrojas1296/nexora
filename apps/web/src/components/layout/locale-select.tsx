@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { hasLocale, useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
+import { SelectField } from "@/components/ui/select-field";
 
 export function LocaleSelect() {
   const locale = useLocale();
@@ -13,14 +14,13 @@ export function LocaleSelect() {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   return (
-    <label className="flex items-center gap-2 text-xs text-muted-foreground">
-      <span className="sr-only">{t("language")}</span>
-      <select
+    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+      <SelectField
+        aria-label={t("language")}
         value={locale}
         disabled={pending}
         aria-busy={pending}
-        onChange={(event) => {
-          const nextLocale = event.target.value;
+        onValueChange={(nextLocale) => {
           if (hasLocale(routing.locales, nextLocale)) {
             const search = window.location.search;
             const hash = window.location.hash;
@@ -29,17 +29,13 @@ export function LocaleSelect() {
             );
           }
         }}
-        className="h-8 max-w-28 rounded-full border border-border bg-card/60 px-3 text-xs text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-      >
-        {routing.locales.map((value) => (
-          <option key={value} value={value}>
-            {labels(value)}
-          </option>
-        ))}
-      </select>
+        size="sm"
+        className="w-fit max-w-36 rounded-full bg-card/60 text-xs"
+        options={routing.locales.map((value) => ({ value, label: labels(value) }))}
+      />
       <output className="sr-only" aria-live="polite">
         {pending ? labels("changing") : ""}
       </output>
-    </label>
+    </div>
   );
 }

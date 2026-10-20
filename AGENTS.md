@@ -47,6 +47,7 @@ Oxc exclusivamente: no añadir ESLint, Prettier ni Biome. Configuración central
 
 - Clean/Hexagonal Architecture por módulo: domain, application, infrastructure y presentation.
 - Prisma 7.10.1 estable con adaptador PostgreSQL, esquema tenant y cliente generado antes de build/typecheck/dev. No conectar, migrar ni sembrar datos automáticamente. Ver `docs/backend.md` y `docs/database.md`.
+- El negocio del backend se llama `Business`: módulo singular `business`/`BusinessModule`, archivo Prisma `business.prisma`, relación `business` y clave `businessId`. «Multi-tenant» sigue describiendo la arquitectura; las rutas REST propuestas usan `/businesses/:businessId`.
 - Las FK compuestas tenant no sustituyen autorización ni filtros: los futuros repositorios deben aislar tenants; nunca confiar en un tenant enviado por el cliente sin autorización. Las capas domain/application permanecen sin Nest ni Prisma.
 - Futura autenticación: jose, argon2, cookies HttpOnly, Secure en producción, refresh rotativo revocable, CSRF y CORS con credenciales y orígenes explícitos. Nunca JWT en localStorage.
 - Variables independientes: web `.env.local`, api `.env`, ejemplos sin secretos. Solo valores públicos bajo `NEXT_PUBLIC_`.
