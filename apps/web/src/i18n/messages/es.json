@@ -1,0 +1,188 @@
+{
+  "Common": {
+    "brand": "Conversa",
+    "demo": "Vista de demostración",
+    "skip": "Saltar al contenido",
+    "pending": "Próximamente",
+    "workspace": "Mi negocio",
+    "language": "Idioma",
+    "appearance": "Apariencia"
+  },
+  "Nav": {
+    "workspace": "Espacio de trabajo",
+    "administration": "Administración",
+    "dashboard": "Dashboard",
+    "conversations": "Conversaciones",
+    "agent": "Agente AI",
+    "products": "Productos",
+    "orders": "Órdenes",
+    "clients": "Clientes",
+    "reports": "Reportes",
+    "settings": "Configuración",
+    "stores": "Tiendas",
+    "help": "Centro de ayuda"
+  },
+  "Shell": {
+    "navigation": "Navegación principal",
+    "openMenu": "Abrir navegación",
+    "closeMenu": "Cerrar navegación",
+    "collapse": "Contraer sidebar",
+    "expand": "Expandir sidebar",
+    "menuDescription": "Accede a las herramientas de tu negocio.",
+    "workspaceLabel": "Espacio de trabajo de demostración",
+    "plan": "Entorno de demostración",
+    "connection": "WhatsApp sin conectar",
+    "connectionDescription": "El onboarding incluye una vista previa; no conecta un número real.",
+    "profile": "Cuenta de demostración",
+    "profileRole": "Administración",
+    "demoNotice": "Estás explorando la interfaz. No hay datos de clientes ni conexiones reales."
+  },
+  "Theme": { "label": "Tema", "light": "Claro", "dark": "Oscuro", "system": "Sistema" },
+  "Locale": { "es": "Español", "en": "English", "changing": "Cambiando idioma…" },
+  "Workspace": {
+    "title": "Tu espacio de ventas",
+    "flowCaption": "Así se conectarán tus conversaciones, tu agente y tu catálogo.",
+    "nextStage": "Siguiente etapa",
+    "setupStage": "Acceso y configuración inicial",
+    "description": "Una sola vista para tus conversaciones, tu catálogo y tu equipo de IA.",
+    "stage": "Preparando tu negocio",
+    "welcome": "Todo empieza con una conversación",
+    "welcomeDescription": "Un espacio para atender, recomendar y vender por WhatsApp. Explora la estructura de tu negocio mientras preparamos las funciones comerciales.",
+    "modulesTitle": "Tu operación, conectada",
+    "modulesDescription": "Cada herramienta tendrá su propio espacio, sin perder el contexto del cliente.",
+    "conversationsDescription": "Mensajes, contexto y seguimiento en un mismo lugar.",
+    "agentDescription": "Instrucciones y personalidad para tu agente de ventas.",
+    "productsDescription": "Un catálogo listo para acompañar cada conversación.",
+    "setupTitle": "Qué sigue",
+    "setupDescription": "El próximo paso incorporará acceso y un asistente de configuración para tu negocio, tienda, agente y conexión a WhatsApp.",
+    "preferencesTitle": "Hazlo tuyo",
+    "preferencesDescription": "Ya puedes cambiar el idioma y elegir tema claro, oscuro o el de tu sistema desde el header.",
+    "statusTitle": "Estado del espacio",
+    "interface": "Interfaz base",
+    "ready": "Lista",
+    "business": "Funciones comerciales",
+    "planned": "En preparación",
+    "whatsapp": "Conexión WhatsApp",
+    "disconnected": "Sin conectar",
+    "backend": "Backend",
+    "notConnected": "No conectado"
+  },
+  "Auth": {
+    "introTitle": "Tu próxima venta empieza con una conversación.",
+    "introDescription": "Prepara tu negocio, define tu agente y explora cómo atenderás a tus clientes por WhatsApp.",
+    "explore": "Explorar la demo",
+    "loginTitle": "Vuelve a tu espacio",
+    "loginDescription": "Accede a la experiencia de demostración con datos ficticios.",
+    "registerTitle": "Prepara tu negocio",
+    "registerDescription": "Crea un perfil temporal para explorar la configuración inicial.",
+    "name": "Nombre",
+    "email": "Email",
+    "password": "Contraseña ficticia",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordHint": "Entre 8 y 128 caracteres. No uses una contraseña real.",
+    "loginAction": "Entrar a la demo",
+    "registerAction": "Crear perfil demo",
+    "pending": "Preparando tu espacio…",
+    "noAccount": "¿Primera vez por aquí?",
+    "hasAccount": "¿Ya conoces la demo?",
+    "demoWarning": "Solo una simulación: cualquier email válido y contraseña de 8 a 128 caracteres permiten entrar. No uses credenciales reales. No se crean cuentas ni se guardan contraseñas; el perfil temporal desaparece al recargar.",
+    "errorHint": "Para simular un error de acceso o un email ocupado, usa error@example.com.",
+    "demoAccount": "Perfil demo · Ver configuración",
+    "logout": "Salir de la demo y borrar progreso",
+    "validation": {
+      "email": "Introduce un email válido de hasta 254 caracteres.",
+      "password": "Usa una contraseña ficticia de entre 8 y 128 caracteres.",
+      "name": "Introduce un nombre de entre 2 y 80 caracteres.",
+      "confirm": "Las contraseñas deben coincidir."
+    },
+    "errors": {
+      "rejected": "Acceso rechazado (simulado). Usa otro email para continuar.",
+      "emailTaken": "Este email está ocupado en la simulación. Usa otro para continuar.",
+      "unexpected": "No pudimos preparar el perfil demo. Inténtalo de nuevo."
+    }
+  },
+  "Onboarding": {
+    "title": "Dale forma a tu negocio",
+    "description": "Cinco pasos para explorar tu espacio de ventas. Todo lo que configures aquí es temporal y de demostración.",
+    "dashboard": "Volver al dashboard",
+    "progress": "Paso {step} de {total}",
+    "progressLabel": "Progreso de configuración",
+    "temporary": "El progreso se conserva mientras navegas, incluso si cambias de idioma. Se pierde al recargar o salir de la demo.",
+    "steps": {
+      "business": {
+        "title": "Tu negocio",
+        "description": "Cuéntanos qué vendes y qué hace especial a tu negocio."
+      },
+      "store": {
+        "title": "Tienda y horarios",
+        "description": "Define la moneda, la zona horaria y un horario diario de atención."
+      },
+      "agent": {
+        "title": "Tu agente AI",
+        "description": "Elige cómo se presentará y qué instrucciones seguirá en la demostración."
+      },
+      "whatsapp": {
+        "title": "WhatsApp",
+        "description": "Explora la conexión visual. Puedes omitir el número y continuar sin conectar nada."
+      },
+      "summary": {
+        "title": "Revisa y finaliza",
+        "description": "Comprueba los datos antes de completar la configuración de demostración."
+      }
+    },
+    "fields": {
+      "businessName": "Nombre del negocio",
+      "businessDescription": "Qué vendes y a quién",
+      "storeName": "Nombre de la tienda",
+      "currency": "Moneda",
+      "timezone": "Zona horaria",
+      "openingTime": "Apertura",
+      "closingTime": "Cierre",
+      "agentName": "Nombre del agente",
+      "agentTone": "Tono de conversación",
+      "agentInstructions": "Instrucciones iniciales",
+      "whatsappPhone": "Número de ejemplo (opcional)",
+      "whatsappPreview": "Vista previa"
+    },
+    "tones": { "friendly": "Cercano", "professional": "Profesional", "concise": "Directo" },
+    "validation": {
+      "name": "Escribe entre 2 y 80 caracteres.",
+      "description": "Describe tu negocio con entre 10 y 500 caracteres.",
+      "instructions": "Escribe entre 20 y 2000 caracteres de instrucciones.",
+      "required": "Selecciona una opción válida.",
+      "phone": "Usa un número internacional: + y entre 8 y 15 dígitos, sin espacios.",
+      "hours": "Introduce horas válidas; el cierre debe ser posterior a la apertura."
+    },
+    "phoneHint": "Usa un número ficticio, por ejemplo +12025550123. No se enviarán mensajes.",
+    "hoursHint": "Horario diario, sin turnos que crucen medianoche.",
+    "whatsappTitle": "Vista previa de conexión",
+    "whatsappDescription": "No se abre Meta, no se escanea un QR y no se verifica ningún número. Este control solo cambia el estado visual de la demo.",
+    "notConnected": "WhatsApp sin conectar",
+    "previewReady": "Vista previa lista · WhatsApp sigue sin conectar",
+    "simulateConnection": "Simular vista previa",
+    "resetPreview": "Restablecer vista previa",
+    "notProvided": "Sin indicar",
+    "edit": "Editar",
+    "editSection": "Editar {section}",
+    "back": "Atrás",
+    "next": "Continuar",
+    "review": "Revisar configuración",
+    "finish": "Finalizar demo",
+    "saving": "Finalizando…",
+    "finishNotice": "No se guarda nada en un servidor ni se conecta WhatsApp o un proveedor de IA.",
+    "simulateFailure": "Simular un error al finalizar (desmárcalo para reintentar).",
+    "saveError": "No se pudo finalizar la demo. Tus datos siguen aquí. Si activaste el error simulado, desmárcalo y vuelve a intentarlo.",
+    "cardTitle": "Configura tu espacio",
+    "cardDescription": "Prepara tu negocio, tienda y agente con el asistente de cinco pasos.",
+    "startSetup": "Abrir configuración",
+    "completedTitle": "Configuración demo lista",
+    "completedDescription": "La configuración temporal de {business} está lista para explorar la interfaz. Los módulos comerciales se incorporarán en el siguiente paso.",
+    "editSetup": "Revisar configuración"
+  },
+  "Modules": {
+    "title": "Este espacio está en preparación",
+    "description": "La navegación y los temas ya están disponibles. La interfaz funcional de este módulo se incorporará en los siguientes pasos del plan.",
+    "back": "Volver al dashboard",
+    "notice": "No hay operaciones reales ni datos del negocio en esta etapa."
+  }
+}

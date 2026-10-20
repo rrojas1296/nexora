@@ -1,0 +1,39 @@
+# Sistema visual
+
+## Dirección
+
+La última referencia mantiene bordes sutiles, controles tipo píldora, tarjetas negras y jerarquía de bloques analíticos. La petición posterior sustituye las superficies pizarra/petróleo por negros y grises neutros; verde WhatsApp como señal de acción, sin lavanda ni lima amarillenta. No se presentan datos ficticios como actividad real. «Conversa» sigue siendo una marca provisional.
+
+Paleta oscura: sidebar `#080808`, canvas `#000000`, fondo `#050505`, tarjetas `#101010`, popovers `#181818`, texto `#f2f2f2`, verde WhatsApp `#25d366` y secundarios `#1c1c1c`. El texto de botones verdes usa `#062b16`; bordes `#262626` y texto secundario `#a3a3a3`. Los estados y gráficas pueden usar colores semánticos sin teñir los fondos de las tarjetas.
+
+Paleta clara: fondo `#f6f6f6`, tarjetas blancas, texto `#1a1a1a`, verde profundo `#08783f` y secundarios grises neutros; los estados conservan acentos suaves verdes. El sidebar permanece oscuro en ambos temas. Geist conserva títulos de peso normal y escala nativa (`text-xs`, `text-sm`, `text-3xl`, etc.), sin tamaños de texto arbitrarios pequeños.
+
+El ancho máximo de 1428px se aplica **solo al contenido de las páginas** mediante `mx-auto w-full max-w-357`, sin `max-w-[1428px]`. El shell y el header ocupan todo el ancho; el sidebar permanece pegado al borde izquierdo del viewport, fuera del contenedor centrado. Esto corrige la interpretación previa que centraba también el sidebar. Login, registro y onboarding conservan el límite exterior. Se mantiene `min-h-dvh`, sin marco redondeado ni sombra exterior.
+
+Sidebar `w-56` expandido y `w-18` contraído, sticky al borde superior y `h-dvh`. Se conserva el espaciado interior del contenido. Radios con `rounded-3xl`, `rounded-2xl` y `rounded-full`, sin sombras por tarjeta. Las columnas usan `grid-cols-*` y `col-span-*`; el rail del wizard usa `lg:w-60`. Los diálogos y mensajes usan fracciones o inset de la escala, no cálculos de longitudes arbitrarios. En móvil, la navegación sigue siendo un diálogo lateral y el contenido se apila.
+
+La vista inicial de preparación ha dado paso a módulos comerciales mock. Dashboard comparte el encabezado de título y descripción de los demás módulos, seguido por cuatro KPIs, barras mensuales y pedidos recientes en la columna principal; a la derecha aparecen agente, productos más vendidos y mensajes. Las barras enero–diciembre comparan el año seleccionado (verde) con el anterior (gris), con selector de año, tooltip y tabla alternativa, sin gráfica diaria duplicada. Los controles demo quedan plegados para priorizar el contenido. Reportes usa una composición distinta: filtros de periodo/tienda, resumen lateral, comparación horizontal de ingresos por tienda, anillo de estados y tabla agrupable con exportación CSV local. Los valores proceden de la misma fixture señalada como demostración: dashboard usa años calendario y reportes conserva el corte temporal fijo, con tablas/listas accesibles alternativas. Productos, pedidos y clientes añaden cabeceras de KPIs independientes de filtros y paginación. La tarjeta de configuración permanece al pie del dashboard y refleja la finalización temporal del onboarding. Listas, formularios, detalles y conversaciones conservan la misma jerarquía visual de superficies, bordes y acentos.
+
+## Tokens y estilos
+
+`apps/web/src/styles/theme.css` define variables semánticas light/dark, sidebar y charts. `@theme inline` las conecta a Tailwind v4. `globals.css` solo contiene imports y estilos globales básicos. Todos los estilos de componentes son clases Tailwind, sin CSS Modules ni estilos inline.
+
+Preferir `bg-card`, `text-muted-foreground`, `border-border`, `bg-primary` y demás tokens sobre colores concretos. El sidebar usa tokens propios oscuros en ambos temas. `canvas` queda disponible como token, pero ya no se usa como marco exterior; `highlight`/`highlight-foreground` define el verde WhatsApp con texto oscuro; `secondary` aporta contraste gris neutro. Las gráficas usan tokens chart y atributos SVG; sin estilos inline escritos en componentes. Recharts gestiona internamente sus elementos de presentación.
+
+## Tema propio
+
+Preferencias: `light`, `dark`, `system`. Estado persistido bajo `conversa-theme-v1` con versión de esquema `1`; solo guarda `preference`. El script del head determina `data-theme` antes del pintado y el CSS aplica `color-scheme`. El provider rehidrata manualmente Zustand, escucha cambios del sistema y sincroniza cambios de otras pestañas. Storage bloqueado o corrupto no debe impedir renderizar; la preferencia por defecto es `system`.
+
+La supresión de discrepancias de hidratación se limita al elemento html, cuyo atributo de tema modifica el bootstrap. No se usa next-themes. Si se introduce CSP estricta, este script necesitará nonce o hash: actualmente no se ha configurado esa política.
+
+## Componentes y accesibilidad
+
+Botón base con variantes default, outline, secondary y ghost; tamaños default, sm e icon. `asChild` permite enlaces semánticos. Radix Dialog aporta gestión de foco, cierre por Escape y semántica a la navegación móvil. Los enlaces indican la página activa, los selectores tienen etiquetas, hay enlace para saltar al contenido y focus visible. Las transiciones respetan reducción de movimiento.
+
+Acceso usa un contenedor centrado con `max-w-357`: panel oscuro de marca en escritorio y formulario de lectura acotada con `max-w-md` en el panel contiguo; en móvil se omite el panel de marca. Onboarding comparte el límite exterior, con progreso a la izquierda y formulario a la derecha en escritorio; ambos se apilan en móvil. Los límites menores de párrafos, formularios y modales se conservan por legibilidad, sin superar el contenedor de pantalla. Mantiene superficies negras/grises, acento verde y equivalentes claros, sin marco exterior.
+
+Los campos tienen etiquetas, descripciones y errores asociados mediante IDs; el wizard lleva el foco al título al cambiar de paso y al campo inválido al continuar. Usa progress nativo, aria-current en el paso activo, fieldsets deshabilitados durante envíos y alertas para errores de operación. Los indicadores de espera respetan reducción de movimiento. No se presenta la simulación WhatsApp como una conexión real.
+
+Los módulos comerciales añaden tablas con caption, controles de búsqueda y filtros etiquetados, paginación, estados con texto además de color, avisos de guardado y errores anunciados. Crear y editar recursos usa páginas dedicadas, no modales, con enlace para volver y formularios RHF/Zod bloqueados durante guardado. Los diálogos de detalle y confirmación conservan Radix para foco/Escape. Las gráficas desactivan animación e incluyen tablas/listas alternativas. Los contenedores estrechos permiten scroll horizontal en tablas; las columnas secundarias se adaptan con Tailwind.
+
+Estas decisiones están implementadas en código, pero no se han validado visualmente ni mediante tests por la restricción vigente.

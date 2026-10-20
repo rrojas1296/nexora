@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": true,
+  "singleQuote": false,
+  "tabWidth": 2,
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/.next/**",
+    "**/dist/**",
+    "**/.turbo/**",
+    "**/coverage/**",
+    "pnpm-lock.yaml",
+    "apps/api/src/infrastructure/database/generated/**"
+  ]
+}

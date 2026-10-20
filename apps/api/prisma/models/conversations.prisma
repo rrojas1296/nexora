@@ -1,0 +1,33 @@
+enum ConversationStatus {
+  OPEN
+  PENDING
+  CLOSED
+}
+
+enum ConversationAssignment {
+  AGENT
+  HUMAN
+}
+
+model Conversation {
+  id             String                 @id @default(uuid()) @db.Uuid
+  tenantId       String                 @db.Uuid
+  clientId       String                 @db.Uuid
+  storeId        String?               @db.Uuid
+  assigneeUserId String?               @db.Uuid
+  status         ConversationStatus     @default(OPEN)
+  assignment     ConversationAssignment @default(AGENT)
+  createdAt      DateTime               @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime               @updatedAt @db.Timestamptz(3)
+  tenant         Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  client         Client                 @relation(fields: [tenantId, clientId], references: [tenantId, id], onDelete: Restrict)
+  store          Store?                @relation(fields: [tenantId, storeId], references: [tenantId, id], onDelete: Restrict)
+  assignee       Membership?           @relation(fields: [tenantId, assigneeUserId], references: [tenantId, userId], onDelete: Restrict)
+  messages       Message[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, status, updatedAt])
+  @@index([tenantId, clientId])
+  @@index([tenantId, storeId])
+  @@index([tenantId, assigneeUserId])
+}

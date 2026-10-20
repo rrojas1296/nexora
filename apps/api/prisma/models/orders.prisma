@@ -1,0 +1,47 @@
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  CANCELLED
+}
+
+model Order {
+  id        String      @id @default(uuid()) @db.Uuid
+  tenantId  String      @db.Uuid
+  reference String
+  clientId  String      @db.Uuid
+  storeId   String      @db.Uuid
+  status    OrderStatus @default(PENDING)
+  currency  String      @default("USD") @db.Char(3)
+  placedAt  DateTime    @default(now()) @db.Timestamptz(3)
+  createdAt DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime    @updatedAt @db.Timestamptz(3)
+  tenant    Tenant      @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  client    Client      @relation(fields: [tenantId, clientId], references: [tenantId, id], onDelete: Restrict)
+  store     Store       @relation(fields: [tenantId, storeId], references: [tenantId, id], onDelete: Restrict)
+  items     OrderItem[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, reference])
+  @@index([tenantId, placedAt])
+  @@index([tenantId, status])
+  @@index([tenantId, clientId])
+  @@index([tenantId, storeId])
+}
+
+model OrderItem {
+  id          String  @id @default(uuid()) @db.Uuid
+  tenantId    String  @db.Uuid
+  orderId     String  @db.Uuid
+  productId   String  @db.Uuid
+  productName String
+  quantity    Int
+  unitPrice   Decimal @db.Decimal(18, 2)
+  tenant      Tenant  @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+  order       Order   @relation(fields: [tenantId, orderId], references: [tenantId, id], onDelete: Restrict)
+  product     Product @relation(fields: [tenantId, productId], references: [tenantId, id], onDelete: Restrict)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, orderId])
+  @@index([tenantId, productId])
+}
