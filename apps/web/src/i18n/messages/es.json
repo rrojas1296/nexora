@@ -1,6 +1,8 @@
 {
   "Common": {
-    "brand": "Conversa",
+    "brand": "Nexora",
+    "showPassword": "Mostrar: {label}",
+    "hidePassword": "Ocultar: {label}",
     "demo": "Vista de demostración",
     "skip": "Saltar al contenido",
     "pending": "Próximamente",
@@ -82,7 +84,7 @@
     "email": "Email",
     "password": "Contraseña",
     "confirmPassword": "Confirmar contraseña",
-    "passwordHint": "Mínimo 12 caracteres y máximo 72 bytes UTF-8; los símbolos y acentos pueden ocupar varios bytes.",
+    "passwordHint": "Usa al menos 8 caracteres, con letras y números.",
     "loginAction": "Iniciar sesión",
     "registerAction": "Crear cuenta",
     "pending": "Preparando tu espacio…",
@@ -99,7 +101,7 @@
     "validation": {
       "email": "Introduce un email válido de hasta 254 caracteres.",
       "password": "Introduce tu contraseña (máximo 72 bytes UTF-8).",
-      "registerPassword": "Usa al menos 12 caracteres y como máximo 72 bytes UTF-8.",
+      "registerPassword": "Usa al menos 8 caracteres, una letra y un número; máximo 72 bytes UTF-8.",
       "name": "Introduce un nombre de entre 1 y 100 caracteres.",
       "businessName": "Introduce un nombre de negocio de entre 1 y 120 caracteres.",
       "confirm": "Las contraseñas deben coincidir."
@@ -114,6 +116,21 @@
       "unexpected": "No pudimos completar la solicitud. Si acababas de crear una cuenta, intenta iniciar sesión antes de repetir el registro."
     }
   },
+  "PasswordStrength": {
+    "label": "Fortaleza estimada",
+    "requirementsMet": "{count} de 3 requisitos cumplidos.",
+    "empty": "Sin contraseña",
+    "weak": "Débil",
+    "fair": "Media",
+    "strong": "Fuerte",
+    "length": "Al menos 8 caracteres",
+    "letter": "Al menos una letra",
+    "number": "Al menos un número",
+    "met": "Cumplido",
+    "unmet": "Pendiente",
+    "tooLong": "La contraseña supera el máximo de 72 bytes UTF-8.",
+    "guidance": "Indicador orientativo. Una contraseña larga y única es más segura; añade símbolos para reforzarla."
+  },
   "PasswordChange": {
     "title": "Cambiar contraseña",
     "email": "Correo electrónico",
@@ -122,7 +139,7 @@
     "currentPassword": "Contraseña actual",
     "newPassword": "Nueva contraseña",
     "confirmPassword": "Confirmar nueva contraseña",
-    "passwordHint": "Usa al menos 12 caracteres y como máximo 72 bytes UTF-8. Los acentos y símbolos pueden ocupar varios bytes.",
+    "passwordHint": "Usa al menos 8 caracteres, con letras y números.",
     "show": "Mostrar contraseñas",
     "hide": "Ocultar contraseñas",
     "action": "Cambiar contraseña",
@@ -136,7 +153,7 @@
     "validation": {
       "email": "Introduce un correo electrónico válido.",
       "current": "Introduce tu contraseña actual (máximo 72 bytes UTF-8).",
-      "password": "Usa al menos 12 caracteres y como máximo 72 bytes UTF-8.",
+      "password": "Usa al menos 8 caracteres, una letra y un número; máximo 72 bytes UTF-8.",
       "confirm": "Las contraseñas nuevas deben coincidir.",
       "different": "La nueva contraseña debe ser distinta de la actual."
     },

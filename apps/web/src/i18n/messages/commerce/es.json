@@ -223,16 +223,33 @@
     "ordersCount": "{count, plural, one {# pedido} other {# pedidos}}"
   },
   "Agent": {
+    "validationBlocked": "No se ha enviado la configuración: corrige los campos indicados y vuelve a pulsar Guardar.",
+    "eyebrow": "Configuración del negocio",
+    "workspaceDescription": "Configura el agente de tu negocio. Los cambios se guardan en la base de datos; no conectan WhatsApp ni ejecutan IA.",
+    "unconfigured": "Todavía no hay un agente configurado. Completa el formulario y guarda tu primera configuración.",
+    "persistedHint": "Configuración guardada para este negocio. Los cambios del borrador no se guardan hasta pulsar Guardar.",
+    "readOnly": "Solo el propietario o un administrador pueden guardar la configuración del agente.",
+    "refreshError": "No se pudo actualizar la configuración desde el servidor. Se conserva tu borrador; reintenta la lectura antes de volver a guardar.",
+    "retry": "Reintentar lectura",
+    "errors": {
+      "session": "La sesión cambió o expiró. Vuelve a iniciar sesión antes de guardar.",
+      "forbidden": "No tienes permiso para realizar esta operación en este negocio.",
+      "invalid": "Revisa el nombre, tono, instrucciones y saludo antes de guardar.",
+      "conflict": "La configuración del agente requiere revisión administrativa: existen registros duplicados o eliminados. No se han reemplazado automáticamente.",
+      "rateLimit": "Demasiadas solicitudes. Espera un momento antes de intentarlo de nuevo.",
+      "uncertain": "No se pudo confirmar el guardado. Puede haberse guardado; conserva tu borrador y comprueba la configuración antes de repetirlo.",
+      "unexpected": "No se pudo cargar la configuración del agente. Inténtalo de nuevo."
+    },
     "configuration": "Personalidad y comportamiento",
     "name": "Nombre del agente",
     "tone": "Tono",
     "instructions": "Instrucciones · 20 a 2000 caracteres",
     "greeting": "Saludo · 5 a 300 caracteres",
-    "enabled": "Marcar como activo en la demo",
+    "enabled": "Agente habilitado (preferencia de configuración)",
     "preview": "Vista previa del saludo",
-    "previewHint": "Esta tarjeta refleja tu borrador. Guarda los cambios para conservarlos mientras navegas. No es una conversación con IA.",
-    "enabledHint": "Estado activo simulado: no ejecuta automatizaciones ni responde a conversaciones.",
-    "disabledHint": "Estado inactivo simulado: el saludo sigue visible como vista previa.",
+    "previewHint": "Esta tarjeta refleja tu borrador local, no una respuesta de IA. Guarda para conservar la configuración al recargar o volver a entrar.",
+    "enabledHint": "Preferencia habilitada en el borrador. Guardarla no ejecuta automatizaciones ni responde conversaciones: la integración de IA y WhatsApp aún no está disponible.",
+    "disabledHint": "Preferencia deshabilitada en el borrador. El saludo sigue visible como vista previa local.",
     "tones": { "friendly": "Cercano", "professional": "Profesional", "concise": "Conciso" }
   },
   "Settings": {

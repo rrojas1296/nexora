@@ -1,7 +1,8 @@
 "use client";
 
 import { apiClient } from "@/lib/api/client";
-import { withAuthenticatedSession } from "@/features/auth/services/auth-service";
+import { normalizeApiError } from "@/lib/api/api-error";
+import { authService, withAuthenticatedSession } from "@/features/auth/services/auth-service";
 import {
   productListSchema,
   productResponseSchema,
@@ -10,16 +11,34 @@ import {
   type ProductScope,
 } from "../schemas/product-schema";
 
-function authenticated<T>(
-  scope: ProductScope,
-  operation: (url: string, headers: Record<string, string>) => Promise<T>,
-  signal?: AbortSignal,
-) {
-  return withAuthenticatedSession(async (session, headers) => {
-    signal?.throwIfAborted();
+function productUrl(scope: ProductScope) {
+  return `/businesses/${scope.businessId}/products`;
+}
+
+async function read<T>(scope: ProductScope, signal: AbortSignal, operation: () => Promise<T>) {
+  try {
+    return await operation();
+  } catch (error) {
+    signal.throwIfAborted();
+    if (normalizeApiError(error).status !== 401) throw error;
+    const session = await authService.current();
+    signal.throwIfAborted();
+    if (!session) throw new Error("AUTHENTICATED_SESSION_REQUIRED");
     if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)
       throw new Error("SESSION_CHANGED");
-    return operation(`/businesses/${scope.businessId}/products`, headers);
+    // Only a rejected read is replayed, once, after coordinated session recovery.
+    return operation();
+  }
+}
+
+function mutate<T>(
+  scope: ProductScope,
+  operation: (url: string, headers: Record<string, string>) => Promise<T>,
+) {
+  return withAuthenticatedSession(async (session, headers) => {
+    if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)
+      throw new Error("SESSION_CHANGED");
+    return operation(productUrl(scope), headers);
   });
 }
 
@@ -33,33 +52,26 @@ function serialize(input: ProductInput) {
 }
 
 export const productsService = {
+  // GETs use session cookies and API authorization, without mutation-only CSRF bootstrap.
   list: (scope: ProductScope, filters: ProductListFilters, signal: AbortSignal) =>
-    authenticated(
-      scope,
-      async (url) => {
-        const response = await apiClient.get(url, { params: filters, signal });
-        return productListSchema.parse(response.data);
-      },
-      signal,
-    ),
+    read(scope, signal, async () => {
+      const response = await apiClient.get(productUrl(scope), { params: filters, signal });
+      return productListSchema.parse(response.data);
+    }),
   get: (scope: ProductScope, id: string, signal: AbortSignal) =>
-    authenticated(
-      scope,
-      async (url) => {
-        const response = await apiClient.get(`${url}/${id}`, { signal });
-        return productResponseSchema.parse(response.data).data;
-      },
-      signal,
-    ),
+    read(scope, signal, async () => {
+      const response = await apiClient.get(`${productUrl(scope)}/${id}`, { signal });
+      return productResponseSchema.parse(response.data).data;
+    }),
   save: (scope: ProductScope, input: ProductInput, id?: string) =>
-    authenticated(scope, async (url, headers) => {
+    mutate(scope, async (url, headers) => {
       const response = id
         ? await apiClient.patch(`${url}/${id}`, serialize(input), { headers })
         : await apiClient.post(url, serialize(input), { headers });
       return productResponseSchema.parse(response.data).data;
     }),
   delete: (scope: ProductScope, id: string) =>
-    authenticated(scope, async (url, headers) => {
+    mutate(scope, async (url, headers) => {
       await apiClient.delete(`${url}/${id}`, { headers });
     }),
 };

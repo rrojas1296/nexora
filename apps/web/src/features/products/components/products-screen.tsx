@@ -13,6 +13,7 @@ import { StatusBadge } from "@/features/demo/components/status-badge";
 import { EditorDialog } from "@/features/demo/components/editor-dialog";
 import { MutationNotice } from "@/features/demo/components/mutation-notice";
 import { Link } from "@/i18n/navigation";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useProductAccess, useProductMutation, useProducts } from "../hooks/use-products";
 import type { Product, ProductListFilters } from "../schemas/product-schema";
 import { productErrorKey } from "../services/product-error";
@@ -24,6 +25,8 @@ export function ProductsScreen() {
   const format = useFormatter();
   const access = useProductAccess();
   const mutation = useProductMutation();
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 500);
   const [filters, setFilters] = useState<ProductListFilters>({
     search: "",
     status: "all",
@@ -32,6 +35,9 @@ export function ProductsScreen() {
   });
   const [deleting, setDeleting] = useState<Product | null>(null);
   const [deleted, setDeleted] = useState(false);
+  if (filters.search !== debouncedSearch) {
+    setFilters({ ...filters, search: debouncedSearch, page: 1 });
+  }
   const query = useProducts(filters);
   const products = query.data?.data ?? [];
   const pagination = query.data?.pagination;
@@ -40,11 +46,7 @@ export function ProductsScreen() {
       <ProductKpis summary={query.isError ? undefined : query.data?.summary} />
       {!access.canWrite ? <p className="text-xs text-muted-foreground">{t("readOnly")}</p> : null}
       {deleted ? <output className="block text-sm text-primary">{t("deleted")}</output> : null}
-      <ListToolbar
-        search={filters.search}
-        onSearch={(search) => setFilters((current) => ({ ...current, search, page: 1 }))}
-        count={pagination?.total ?? 0}
-      >
+      <ListToolbar search={search} onSearch={setSearch} count={pagination?.total ?? 0}>
         <label className="space-y-2 text-xs">
           <span className="block">{common("statusLabel")}</span>
           <SelectField
@@ -99,7 +101,10 @@ export function ProductsScreen() {
               key: "price",
               label: t("price"),
               render: (product) =>
-                format.number(product.price, { style: "currency", currency: product.currency }),
+                format.number(product.price, {
+                  style: "currency",
+                  currency: product.currency,
+                }),
             },
             {
               key: "stock",

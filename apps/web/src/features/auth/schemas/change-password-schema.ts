@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { passwordSchema } from "./auth-schema";
+import { newPasswordSchema, passwordSchema } from "./auth-schema";
 
 type ChangePasswordValidation = {
   email: string;
@@ -19,7 +19,7 @@ export function createChangePasswordSchema(
         ? z.string().trim().toLowerCase().max(254, messages.email).pipe(z.email(messages.email))
         : z.string(),
       currentPassword: passwordSchema(1, messages.current),
-      newPassword: passwordSchema(12, messages.password),
+      newPassword: newPasswordSchema(messages.password),
       confirmPassword: z.string(),
     })
     .refine((value) => value.newPassword === value.confirmPassword, {

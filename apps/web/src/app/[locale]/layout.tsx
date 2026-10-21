@@ -8,11 +8,13 @@ import { QueryProvider } from "@/providers/query-provider";
 import { AuthProvider } from "@/providers/auth-provider";
 import { ThemeProvider } from "@/providers/theme-provider";
 import "../globals.css";
+import Script from "next/script";
+import Head from "next/head";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "Conversa · WhatsApp AI", template: "%s · Conversa" },
+  title: { default: "Nexora · WhatsApp AI", template: "%s · Nexora" },
   description: "WhatsApp AI sales workspace",
   robots: { index: false, follow: false },
 };
@@ -30,9 +32,9 @@ export default async function LocaleLayout({ children }: LayoutProps<"/[locale]"
 
   return (
     <html lang={locale} suppressHydrationWarning className={`${geistSans.variable} min-h-full`}>
-      <head>
-        <script id="theme-bootstrap" dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
-      </head>
+      <Head>
+        <Script id="theme-bootstrap" dangerouslySetInnerHTML={{ __html: themeBootstrapScript }} />
+      </Head>
       <body className="min-h-dvh">
         <a
           href="#main-content"

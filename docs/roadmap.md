@@ -224,6 +224,61 @@ Los seis pasos están completados: frontend funcional con mocks y revisiones vis
 - Productos queda fuera de escenarios/restablecimiento demo y persiste tras recarga/logout. Dashboard, pedidos y reportes conservan fixtures independientes: no sincronizan productos ni afectan stock real. Sin nuevas dependencias ni integraciones externas. Contratos y límites en [products.md](./products.md).
 - Verificación: lint, formato, tipos, build y diff; sin tests, smoke checks, peticiones HTTP ni navegador por la restricción vigente. Estas verificaciones no demuestran comportamiento runtime, concurrencia ni aislamiento efectivo; no declarar producción.
 
+## Corrección — Búsqueda de productos sin bootstrap auth por tecla
+
+- Separadas las lecturas GET de listado/detalle del helper de mutaciones: buscar, filtrar o paginar ya no requiere consultar `/auth/me` y `/auth/csrf` antes de cada petición. Conservadas cookies, autorización backend, claves por usuario/negocio y cancelación de queries.
+- Alta, edición y borrado conservan Web Lock, verificación de identidad/negocio y CSRF. La revalidación periódica de auth permanece independiente; solo ante un 401 se recupera sesión bajo el lock existente y se repite el GET una vez, previa verificación de usuario/negocio y cancelación. Sin replay de mutaciones ni retry de renovaciones inciertas.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y `git diff --check` correctos; 59 páginas generadas. Sin tests, HTTP ni navegador por la restricción vigente; comportamiento runtime pendiente de comprobación autorizada.
+
+## Ajuste — Debounce de búsqueda de productos
+
+- Añadido hook reutilizable `useDebounce` con limpieza de timeout al cambiar valor/demora o desmontar. El buscador muestra lo escrito inmediatamente y aplica la búsqueda tras 300 ms sin escritura, reiniciando la página junto con el término aplicado. Filtro de estado y paginación sin demora añadida.
+- Sin dependencias nuevas ni cambios de auth/API. Verificación limitada a lint, formato, tipos, build y diff; sin tests, HTTP ni navegador por la restricción vigente.
+
+## Corrección — Sidebar acorde al tema activo
+
+- Separados los tokens del sidebar por tema: superficie blanca, texto gris y verde profundo en claro; conservada la paleta negra/verde WhatsApp en oscuro. Navegación de escritorio y móvil comparten los tokens y siguen el tema resuelto, incluido sistema.
+- Hover del control de colapso usa texto semántico en lugar de blanco fijo. Sustituye la decisión previa de sidebar siempre oscuro; sin cambios al store, bootstrap ni provider de tema.
+- Verificación limitada a lint, formato, tipos, build y diff; sin tests ni comprobaciones de navegador por la restricción vigente.
+
+## Ajuste — Marca Nexora y título del sidebar
+
+- Marca de la app actualizada a Nexora en es/en y en los metadatos de título por defecto/plantilla. Login/registro y navegación comparten las traducciones de marca.
+- El componente Brand sustituye texto blanco fijo por `text-sidebar-foreground`, compartido por sidebar de escritorio y navegación móvil. Conservada la clave de almacenamiento del tema para no perder preferencias existentes; los nombres de negocios mock no representan la marca de la aplicación y no se modifican.
+- Sin nuevas dependencias ni cambios a auth/API. Verificación estática sin tests ni navegador.
+
+## Ajuste — Ayuda de contraseña simplificada
+
+- Texto de ayuda de registro y cambio de contraseña simplificado a «Usa una contraseña de al menos 12 caracteres.» y su equivalente en inglés. Conservadas las validaciones y los errores del límite de 72 bytes UTF-8; sin cambios de seguridad ni API.
+
+## Ajuste — Política e indicador de contraseña
+
+- Sustituye el mínimo anterior de 12 por 8 caracteres (puntos de código Unicode), al menos una letra y un número decimal Unicode en registro y nueva contraseña de ambos flujos de cambio. Validación alineada entre Zod cliente y DTOs API; conserva máximo 72 bytes UTF-8, confirmación local y diferencia respecto a la actual. Login/contraseña actual no reciben la política de creación.
+- Indicador reutilizable con suscripción RHF al campo, barra de tres segmentos, etiquetas/requisitos es/en y medidor accesible. Estimación solo local: débil si incumple, media si cumple, fuerte con al menos 12 caracteres y símbolo adicional; no garantiza seguridad ni consulta filtraciones. No persiste ni envía credenciales para calcularla. Símbolos opcionales, sin transformaciones de contraseña.
+- Sin dependencias nuevas, migraciones ni acceso a base de datos. `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y `git diff --check` correctos; sin tests ni navegador por la restricción vigente.
+
+## Ajuste — Visibilidad individual de contraseñas
+
+- `InputField` incorpora un botón Eye/EyeOff para cada input de tipo password, con estado local independiente, oculto inicialmente, etiqueta es/en contextual, foco visible y control por teclado. Respeta disabled y fieldset al enviar; no envía formularios ni cambia el valor/autocomplete del campo.
+- Aplicado a login, registro, confirmaciones y ambos cambios de contraseña. Sustituye el botón global del formulario de cambio por control individual. Sin persistencia de visibilidad ni credenciales y sin dependencias nuevas.
+
+## Ampliación — Configuración persistente de agente
+
+- Pantalla de agente conectada a GET/PUT `/businesses/:businessId/agents/configuration`; sin fixtures, escenarios ni restablecimiento demo. Formulario inicialmente vacío si no hay configuración, con vista previa local y guardado explícito. Lectura con membresía activa y escritura OWNER/ADMIN.
+- Módulo agents con capas domain/application independientes de Nest/Prisma, repositorio PostgreSQL, DTOs Zod, guard global, CSRF y autorización business-scoped. Reutiliza `Agents` (`storeId: null`, `enabled` mapeado a `active`), sin migraciones ni seeds. Bloqueo del negocio serializa escritores de esta API; duplicados/reservas eliminadas devuelven conflicto en lectura y escritura, sin recuperación destructiva. La unicidad no está garantizada ante escritores externos al protocolo.
+- React Query separado por usuario/negocio, cancelación de lecturas, recuperación auth solo tras 401, mutaciones sin reenvío automático y reconciliación posterior. Permisos y errores es/en; borradores sucios conservados incluso si falla el refresco. Dashboard/onboarding y demás mocks permanecen independientes.
+- `enabled` es solo configuración persistida: no conecta WhatsApp ni ejecuta IA. Contrato, concurrencia y límites en [agents.md](./agents.md). Verificación estática con lint, formato, tipos y build; sin tests, HTTP, navegador ni consultas a base de datos.
+
+## Ajuste — Validación visible antes de guardar el agente
+
+- Ante el reporte de Guardar sin petición HTTP, añadido un resumen de validación al inicio del formulario de agente con los campos rechazados y sus mensajes es/en. Aclara expresamente que no se envió la configuración; conserva las validaciones y los mensajes individuales. No modifica otras pantallas que no solicitan el resumen.
+- La inspección estática no confirmó un defecto de persistencia: el formulario solo envía una mutación después de superar Zod. El resumen permite distinguir ese bloqueo de un error HTTP; la causa concreta del reporte requiere observar qué campos marca o si se produce una petición. Sin tests ni comprobación de runtime/base de datos.
+
+## Corrección — Captura explícita de inputs del agente
+
+- Ante la observación de que los inputs no actualizaban los valores enviados, sustituido el `RecordForm` genérico del agente por un formulario propio y `AgentFields` con `Controller` para nombre, instrucciones, saludo y habilitado. Tono conserva `FormSelectField`, también controlado. Cada input recibe valor y cambio del estado RHF; checkbox usa `checked` y booleano explícitos. Vista previa y submit consumen ese mismo estado, conservando Zod, permisos y protección del borrador.
+- Eliminado el log de depuración del borrador; no se imprimen instrucciones ni saludo en consola. Otros formularios no cambian. Comprobación estática; sin tests ni validación de persistencia en runtime.
+
 ## Fase posterior, fuera del alcance actual
 
-Recuperación/verificación de email y MFA; rate limits distribuidos/por cuenta, auditoría durable, retención de sesiones, rotación gradual de claves y verificaciones de seguridad; selección autorizada de negocio y ampliación de RBAC/repositorios business-scoped más allá de productos; endpoints de pedidos y del resto del comercio, persistencia del resto del onboarding; WhatsApp Cloud API y proveedores de IA.
+Recuperación/verificación de email y MFA; rate limits distribuidos/por cuenta, auditoría durable, retención de sesiones, rotación gradual de claves y verificaciones de seguridad; selección autorizada de negocio y ampliación de RBAC/repositorios business-scoped más allá de productos y configuración de agente; endpoints de pedidos y del resto del comercio, persistencia del resto del onboarding; WhatsApp Cloud API y proveedores de IA.

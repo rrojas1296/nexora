@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Eye, EyeOff, LoaderCircle, LockKeyhole } from "lucide-react";
+import { LoaderCircle, LockKeyhole } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { Link } from "@/i18n/navigation";
 import { useChangePasswordForm } from "../hooks/use-change-password-form";
+import { PasswordStrength } from "./password-strength";
 
 const passwordFields = [
   { name: "currentPassword", autoComplete: "current-password" },
@@ -17,7 +17,6 @@ const passwordFields = [
 export function ChangePasswordForm({ withCredentials = false }: { withCredentials?: boolean }) {
   const t = useTranslations("PasswordChange");
   const { form, onSubmit } = useChangePasswordForm(withCredentials);
-  const [visible, setVisible] = useState(false);
   const { errors, isSubmitting } = form.formState;
 
   return (
@@ -41,27 +40,21 @@ export function ChangePasswordForm({ withCredentials = false }: { withCredential
           />
         ) : null}
         {passwordFields.map(({ name, autoComplete }) => (
-          <InputField
-            key={name}
-            label={t(name)}
-            type={visible ? "text" : "password"}
-            autoComplete={autoComplete}
-            maxLength={72}
-            hint={name === "newPassword" ? t("passwordHint") : undefined}
-            {...form.register(name)}
-            error={errors[name]?.message}
-          />
+          <div key={name} className="space-y-3">
+            <InputField
+              label={t(name)}
+              type="password"
+              autoComplete={autoComplete}
+              maxLength={72}
+              hint={name === "newPassword" ? t("passwordHint") : undefined}
+              {...form.register(name)}
+              error={errors[name]?.message}
+            />
+            {name === "newPassword" ? (
+              <PasswordStrength control={form.control} name="newPassword" />
+            ) : null}
+          </div>
         ))}
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          aria-pressed={visible}
-          onClick={() => setVisible((value) => !value)}
-        >
-          {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
-          {t(visible ? "hide" : "show")}
-        </Button>
         {errors.root ? (
           <p
             role="alert"

@@ -28,15 +28,15 @@
   --chart-4: #5d72a6;
   --chart-5: #a65370;
   --radius: 1rem;
-  --sidebar: #080808;
-  --sidebar-foreground: #d4d4d4;
-  --sidebar-primary: #25d366;
-  --sidebar-primary-foreground: #062b16;
-  --sidebar-accent: #1b1b1b;
-  --sidebar-accent-foreground: #64e892;
-  --sidebar-border: #232323;
-  --sidebar-ring: #25d366;
-  --sidebar-muted: #969696;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #353535;
+  --sidebar-primary: #08783f;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6f5ec;
+  --sidebar-accent-foreground: #11633b;
+  --sidebar-border: #dddddd;
+  --sidebar-ring: #08783f;
+  --sidebar-muted: #626262;
 }
 
 [data-theme="dark"] {
@@ -67,6 +67,15 @@
   --chart-3: #e6be73;
   --chart-4: #9aafe0;
   --chart-5: #df9cb3;
+  --sidebar: #080808;
+  --sidebar-foreground: #d4d4d4;
+  --sidebar-primary: #25d366;
+  --sidebar-primary-foreground: #062b16;
+  --sidebar-accent: #1b1b1b;
+  --sidebar-accent-foreground: #64e892;
+  --sidebar-border: #232323;
+  --sidebar-ring: #25d366;
+  --sidebar-muted: #969696;
 }
 
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));

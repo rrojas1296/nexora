@@ -1,6 +1,8 @@
 {
   "Common": {
-    "brand": "Conversa",
+    "brand": "Nexora",
+    "showPassword": "Show: {label}",
+    "hidePassword": "Hide: {label}",
     "demo": "Demo preview",
     "skip": "Skip to content",
     "pending": "Coming soon",
@@ -82,7 +84,7 @@
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm password",
-    "passwordHint": "At least 12 characters and at most 72 UTF-8 bytes; symbols and accented letters may use several bytes.",
+    "passwordHint": "Use at least 8 characters, including letters and numbers.",
     "loginAction": "Sign in",
     "registerAction": "Create account",
     "pending": "Preparing your workspace…",
@@ -99,7 +101,7 @@
     "validation": {
       "email": "Enter a valid email of up to 254 characters.",
       "password": "Enter your password (at most 72 UTF-8 bytes).",
-      "registerPassword": "Use at least 12 characters and at most 72 UTF-8 bytes.",
+      "registerPassword": "Use at least 8 characters, one letter and one number; maximum 72 UTF-8 bytes.",
       "name": "Enter a name of 1–100 characters.",
       "businessName": "Enter a business name of 1–120 characters.",
       "confirm": "Passwords must match."
@@ -114,6 +116,21 @@
       "unexpected": "We could not complete the request. If you were creating an account, try signing in before submitting another registration."
     }
   },
+  "PasswordStrength": {
+    "label": "Estimated strength",
+    "requirementsMet": "{count} of 3 requirements met.",
+    "empty": "No password",
+    "weak": "Weak",
+    "fair": "Fair",
+    "strong": "Strong",
+    "length": "At least 8 characters",
+    "letter": "At least one letter",
+    "number": "At least one number",
+    "met": "Met",
+    "unmet": "Not met",
+    "tooLong": "The password exceeds the maximum of 72 UTF-8 bytes.",
+    "guidance": "Guidance only. A long, unique password is safer; add symbols to strengthen it."
+  },
   "PasswordChange": {
     "title": "Change password",
     "email": "Email address",
@@ -122,7 +139,7 @@
     "currentPassword": "Current password",
     "newPassword": "New password",
     "confirmPassword": "Confirm new password",
-    "passwordHint": "Use at least 12 characters and no more than 72 UTF-8 bytes. Accents and symbols may take several bytes.",
+    "passwordHint": "Use at least 8 characters, including letters and numbers.",
     "show": "Show passwords",
     "hide": "Hide passwords",
     "action": "Change password",
@@ -136,7 +153,7 @@
     "validation": {
       "email": "Enter a valid email address.",
       "current": "Enter your current password (no more than 72 UTF-8 bytes).",
-      "password": "Use at least 12 characters and no more than 72 UTF-8 bytes.",
+      "password": "Use at least 8 characters, one letter and one number; maximum 72 UTF-8 bytes.",
       "confirm": "The new passwords must match.",
       "different": "Your new password must be different from your current password."
     },

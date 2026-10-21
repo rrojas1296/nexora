@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { MutationNotice } from "./mutation-notice";
 import { RecordInput } from "./record-input";
+import { useValidationMessage } from "../hooks/use-validation-message";
 
 export type RecordField<T extends FieldValues> = {
   name: Path<T>;
@@ -26,6 +27,7 @@ export function RecordForm<T extends FieldValues>({
   pending,
   error,
   errorMessage,
+  validationMessage,
   success,
   onCancel,
   readOnly = false,
@@ -37,16 +39,41 @@ export function RecordForm<T extends FieldValues>({
   pending: boolean;
   error: Error | null;
   errorMessage?: string;
+  validationMessage?: string;
   success?: boolean;
   onCancel?: () => void;
   readOnly?: boolean;
   columns?: boolean;
 }) {
   const t = useTranslations("Demo");
+  const fieldMessage = useValidationMessage();
+  const invalidFields = validationMessage
+    ? fields.flatMap((field) => {
+        const error = form.getFieldState(field.name, form.formState).error;
+        return error
+          ? [{ name: field.name, label: field.label, message: fieldMessage(error) }]
+          : [];
+      })
+    : [];
   return (
     <form method="post" noValidate onSubmit={form.handleSubmit(onSave)} aria-busy={pending}>
       <fieldset disabled={pending || readOnly} className="space-y-6">
         <legend className="sr-only">{t("form")}</legend>
+        {validationMessage && invalidFields.length > 0 ? (
+          <div
+            role="alert"
+            className="rounded-xl border border-destructive/30 p-4 text-xs text-destructive"
+          >
+            <p className="font-medium">{validationMessage}</p>
+            <ul className="mt-2 list-inside list-disc space-y-1">
+              {invalidFields.map((field) => (
+                <li key={field.name}>
+                  {field.label}: {field.message}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
         <div className={columns ? "grid items-start gap-5 sm:grid-cols-2" : "space-y-5"}>
           {fields.map((field) => (
             <Fragment key={field.name}>

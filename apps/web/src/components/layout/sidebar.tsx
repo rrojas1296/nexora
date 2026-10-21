@@ -35,7 +35,7 @@ export function Sidebar() {
           aria-label={collapsed ? t("expand") : t("collapse")}
           aria-expanded={!collapsed}
           title={collapsed ? t("expand") : t("collapse")}
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-sidebar-muted outline-none hover:bg-sidebar-accent hover:text-white focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-sidebar-muted outline-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         >
           {collapsed ? (
             <PanelLeftOpen className="size-3.5" aria-hidden="true" />

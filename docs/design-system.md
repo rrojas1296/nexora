@@ -2,11 +2,11 @@
 
 ## Dirección
 
-La última referencia mantiene bordes sutiles, controles tipo píldora, tarjetas negras y jerarquía de bloques analíticos. La petición posterior sustituye las superficies pizarra/petróleo por negros y grises neutros; verde WhatsApp como señal de acción, sin lavanda ni lima amarillenta. No se presentan datos ficticios como actividad real. «Conversa» sigue siendo una marca provisional.
+La última referencia mantiene bordes sutiles, controles tipo píldora, tarjetas negras y jerarquía de bloques analíticos. La petición posterior sustituye las superficies pizarra/petróleo por negros y grises neutros; verde WhatsApp como señal de acción, sin lavanda ni lima amarillenta. No se presentan datos ficticios como actividad real. La marca de la aplicación es Nexora. El nombre en el sidebar usa `text-sidebar-foreground` para respetar el tema activo en escritorio y móvil.
 
 Paleta oscura: sidebar `#080808`, canvas `#000000`, fondo `#050505`, tarjetas `#101010`, popovers `#181818`, texto `#f2f2f2`, verde WhatsApp `#25d366` y secundarios `#1c1c1c`. El texto de botones verdes usa `#062b16`; bordes `#262626` y texto secundario `#a3a3a3`. Los estados y gráficas pueden usar colores semánticos sin teñir los fondos de las tarjetas.
 
-Paleta clara: fondo `#f6f6f6`, tarjetas blancas, texto `#1a1a1a`, verde profundo `#08783f` y secundarios grises neutros; los estados conservan acentos suaves verdes. El sidebar permanece oscuro en ambos temas. Geist conserva títulos de peso normal y escala nativa (`text-xs`, `text-sm`, `text-3xl`, etc.), sin tamaños de texto arbitrarios pequeños.
+Paleta clara: fondo `#f6f6f6`, tarjetas blancas, texto `#1a1a1a`, verde profundo `#08783f` y secundarios grises neutros; los estados conservan acentos suaves verdes. El sidebar sigue el tema activo: superficie blanca, texto gris y verde profundo en claro; superficie `#080808`, texto claro y verde WhatsApp en oscuro. La navegación móvil comparte los mismos tokens. Geist conserva títulos de peso normal y escala nativa (`text-xs`, `text-sm`, `text-3xl`, etc.), sin tamaños de texto arbitrarios pequeños.
 
 El ancho máximo de 1428px se aplica **solo al contenido de las páginas** mediante `mx-auto w-full max-w-357`, sin `max-w-[1428px]`. El shell y el header ocupan todo el ancho; el sidebar permanece pegado al borde izquierdo del viewport, fuera del contenedor centrado. Esto corrige la interpretación previa que centraba también el sidebar. Login, registro y onboarding conservan el límite exterior. Se mantiene `min-h-dvh`, sin marco redondeado ni sombra exterior.
 
@@ -18,7 +18,7 @@ La vista inicial de preparación ha dado paso a módulos comerciales mock. Dashb
 
 `apps/web/src/styles/theme.css` define variables semánticas light/dark, sidebar y charts. `@theme inline` las conecta a Tailwind v4. `globals.css` solo contiene imports y estilos globales básicos. Todos los estilos de componentes son clases Tailwind, sin CSS Modules ni estilos inline.
 
-Preferir `bg-card`, `text-muted-foreground`, `border-border`, `bg-primary` y demás tokens sobre colores concretos. El sidebar usa tokens propios oscuros en ambos temas. `canvas` queda disponible como token, pero ya no se usa como marco exterior; `highlight`/`highlight-foreground` define el verde WhatsApp con texto oscuro; `secondary` aporta contraste gris neutro. Las gráficas usan tokens chart y atributos SVG; sin estilos inline escritos en componentes. Recharts gestiona internamente sus elementos de presentación.
+Preferir `bg-card`, `text-muted-foreground`, `border-border`, `bg-primary` y demás tokens sobre colores concretos. El sidebar usa tokens propios con valores light/dark, incluidos acentos, bordes, texto secundario y foco. `canvas` queda disponible como token, pero ya no se usa como marco exterior; `highlight`/`highlight-foreground` define el verde WhatsApp con texto oscuro; `secondary` aporta contraste gris neutro. Las gráficas usan tokens chart y atributos SVG; sin estilos inline escritos en componentes. Recharts gestiona internamente sus elementos de presentación.
 
 ## Movimiento de entrada
 

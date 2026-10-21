@@ -14,7 +14,12 @@ export function Brand({ compact = false }: { compact?: boolean }) {
       <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-sidebar-primary-foreground">
         <MessageCircleMore className="size-5" aria-hidden="true" />
       </span>
-      <span className={cn("text-base font-medium tracking-tight text-white", compact && "sr-only")}>
+      <span
+        className={cn(
+          "text-base font-medium tracking-tight text-sidebar-foreground",
+          compact && "sr-only",
+        )}
+      >
         {t("brand")}
       </span>
     </Link>

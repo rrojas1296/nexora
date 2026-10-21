@@ -12,6 +12,7 @@ import { useAuthSchemas } from "../hooks/use-auth-schemas";
 import { useAuthAccess } from "../hooks/use-auth-access";
 import type { RegisterValues } from "../schemas/auth-schema";
 import { authService } from "../services/auth-service";
+import { PasswordStrength } from "./password-strength";
 
 export function RegisterForm() {
   const t = useTranslations("Auth");
@@ -20,6 +21,7 @@ export function RegisterForm() {
   const errorMessage = useAuthError();
   const {
     register,
+    control,
     handleSubmit,
     setError,
     resetField,
@@ -81,6 +83,7 @@ export function RegisterForm() {
           error={errors.password?.message}
           hint={t("passwordHint")}
         />
+        <PasswordStrength control={control} name="password" />
         <InputField
           label={t("confirmPassword")}
           type="password"

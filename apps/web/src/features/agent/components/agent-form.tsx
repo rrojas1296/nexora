@@ -1,52 +1,73 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { Bot } from "lucide-react";
-import { agentSchema, tones } from "@/features/demo/schemas/workspace-schema";
-import type { Agent } from "@/features/demo/types/workspace";
-import { useWorkspaceMutation } from "@/features/demo/hooks/use-workspace";
-import { useDemoScenarioStore } from "@/features/demo/stores/demo-scenario-store";
-import { RecordForm } from "@/features/demo/components/record-form";
+import {
+  agentInputSchema,
+  emptyAgent,
+  type AgentConfiguration,
+  type AgentInput,
+} from "../schemas/agent-schema";
+import { useAgentAccess, useAgentMutation } from "../hooks/use-agent";
+import { agentErrorKey } from "../services/agent-error";
+import { Button } from "@/components/ui/button";
+import { MutationNotice } from "@/features/demo/components/mutation-notice";
+import { AgentFields } from "./agent-fields";
 
-export function AgentForm({ agent }: { agent: Agent }) {
+export function AgentForm({ agent }: { agent: AgentConfiguration | null }) {
   const t = useTranslations("Agent");
-  const mutation = useWorkspaceMutation();
-  const readOnly = useDemoScenarioStore((state) => state.scenario !== "normal");
-  const form = useForm<Agent>({ resolver: zodResolver(agentSchema), defaultValues: agent });
+  const common = useTranslations("Demo");
+  const mutation = useAgentMutation();
+  const access = useAgentAccess();
+  const form = useForm<AgentInput>({
+    resolver: zodResolver(agentInputSchema),
+    defaultValues: agent ?? emptyAgent,
+  });
+  const { isDirty } = form.formState;
+  useEffect(() => {
+    // Background reconciliation must not overwrite an unsaved draft.
+    if (!isDirty && !mutation.isPending) form.reset(agent ?? emptyAgent);
+  }, [agent, form, isDirty, mutation.isPending]);
   const preview = useWatch({ control: form.control });
   return (
     <div className="grid items-start gap-6 xl:grid-cols-5">
       <section className="min-w-0 rounded-3xl border bg-card p-6 xl:col-span-3">
         <h2 className="mb-5 text-lg">{t("configuration")}</h2>
-        <RecordForm
-          form={form}
-          pending={mutation.isPending}
-          readOnly={readOnly}
-          error={mutation.error}
-          success={mutation.isSuccess && !form.formState.isDirty}
-          fields={[
-            { name: "name", label: t("name") },
-            {
-              name: "tone",
-              label: t("tone"),
-              kind: "select",
-              options: tones.map((value) => ({ value, label: t(`tones.${value}`) })),
-            },
-            { name: "instructions", label: t("instructions"), kind: "textarea" },
-            { name: "greeting", label: t("greeting"), kind: "textarea", maxLength: 300 },
-            { name: "enabled", label: t("enabled"), kind: "checkbox" },
-          ]}
-          onSave={async (input) => {
+        <form
+          noValidate
+          aria-busy={mutation.isPending}
+          onSubmit={form.handleSubmit(async (input) => {
             try {
-              await mutation.mutateAsync({ type: "agent.save", input });
-              form.reset(input);
+              const saved = await mutation.mutateAsync(input);
+              if (access.isCurrent()) form.reset(saved);
             } catch {
               /* Preserve the configuration draft. */
             }
-          }}
-        />
+          })}
+        >
+          <fieldset disabled={mutation.isPending || !access.canWrite} className="space-y-5">
+            <legend className="sr-only">{t("configuration")}</legend>
+            {Object.keys(form.formState.errors).length > 0 ? (
+              <p role="alert" className="text-xs text-destructive">
+                {t("validationBlocked")}
+              </p>
+            ) : null}
+            <AgentFields form={form} disabled={mutation.isPending || !access.canWrite} />
+            <MutationNotice
+              error={mutation.error}
+              message={
+                mutation.error ? t(`errors.${agentErrorKey(mutation.error, true)}`) : undefined
+              }
+              success={mutation.isSuccess && !isDirty}
+            />
+            <div className="flex justify-end border-t pt-5">
+              <Button type="submit">{common(mutation.isPending ? "saving" : "save")}</Button>
+            </div>
+          </fieldset>
+        </form>
       </section>
       <aside className="min-w-0 rounded-3xl border bg-secondary/30 p-6 xl:col-span-2">
         <span className="flex size-12 items-center justify-center rounded-full border bg-card">

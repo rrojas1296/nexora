@@ -7,18 +7,24 @@ import { ModuleContent } from "./module-content";
 import { SetupCard } from "./setup-card";
 
 export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
-  const [nav, t, dashboard, products] = await Promise.all([
+  const [nav, t, dashboard, products, agent] = await Promise.all([
     getTranslations("Nav"),
     getTranslations("Demo"),
     getTranslations("Dashboard"),
     getTranslations("Products"),
+    getTranslations("Agent"),
   ]);
+  const persisted = module === "products" || module === "agent";
   return (
     <PageEntrance key={module} className="w-full space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-3 text-xs tracking-widest text-muted-foreground uppercase">
-            {module === "products" ? products("eyebrow") : t("eyebrow")}
+            {module === "products"
+              ? products("eyebrow")
+              : module === "agent"
+                ? agent("eyebrow")
+                : t("eyebrow")}
           </p>
           <h1
             id="module-title"
@@ -28,7 +34,11 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
             {nav(module)}
           </h1>
           <p className="mt-3 max-w-2xl text-xs leading-6 text-muted-foreground">
-            {module === "products" ? products("workspaceDescription") : t(`descriptions.${module}`)}
+            {module === "products"
+              ? products("workspaceDescription")
+              : module === "agent"
+                ? agent("workspaceDescription")
+                : t(`descriptions.${module}`)}
           </p>
         </div>
       </header>
@@ -39,10 +49,10 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
             <DemoToolbar />
           </div>
         </details>
-      ) : module !== "help" && module !== "products" ? (
+      ) : module !== "help" && !persisted ? (
         <DemoToolbar />
       ) : null}
-      {module === "products" ? (
+      {persisted ? (
         <ModuleContent module={module} />
       ) : (
         <DemoContent>

@@ -10,11 +10,15 @@ const password = (min: number) =>
     .max(72)
     .refine((value) => Buffer.byteLength(value, "utf8") <= 72);
 
+const newPassword = password(1).refine(
+  (value) => [...value].length >= 8 && /\p{L}/u.test(value) && /\p{Nd}/u.test(value),
+);
+
 export const registerSchema = z
   .object({
     name: z.string().trim().min(1).max(100),
     email,
-    password: password(12),
+    password: newPassword,
     businessName: z.string().trim().min(1).max(120),
   })
   .strict();
@@ -30,7 +34,7 @@ export const loginSchema = z
 export const changePasswordSchema = z
   .object({
     currentPassword: password(1),
-    newPassword: password(12),
+    newPassword,
   })
   .strict()
   .refine((value) => value.currentPassword !== value.newPassword);

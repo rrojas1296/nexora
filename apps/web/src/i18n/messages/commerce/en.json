@@ -219,16 +219,33 @@
     "ordersCount": "{count, plural, one {# order} other {# orders}}"
   },
   "Agent": {
+    "validationBlocked": "The configuration has not been sent: correct the fields listed below, then press Save again.",
+    "eyebrow": "Business configuration",
+    "workspaceDescription": "Configure your business agent. Changes are stored in the database; they do not connect WhatsApp or run AI.",
+    "unconfigured": "No agent has been configured yet. Complete the form and save your first configuration.",
+    "persistedHint": "Configuration saved for this business. Draft changes are not saved until you press Save.",
+    "readOnly": "Only the owner or an administrator can save the agent configuration.",
+    "refreshError": "Could not refresh the configuration from the server. Your draft is preserved; retry the read before saving again.",
+    "retry": "Retry read",
+    "errors": {
+      "session": "Your session changed or expired. Sign in again before saving.",
+      "forbidden": "You do not have permission to perform this operation in this business.",
+      "invalid": "Review the name, tone, instructions and greeting before saving.",
+      "conflict": "The agent configuration requires administrator review: duplicate or deleted records exist. They have not been replaced automatically.",
+      "rateLimit": "Too many requests. Wait a moment before trying again.",
+      "uncertain": "The save could not be confirmed. It may have been saved; keep your draft and check the configuration before repeating it.",
+      "unexpected": "Could not load the agent configuration. Please try again."
+    },
     "configuration": "Personality and behavior",
     "name": "Agent name",
     "tone": "Tone",
     "instructions": "Instructions · 20 to 2000 characters",
     "greeting": "Greeting · 5 to 300 characters",
-    "enabled": "Mark as active in the demo",
+    "enabled": "Agent enabled (configuration preference)",
     "preview": "Greeting preview",
-    "previewHint": "This card reflects your draft. Save changes to keep them while navigating. This is not an AI conversation.",
-    "enabledHint": "Simulated active status: no automations run and no conversations receive automatic replies.",
-    "disabledHint": "Simulated inactive status: the greeting is still shown as a preview.",
+    "previewHint": "This card reflects your local draft, not an AI response. Save to keep the configuration after a reload or when signing in again.",
+    "enabledHint": "Enabled preference in the draft. Saving does not run automations or reply to conversations: AI and WhatsApp integration is not available yet.",
+    "disabledHint": "Disabled preference in the draft. The greeting is still shown as a local preview.",
     "tones": { "friendly": "Friendly", "professional": "Professional", "concise": "Concise" }
   },
   "Settings": {

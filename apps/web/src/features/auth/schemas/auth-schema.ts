@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { meetsPasswordRequirements } from "./password-policy";
 
 export type AuthValidation = {
   email: string;
@@ -17,6 +18,10 @@ export function passwordSchema(min: number, message: string) {
     .refine((value) => new TextEncoder().encode(value).byteLength <= 72, message);
 }
 
+export function newPasswordSchema(message: string) {
+  return passwordSchema(1, message).refine(meetsPasswordRequirements, message);
+}
+
 export function createAuthSchemas(messages: AuthValidation) {
   const login = z.object({
     email: z.string().trim().toLowerCase().max(254, messages.email).pipe(z.email(messages.email)),
@@ -26,7 +31,7 @@ export function createAuthSchemas(messages: AuthValidation) {
     .extend({
       name: z.string().trim().min(1, messages.name).max(100, messages.name),
       businessName: z.string().trim().min(1, messages.businessName).max(120, messages.businessName),
-      password: passwordSchema(12, messages.registerPassword),
+      password: newPasswordSchema(messages.registerPassword),
       confirmPassword: z.string(),
     })
     .refine((value) => value.password === value.confirmPassword, {
