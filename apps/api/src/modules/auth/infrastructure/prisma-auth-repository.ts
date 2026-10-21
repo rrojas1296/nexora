@@ -21,8 +21,45 @@ export class PrismaAuthRepository implements AuthRepository {
 
   findCredentials(email: string) {
     return this.client.user.findUnique({
-      where: { email },
+      where: { email, isDeleted: false },
       select: { id: true, passwordHash: true, active: true },
+    });
+  }
+
+  findCredentialsById(userId: string) {
+    return this.client.user.findUnique({
+      where: { id: userId, active: true, isDeleted: false },
+      select: { id: true, passwordHash: true, active: true },
+    });
+  }
+
+  changePassword(claims: TokenClaims, previousHash: string, newHash: string): Promise<void> {
+    return this.replacePassword(claims.sub, previousHash, newHash, claims);
+  }
+
+  changePasswordWithCredentials(
+    userId: string,
+    previousHash: string,
+    newHash: string,
+  ): Promise<void> {
+    return this.replacePassword(userId, previousHash, newHash);
+  }
+
+  private async replacePassword(
+    userId: string,
+    previousHash: string,
+    newHash: string,
+    claims?: TokenClaims,
+  ): Promise<void> {
+    await this.client.$transaction(async (tx) => {
+      await this.lockUser(tx, userId);
+      if (claims) await this.requireSession(tx, claims);
+      const updated = await tx.user.updateMany({
+        where: { id: userId, passwordHash: previousHash, active: true, isDeleted: false },
+        data: { passwordHash: newHash },
+      });
+      if (updated.count !== 1) throw new AuthError("unauthorized");
+      await this.revokeAll(tx, userId, new Date());
     });
   }
 
@@ -55,26 +92,50 @@ export class PrismaAuthRepository implements AuthRepository {
     }
   }
 
-  startSession(userId: string, businessId: string | undefined, issue: IssueTokens) {
-    return this.client.$transaction((tx) => this.createSession(tx, userId, businessId, issue));
+  startSession(
+    userId: string,
+    businessId: string | undefined,
+    passwordHash: string,
+    issue: IssueTokens,
+  ) {
+    return this.client.$transaction(async (tx) => {
+      // Serialize login with password changes, then recheck the hash verified by bcrypt.
+      await this.lockUser(tx, userId);
+      const user = await tx.user.findFirst({
+        where: { id: userId, passwordHash, active: true, isDeleted: false },
+        select: { id: true },
+      });
+      if (!user) throw new AuthError("unauthorized");
+      return this.createSession(tx, userId, businessId, issue);
+    });
   }
 
   async current(claims: TokenClaims): Promise<Identity> {
+    await this.requireSession(this.client, claims);
+    return this.identity(this.client, claims.sub, claims.businessId);
+  }
+
+  private async requireSession(tx: Transaction, claims: TokenClaims): Promise<void> {
     const now = new Date();
-    const session = await this.client.authSession.findFirst({
+    const session = await tx.authSession.findFirst({
       where: {
         id: claims.sid,
+        isDeleted: false,
         userId: claims.sub,
         businessId: claims.businessId,
         revokedAt: null,
         expiresAt: { gt: now },
         idleExpiresAt: { gt: now },
-        membership: { active: true, user: { active: true } },
+        membership: {
+          active: true,
+          isDeleted: false,
+          user: { active: true, isDeleted: false },
+          business: { isDeleted: false },
+        },
       },
       select: { id: true },
     });
     if (!session) throw new AuthError("unauthorized");
-    return this.identity(this.client, claims.sub, claims.businessId);
   }
 
   async rotate(claims: TokenClaims, hash: string, issue: IssueTokens) {
@@ -83,7 +144,12 @@ export class PrismaAuthRepository implements AuthRepository {
       await this.lockFamily(tx, claims);
       const now = new Date();
       const session = await tx.authSession.findFirst({
-        where: { id: claims.sid, userId: claims.sub, businessId: claims.businessId },
+        where: {
+          id: claims.sid,
+          userId: claims.sub,
+          businessId: claims.businessId,
+          isDeleted: false,
+        },
       });
       if (!session || session.revokedAt || session.expiresAt <= now || session.idleExpiresAt <= now)
         return null;
@@ -94,6 +160,7 @@ export class PrismaAuthRepository implements AuthRepository {
           userId: claims.sub,
           businessId: claims.businessId,
           refreshTokenHash: hash,
+          isDeleted: false,
         },
       });
       if (!token || token.consumedAt || token.revokedAt) {
@@ -105,7 +172,9 @@ export class PrismaAuthRepository implements AuthRepository {
           userId: claims.sub,
           businessId: claims.businessId,
           active: true,
-          user: { active: true },
+          isDeleted: false,
+          user: { active: true, isDeleted: false },
+          business: { isDeleted: false },
         },
       });
       if (!membership || token.expiresAt <= now) {
@@ -113,7 +182,7 @@ export class PrismaAuthRepository implements AuthRepository {
         return null;
       }
       const consumed = await tx.refreshSession.updateMany({
-        where: { id: token.id, consumedAt: null, revokedAt: null },
+        where: { id: token.id, consumedAt: null, revokedAt: null, isDeleted: false },
         data: { consumedAt: now },
       });
       if (consumed.count !== 1) {
@@ -121,7 +190,7 @@ export class PrismaAuthRepository implements AuthRepository {
         return null;
       }
       const renewed = await tx.authSession.update({
-        where: { id: session.id },
+        where: { id: session.id, isDeleted: false },
         data: {
           idleExpiresAt: new Date(
             Math.min(session.expiresAt.getTime(), now.getTime() + this.settings.refreshTtl * 1000),
@@ -144,15 +213,7 @@ export class PrismaAuthRepository implements AuthRepository {
     await this.client.$transaction(async (tx) => {
       const now = new Date();
       if (all) {
-        // Updates lock family rows, so a racing refresh cannot commit an unrevoked family.
-        await tx.authSession.updateMany({
-          where: { userId: claims.sub, revokedAt: null },
-          data: { revokedAt: now },
-        });
-        await tx.refreshSession.updateMany({
-          where: { userId: claims.sub, revokedAt: null },
-          data: { revokedAt: now },
-        });
+        await this.revokeAll(tx, claims.sub, now);
       } else {
         await this.lockFamily(tx, claims);
         await this.revokeFamily(tx, claims, now);
@@ -170,7 +231,9 @@ export class PrismaAuthRepository implements AuthRepository {
       where: {
         userId,
         active: true,
-        user: { active: true },
+        isDeleted: false,
+        user: { active: true, isDeleted: false },
+        business: { isDeleted: false },
         ...(businessId ? { businessId } : {}),
       },
       orderBy: [{ createdAt: "asc" }, { businessId: "asc" }],
@@ -198,13 +261,13 @@ export class PrismaAuthRepository implements AuthRepository {
 
   private async identity(tx: Transaction, userId: string, businessId: string): Promise<Identity> {
     const user = await tx.user.findFirst({
-      where: { id: userId, active: true },
+      where: { id: userId, active: true, isDeleted: false },
       select: {
         id: true,
         name: true,
         email: true,
         memberships: {
-          where: { active: true },
+          where: { active: true, isDeleted: false, business: { isDeleted: false } },
           orderBy: [{ createdAt: "asc" }, { businessId: "asc" }],
           select: {
             businessId: true,
@@ -233,11 +296,29 @@ export class PrismaAuthRepository implements AuthRepository {
     });
   }
 
+  private lockUser(tx: Transaction, userId: string) {
+    // NO KEY UPDATE serializes credentials without blocking refresh FK key-share locks.
+    return tx.$queryRaw`SELECT "id" FROM "Users" WHERE "id" = ${userId}::uuid FOR NO KEY UPDATE`;
+  }
+
+  private async revokeAll(tx: Transaction, userId: string, now: Date): Promise<void> {
+    // Lock families before tokens, matching refresh. Include soft-deleted rows deliberately.
+    await tx.authSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: now },
+    });
+    await tx.refreshSession.updateMany({
+      where: { userId, revokedAt: null },
+      data: { revokedAt: now },
+    });
+  }
+
   private lockFamily(tx: Transaction, claims: TokenClaims) {
-    return tx.$queryRaw`SELECT "id" FROM "AuthSession" WHERE "id" = ${claims.sid}::uuid AND "userId" = ${claims.sub}::uuid AND "businessId" = ${claims.businessId}::uuid FOR UPDATE`;
+    return tx.$queryRaw`SELECT "id" FROM "AuthSessions" WHERE "id" = ${claims.sid}::uuid AND "userId" = ${claims.sub}::uuid AND "businessId" = ${claims.businessId}::uuid FOR UPDATE`;
   }
 
   private async revokeFamily(tx: Transaction, claims: TokenClaims, now: Date) {
+    // Revocation includes deleted rows so restoring one cannot undo a logout or replay response.
     const where = { userId: claims.sub, businessId: claims.businessId, revokedAt: null };
     await tx.authSession.updateMany({
       where: { ...where, id: claims.sid },

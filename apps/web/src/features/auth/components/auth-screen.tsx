@@ -1,13 +1,28 @@
+import { PageEntrance } from "@/components/ui/page-entrance";
 import { ArrowUpRight, Bot, MessageCircleMore, ShieldAlert } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { LocaleSelect } from "@/components/layout/locale-select";
 import { ThemeSelect } from "@/components/layout/theme-select";
 import { Link } from "@/i18n/navigation";
+import { ChangePasswordForm } from "./change-password-form";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
 
-export async function AuthScreen({ mode }: { mode: "login" | "register" }) {
+export async function AuthScreen({ mode }: { mode: "login" | "register" | "change-password" }) {
   const t = await getTranslations("Auth");
+  const content = {
+    login: { title: t("loginTitle"), description: t("loginDescription"), form: <LoginForm /> },
+    register: {
+      title: t("registerTitle"),
+      description: t("registerDescription"),
+      form: <RegisterForm />,
+    },
+    "change-password": {
+      title: t("changePasswordTitle"),
+      description: t("changePasswordDescription"),
+      form: <ChangePasswordForm withCredentials />,
+    },
+  }[mode];
   const common = await getTranslations("Common");
   return (
     <div className="mx-auto grid min-h-dvh w-full max-w-357 lg:grid-cols-2">
@@ -53,19 +68,17 @@ export async function AuthScreen({ mode }: { mode: "login" | "register" }) {
             <ThemeSelect />
           </div>
         </header>
-        <main
+        <PageEntrance
+          as="main"
+          key={mode}
           id="main-content"
           tabIndex={-1}
           className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 py-8 outline-none sm:px-8"
         >
           <p className="mb-3 text-xs text-secondary-foreground">{common("brand")}</p>
-          <h1 className="text-3xl font-normal tracking-tight">
-            {t(mode === "login" ? "loginTitle" : "registerTitle")}
-          </h1>
-          <p className="mt-3 mb-7 text-sm leading-6 text-muted-foreground">
-            {t(mode === "login" ? "loginDescription" : "registerDescription")}
-          </p>
-          {mode === "login" ? <LoginForm /> : <RegisterForm />}
+          <h1 className="text-3xl font-normal tracking-tight">{content.title}</h1>
+          <p className="mt-3 mb-7 text-sm leading-6 text-muted-foreground">{content.description}</p>
+          {content.form}
           <div className="mt-7 flex gap-2.5 rounded-2xl border bg-card/70 p-4">
             <ShieldAlert
               className="mt-0.5 size-4 shrink-0 text-secondary-foreground"
@@ -76,7 +89,7 @@ export async function AuthScreen({ mode }: { mode: "login" | "register" }) {
               <p className="mt-2">{t("scopeNotice")}</p>
             </div>
           </div>
-        </main>
+        </PageEntrance>
       </div>
     </div>
   );

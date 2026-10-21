@@ -23,6 +23,13 @@ export type IssueTokens = (session: Session) => Promise<TokenPair>;
 
 export interface AuthRepository {
   findCredentials(email: string): Promise<CredentialsUser | null>;
+  findCredentialsById(userId: string): Promise<CredentialsUser | null>;
+  changePassword(claims: TokenClaims, previousHash: string, newHash: string): Promise<void>;
+  changePasswordWithCredentials(
+    userId: string,
+    previousHash: string,
+    newHash: string,
+  ): Promise<void>;
   register(
     input: Omit<RegisterInput, "password">,
     hash: string,
@@ -31,6 +38,7 @@ export interface AuthRepository {
   startSession(
     userId: string,
     businessId: string | undefined,
+    passwordHash: string,
     issue: IssueTokens,
   ): Promise<AuthResult>;
   current(claims: TokenClaims): Promise<Identity>;

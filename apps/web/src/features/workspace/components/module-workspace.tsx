@@ -1,3 +1,4 @@
+import { PageEntrance } from "@/components/ui/page-entrance";
 import { getTranslations } from "next-intl/server";
 import type { ModuleKey } from "@/components/layout/navigation";
 import { DemoToolbar } from "@/features/demo/components/demo-toolbar";
@@ -6,17 +7,18 @@ import { ModuleContent } from "./module-content";
 import { SetupCard } from "./setup-card";
 
 export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
-  const [nav, t, dashboard] = await Promise.all([
+  const [nav, t, dashboard, products] = await Promise.all([
     getTranslations("Nav"),
     getTranslations("Demo"),
     getTranslations("Dashboard"),
+    getTranslations("Products"),
   ]);
   return (
-    <div className="w-full space-y-6">
+    <PageEntrance key={module} className="w-full space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-3 text-xs tracking-widest text-muted-foreground uppercase">
-            {t("eyebrow")}
+            {module === "products" ? products("eyebrow") : t("eyebrow")}
           </p>
           <h1
             id="module-title"
@@ -26,7 +28,7 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
             {nav(module)}
           </h1>
           <p className="mt-3 max-w-2xl text-xs leading-6 text-muted-foreground">
-            {t(`descriptions.${module}`)}
+            {module === "products" ? products("workspaceDescription") : t(`descriptions.${module}`)}
           </p>
         </div>
       </header>
@@ -37,13 +39,17 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
             <DemoToolbar />
           </div>
         </details>
-      ) : module !== "help" ? (
+      ) : module !== "help" && module !== "products" ? (
         <DemoToolbar />
       ) : null}
-      <DemoContent>
+      {module === "products" ? (
         <ModuleContent module={module} />
-      </DemoContent>
+      ) : (
+        <DemoContent>
+          <ModuleContent module={module} />
+        </DemoContent>
+      )}
       {module === "dashboard" ? <SetupCard /> : null}
-    </div>
+    </PageEntrance>
   );
 }

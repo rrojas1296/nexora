@@ -1,5 +1,8 @@
 import { z } from "zod";
 import { currencies, defaultCurrency } from "@/lib/config/currency";
+import { productInputSchema } from "@/features/products/schemas/product-schema";
+
+export { productInputSchema } from "@/features/products/schemas/product-schema";
 
 export { currencies } from "@/lib/config/currency";
 
@@ -12,29 +15,12 @@ const money = z
   .min(0, "price")
   .max(999999, "price")
   .refine((value) => Math.abs(value * 100 - Math.round(value * 100)) < 0.00001, "price");
-const inventory = z.number({ error: "stock" }).int("stock").min(0, "stock").max(1000000, "stock");
 export const clientSegments = ["retail", "wholesale", "vip"] as const;
 export const clientCountries = ["US", "MX", "CO", "ES", "AR", "CL", "PE"] as const;
 export const orderStatuses = ["pending", "paid", "shipped", "cancelled"] as const;
 export const conversationStatuses = ["open", "pending", "closed"] as const;
 export const tones = ["friendly", "professional", "concise"] as const;
 
-export const productInputSchema = z.object({
-  name,
-  sku: z.string().trim().min(2, "sku").max(30, "sku"),
-  description: text,
-  category: name,
-  brand: shortText,
-  supplier: shortText,
-  barcode: z.string().trim().max(50, "text"),
-  price: money,
-  cost: money,
-  compareAtPrice: money,
-  weight: inventory,
-  stock: inventory,
-  lowStockThreshold: inventory,
-  active: z.boolean(),
-});
 export const productSchema = productInputSchema.extend({ id });
 export const clientInputSchema = z.object({
   name,

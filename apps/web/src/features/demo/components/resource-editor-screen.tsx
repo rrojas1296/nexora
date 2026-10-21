@@ -9,9 +9,6 @@ import { useDemoScenarioStore } from "../stores/demo-scenario-store";
 import type { ResourceModule } from "../lib/resources";
 import { QueryState } from "./query-state";
 
-const ProductEditor = dynamic(() =>
-  import("@/features/products/components/product-editor").then((module) => module.ProductEditor),
-);
 const ClientEditor = dynamic(() =>
   import("@/features/clients/components/client-editor").then((module) => module.ClientEditor),
 );
@@ -22,7 +19,13 @@ const OrderEditor = dynamic(() =>
   import("@/features/orders/components/order-editor").then((module) => module.OrderEditor),
 );
 
-export function ResourceEditorScreen({ resource, id }: { resource: ResourceModule; id?: string }) {
+export function ResourceEditorScreen({
+  resource,
+  id,
+}: {
+  resource: Exclude<ResourceModule, "products">;
+  id?: string;
+}) {
   const t = useTranslations("ResourceEditor");
   const common = useTranslations("Demo");
   const query = useWorkspace();
@@ -53,13 +56,6 @@ export function ResourceEditorScreen({ resource, id }: { resource: ResourceModul
         ) : (
           <div className="grid items-start gap-6 xl:grid-cols-4">
             <section className="min-w-0 rounded-3xl border bg-card p-5 sm:p-7 xl:col-span-3">
-              {resource === "products" ? (
-                <ProductEditor
-                  key={id ?? "new"}
-                  product={workspace.products.find((row) => row.id === id)}
-                  onClose={onClose}
-                />
-              ) : null}
               {resource === "clients" ? (
                 <ClientEditor
                   key={id ?? "new"}

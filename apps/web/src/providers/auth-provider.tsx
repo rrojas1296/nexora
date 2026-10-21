@@ -16,7 +16,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const recheck = () => {
       if (document.visibilityState === "visible") {
         setReconciling(true);
-        void queryClient
+        queryClient
           .invalidateQueries({ queryKey: sessionQueryKey }, { cancelRefetch: false })
           .finally(() => setReconciling(false));
       }
@@ -33,13 +33,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       channel.onmessage = (event: MessageEvent<unknown>) => {
         if (event.data === "changed") changed();
       };
-    document.addEventListener("visibilitychange", recheck);
-    window.addEventListener("focus", recheck);
     window.addEventListener("online", recheck);
     return () => {
       channel?.close();
-      document.removeEventListener("visibilitychange", recheck);
-      window.removeEventListener("focus", recheck);
       window.removeEventListener("online", recheck);
     };
   }, [queryClient]);

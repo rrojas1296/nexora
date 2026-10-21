@@ -99,7 +99,7 @@
     "compareHint": "Opcional. Usa 0 si no aplica.",
     "lowStockThreshold": "Umbral de stock bajo",
     "weight": "Peso · gramos",
-    "table": "Catálogo de productos demo",
+    "table": "Catálogo de productos",
     "create": "Nuevo producto",
     "edit": "Editar producto",
     "name": "Nombre",
@@ -110,7 +110,27 @@
     "active": "Disponible en el catálogo",
     "formHint": "Nombre de 2 a 100 caracteres, referencia única y precio con hasta dos decimales. Todo el catálogo usa PEN; no modifica pedidos anteriores.",
     "deleteTitle": "Eliminar producto",
-    "deleteDescription": "¿Eliminar «{name}» de la demo? No se pueden eliminar productos vinculados a pedidos; puedes desactivarlos."
+    "deleteDescription": "¿Eliminar «{name}» del catálogo? El borrado es lógico. Si tiene pedidos vinculados, desactívalo para conservar su historial.",
+    "eyebrow": "Catálogo del negocio",
+    "workspaceDescription": "Gestiona los productos de tu negocio. Los cambios se guardan en la base de datos; el resto de los módulos comerciales continúa en modo demo.",
+    "readOnly": "Puedes consultar el catálogo. Solo propietarios y administradores pueden crear, editar o eliminar productos.",
+    "lowStock": "Stock bajo",
+    "deleted": "Producto eliminado del catálogo.",
+    "storageTitle": "Catálogo persistente",
+    "storageHint": "Los cambios se guardan en el negocio activo. Los importes usan PEN y el stock se administra manualmente; los pedidos demo no afectan este inventario.",
+    "securityHint": "La referencia es única por negocio, incluso después de eliminar el producto. No cierres la página mientras se guarda. No se reintentan escrituras automáticamente.",
+    "errors": {
+      "sku": "Ya existe un producto con esta referencia en tu negocio, incluso si fue eliminado. Usa otra referencia.",
+      "linked": "El producto tiene pedidos vinculados y no puede eliminarse. Puedes desactivarlo.",
+      "session": "Tu sesión o negocio activo cambió. Vuelve a iniciar sesión antes de continuar.",
+      "forbidden": "No tienes permiso para realizar esta acción en el negocio activo.",
+      "missing": "El producto no existe o ya fue eliminado de este negocio.",
+      "invalid": "Revisa los datos. Los precios admiten hasta dos decimales; el stock debe ser un entero válido.",
+      "conflict": "El producto cambió o hay un conflicto. Actualiza el catálogo antes de continuar.",
+      "rateLimit": "Demasiadas solicitudes. Espera un momento antes de volver a intentarlo.",
+      "unexpected": "No se pudo cargar el catálogo. Comprueba tu conexión y vuelve a intentarlo.",
+      "uncertain": "No se pudo confirmar el resultado. Es posible que el cambio se haya guardado. Revisa el catálogo antes de repetir la operación; conservamos tu formulario."
+    }
   },
   "Orders": {
     "create": "Nuevo pedido",
@@ -225,8 +245,8 @@
     "notifications": "Preferir notificaciones (solo dato de configuración)",
     "preferences": "Idioma y apariencia",
     "preferencesHint": "El tema se conserva en este navegador. El idioma forma parte de la URL. Las preferencias del negocio solo se guardan en memoria; no cambian el perfil demo, el onboarding ni los periodos de reportes.",
-    "security": "Seguridad real: pendiente",
-    "securityHint": "No hay cuentas reales, cambio de contraseña, permisos ni sesiones de servidor. La autenticación segura y el aislamiento por negocio se incorporarán en una etapa posterior."
+    "security": "Seguridad de tu cuenta",
+    "securityHint": "La contraseña pertenece a tu cuenta real, no a la demostración. Puedes cambiarla verificando tu contraseña actual; se cerrarán todas tus sesiones."
   },
   "Analytics": {
     "period": "Periodo demo",

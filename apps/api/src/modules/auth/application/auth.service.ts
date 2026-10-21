@@ -1,5 +1,7 @@
 import {
   AuthError,
+  type ChangePasswordInput,
+  type CredentialsChangePasswordInput,
   type LoginInput,
   type RegisterInput,
   type TokenClaims,
@@ -23,9 +25,27 @@ export class AuthService {
     const user = await this.repository.findCredentials(input.email);
     const matches = await this.passwords.verify(input.password, user?.passwordHash);
     if (!user?.active || !matches) throw new AuthError("unauthorized");
-    return this.repository.startSession(user.id, input.businessId, (session) =>
+    return this.repository.startSession(user.id, input.businessId, user.passwordHash, (session) =>
       this.tokens.issue(session),
     );
+  }
+
+  async changePassword(claims: TokenClaims, input: ChangePasswordInput): Promise<void> {
+    const user = await this.repository.findCredentialsById(claims.sub);
+    if (!user?.active) throw new AuthError("unauthorized");
+    const matches = await this.passwords.verify(input.currentPassword, user.passwordHash);
+    if (!matches) throw new AuthError("incorrect_password");
+    const hash = await this.passwords.hash(input.newPassword);
+    await this.repository.changePassword(claims, user.passwordHash, hash);
+  }
+
+  async changePasswordWithCredentials(input: CredentialsChangePasswordInput): Promise<void> {
+    const user = await this.repository.findCredentials(input.email);
+    // Verify even for an unknown email, using the hasher's dummy hash.
+    const matches = await this.passwords.verify(input.currentPassword, user?.passwordHash);
+    if (!user?.active || !matches) throw new AuthError("unauthorized");
+    const hash = await this.passwords.hash(input.newPassword);
+    await this.repository.changePasswordWithCredentials(user.id, user.passwordHash, hash);
   }
 
   verifyToken(token: string, purpose: "access" | "refresh") {

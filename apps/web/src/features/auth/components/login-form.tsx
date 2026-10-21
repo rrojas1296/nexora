@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+import { PasswordChangedNotice } from "./password-changed-notice";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, LoaderCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
@@ -46,6 +48,9 @@ export function LoginForm() {
       className="space-y-5"
       aria-busy={isSubmitting}
     >
+      <Suspense fallback={null}>
+        <PasswordChangedNotice />
+      </Suspense>
       <fieldset disabled={isSubmitting} className="space-y-5">
         <legend className="sr-only">{t("loginTitle")}</legend>
         <InputField
@@ -81,6 +86,14 @@ export function LoginForm() {
           {t(isSubmitting ? "pending" : "loginAction")}
         </Button>
       </fieldset>
+      <p className="text-center text-xs">
+        <Link
+          href="/change-password"
+          className="rounded text-foreground underline underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {t("changePasswordTitle")}
+        </Link>
+      </p>
       <p className="text-center text-xs text-muted-foreground">
         {t("noAccount")}{" "}
         <Link

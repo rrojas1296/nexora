@@ -64,10 +64,6 @@ export function SettingsForm({ settings }: { settings: Settings }) {
             <LocaleSelect />
           </div>
         </section>
-        <section className="rounded-3xl border border-dashed p-6">
-          <h2 className="text-sm">{t("security")}</h2>
-          <p className="mt-2 text-xs leading-6 text-muted-foreground">{t("securityHint")}</p>
-        </section>
       </aside>
     </div>
   );

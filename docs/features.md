@@ -1,15 +1,15 @@
 # Funcionalidades frontend y límites
 
-## Estado del paso 4
+## Estado actual
 
-Los módulos están implementados como interfaz de demostración. Requieren JavaScript y usan datos ficticios en memoria del navegador. No constituyen operaciones reales, autorización, persistencia ni aislamiento multi-tenant. No usar información personal real.
+**Productos ya tiene API y persistencia real en PostgreSQL**, con autorización por negocio activo y escrituras OWNER/ADMIN; ver [products.md](./products.md). Los otros módulos comerciales conservan la interfaz de demostración del paso 4: JavaScript y datos ficticios en memoria del navegador, sin operaciones reales ni aislamiento multi-tenant. No usar información personal real en los mocks.
 
-| Ruta (con prefijo `/es` o `/en`) | Funcionalidad mock                                                                                                                                                                            |
+| Ruta (con prefijo `/es` o `/en`) | Funcionalidad                                                                                                                                                                                 |
 | -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/dashboard`                     | Ventas, conversaciones, porcentaje de pedidos cobrados y ticket promedio; barras mensuales enero–diciembre por año; pedidos recientes, agente, productos más vendidos, mensajes y onboarding. |
 | `/conversations`                 | Búsqueda por cliente/teléfono/último mensaje, filtro de estado, selección, historial, contexto del cliente, estado, asignación y mensajes locales.                                            |
 | `/agent`                         | Nombre, tono, instrucciones, saludo, activación ficticia y vista previa inmediata del borrador.                                                                                               |
-| `/products`                      | Búsqueda, disponibilidad, paginación, alta, edición y eliminación confirmada. Referencia única; protección del historial de pedidos al eliminar.                                              |
+| `/products`                      | API real: búsqueda, disponibilidad, paginación remota, KPIs globales, alta, edición y borrado lógico confirmado. SKU único por negocio; OWNER/ADMIN para escrituras.                          |
 | `/orders`                        | Búsqueda por referencia/cliente, filtros por estado y tienda, paginación, detalle de líneas con precios históricos y cambio libre de estado.                                                  |
 | `/clients`                       | Búsqueda por nombre/email/teléfono, paginación, alta, edición y detalle con pedidos/conversaciones vinculados. Email único.                                                                   |
 | `/reports`                       | Periodo 7/30 días y tienda, resumen lateral, barras por tienda, anillo por estado, tabla por producto/cliente y exportación CSV local.                                                        |
@@ -17,7 +17,7 @@ Los módulos están implementados como interfaz de demostración. Requieren Java
 | `/stores`                        | Búsqueda, alta y edición de nombre, dirección, moneda preferida, zona horaria y estado; conteo del historial de pedidos.                                                                      |
 | `/help`                          | Búsqueda de guías traducidas, FAQs desplegables, acceso al onboarding y documentación oficial externa de WhatsApp. No hay canal de soporte conectado.                                         |
 
-Login, registro y el wizard de cinco pasos están descritos en [authentication.md](./authentication.md) y [frontend.md](./frontend.md). La tarjeta de onboarding sigue disponible en dashboard, incluso ante un escenario comercial vacío o fallido. El borrador del wizard es independiente de las colecciones comerciales; completar el onboarding no reemplaza los ejemplos del catálogo, tiendas, agente o negocio.
+Login, registro y el wizard de cinco pasos están descritos en [authentication.md](./authentication.md) y [frontend.md](./frontend.md). La tarjeta de onboarding sigue disponible en dashboard, incluso ante un escenario comercial vacío o fallido. El borrador del wizard es independiente de las colecciones comerciales; completar el onboarding actualiza solo el nombre del Business real y no reemplaza los ejemplos del catálogo, tiendas o agente.
 
 ## Recursos y revisión visual
 
@@ -28,6 +28,13 @@ Login, registro y el wizard de cinco pasos están descritos en [authentication.m
 - Cliente: contacto, empresa, identificación fiscal, segmento, estado, dirección, ciudad, región, código postal, país, idioma preferido, notas y consentimiento de marketing únicamente simulado.
 - Pedido: referencia única, cliente, tienda, fecha UTC, estado y hasta 100 líneas con producto, cantidad y precio unitario. Sin cobros ni cambios de stock. Crear/editar no modifica automáticamente el historial de conversaciones.
 - Reportes: filtro de periodo/tienda, resumen lateral, comparación de ingresos por tienda, anillo de estados y tabla agrupable por producto/cliente, con unidades, pedidos, ingresos y participación. No duplica el dashboard. Exporta la tabla filtrada a CSV UTF-8 local, con comillas escapadas y protección de fórmulas en celdas de texto. No exporta desde un backend.
+
+## Productos reales
+
+- Listado, alta y edición consumen `features/products/services/products-service.ts` y hooks propios, no el snapshot demo. Formularios con todos los campos existentes, validación RHF/Zod y errores es/en.
+- Catálogo vacío permite crear; escenarios/error/restablecimiento demo no afectan datos ni borradores reales. La base de datos conserva productos tras recarga o logout; no se copian fixtures a PostgreSQL.
+- KPIs sobre todo el catálogo no eliminado del negocio, independientes de filtros y páginas. Los pedidos/reportes/dashboard siguen usando su catálogo ficticio y no afectan stock real.
+- Sesión/CSRF, alcance por usuario/negocio, soft delete, detalle de DTOs y limitaciones en [products.md](./products.md).
 
 ## Arquitectura del mock
 
@@ -40,11 +47,11 @@ Login, registro y el wizard de cinco pasos están descritos en [authentication.m
 - Los componentes por feature consumen los hooks, no acceden directamente al repositorio. Los formularios usan RHF + Zod y primitivas compartidas en páginas dedicadas para productos, clientes, pedidos y tiendas. Los diálogos Radix se reservan para detalles y confirmaciones, no altas/ediciones.
 - Recharts 3.10.1 se incorpora con importación dinámica y datos derivados, sin precargar la librería en módulos no analíticos. Hay tabla alternativa de valores, tooltip traducido y animación desactivada.
 
-La API futura puede sustituir el adaptador manteniendo los contratos de lectura/escritura y los hooks. El snapshot agregado y los comandos son un contrato local de la demo, **no un contrato REST ya implementado**. Al conectar el backend habrá que introducir endpoints y query keys por recurso/tenant, autorización del servidor, paginación remota y errores de dominio acordados. El cliente Axios central está preparado con `withCredentials`, pero aún no se usa para operaciones comerciales.
+La API futura puede sustituir el adaptador manteniendo los contratos de lectura/escritura y los hooks. El snapshot agregado y los comandos son un contrato local de la demo, **no un contrato REST ya implementado**. Al conectar el backend habrá que introducir endpoints y query keys por recurso/tenant, autorización del servidor, paginación remota y errores de dominio acordados. El cliente Axios central con `withCredentials` ya se usa en productos; los módulos restantes necesitan endpoints, hooks y autorización propios.
 
 ## Escenarios reproducibles
 
-El control sobre cada módulo comercial permite:
+El control sobre cada módulo comercial mock (no productos) permite:
 
 1. **Con datos**: leer y guardar cambios en el repositorio temporal.
 2. **Colecciones vacías**: mostrar listas vacías sin borrar los registros reales de la demo. Los formularios de configuración quedan de solo lectura y se deshabilitan las altas; volver a «Con datos» recupera los cambios guardados.
@@ -53,7 +60,7 @@ El control sobre cada módulo comercial permite:
 
 Las lecturas tienen 450 ms de latencia y aceptan AbortSignal. Las escrituras esperan 550 ms, sin reintento automático. Se deshabilitan acciones durante el guardado; los formularios conservan borradores y muestran errores si la operación falla. SKU repetido, email repetido, producto vinculado a pedidos y conversación cerrada son errores de dominio simulados. El escenario es global: cambiarlo remonta el contenido para no dejar formularios abiertos sobre datos de otro escenario y descarta borradores sin guardar.
 
-Los cambios comerciales sobreviven a la navegación interna y a cambios de idioma, pero no a recarga, perfil nuevo, salida de la demo o restablecimiento. Iniciar/salir limpia además la caché de React Query y el escenario. Un contador de generación invalida escrituras que estaban pendientes al cambiar de perfil. No hay datos privados ni base de usuarios.
+Los cambios comerciales mock sobreviven a la navegación interna y a cambios de idioma, pero no a recarga, perfil nuevo, salida de la demo o restablecimiento. Iniciar/salir limpia además la caché de React Query y el escenario. Un contador de generación invalida escrituras que estaban pendientes al cambiar de perfil. La fixture no contiene datos privados; las cuentas reales pertenecen al módulo auth.
 
 ## Definiciones de métricas
 
@@ -78,4 +85,4 @@ Se pueden crear/editar pedidos mock; no conversaciones nuevas. Tampoco hay elimi
 
 ## Verificación y pendientes
 
-La verificación de esta etapa se limita a formato, lint, tipos y build. No se han implementado ni ejecutado tests ni comprobaciones en navegador por la restricción vigente. La compilación no verifica interacciones, disposición responsive, accesibilidad efectiva ni seguridad. El backend ya incorpora base NestJS/Prisma y autenticación real independiente; la integración de estas pantallas con auth sigue pendiente. No hay endpoints comerciales reales. Ver `authentication.md` y `backend.md`.
+La verificación de esta etapa se limita a formato, lint, tipos y build. No se han implementado ni ejecutado tests ni comprobaciones en navegador por la restricción vigente. La compilación no verifica interacciones, disposición responsive, accesibilidad efectiva ni seguridad. El backend incorpora autenticación integrada, actualización del nombre del negocio y CRUD real de productos; los demás módulos comerciales siguen sin endpoints reales. Ver `authentication.md` y `backend.md`.

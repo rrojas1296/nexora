@@ -6,20 +6,20 @@ El plan inicial tras renombrar Tenant a Business ha sido sustituido por la autor
 
 Implementados en NestJS: registro transaccional de usuario/Business/Membership OWNER, login, perfil, refresh rotativo, logout, logout-all, bootstrap CSRF, cookies HttpOnly, guard global y rate limits. Sesiones y hashes persistidos mediante Prisma/PostgreSQL. Migración inicial versionada y aplicada; sin seeds, sin cuentas precreadas y sin migraciones automáticas en build/dev/start. Contratos y limitaciones exactos en [authentication.md](./authentication.md); operación de esquema en [database.md](./database.md).
 
-Las capas application/domain no dependen de Nest ni Prisma. Los adaptadores bcrypt, jose, CSRF y Prisma viven en infraestructura y se componen mediante factories del módulo auth. Los módulos comerciales siguen sin endpoints. La comprobación de sesión/pertenencia no equivale a RBAC comercial completo.
+Las capas application/domain no dependen de Nest ni Prisma. Los adaptadores bcrypt, jose, CSRF y Prisma viven en infraestructura y se componen mediante factories del módulo auth. Business incorpora PATCH del nombre del negocio activo con OWNER/ADMIN; productos incorpora CRUD persistente business-scoped, lecturas con membresía activa y escrituras OWNER/ADMIN; los demás módulos comerciales siguen sin endpoints. Ver [products.md](./products.md). La comprobación de sesión/pertenencia no equivale a RBAC comercial completo.
 
-**Frontend integrado:** login/registro usan cuentas reales; workspace/onboarding comprueban sesión en servidor y cliente. Los datos comerciales y el wizard siguen siendo mocks independientes. No se ha verificado runtime por la restricción de tests.
+**Frontend integrado:** login/registro usan cuentas reales; workspace/onboarding comprueban sesión en servidor y cliente. El wizard reutiliza el Business registrado y guarda su nombre al finalizar; el resto del wizard y los datos comerciales excepto productos siguen siendo mocks independientes. No se ha verificado runtime por la restricción de tests.
 
 ## 1. Topología e integración frontend implementadas
 
 - Mismo origen público mediante rewrite `/api/v1` a `API_INTERNAL_URL`; navegador usa ruta relativa y SSR URL privada. CORS admite el origen público exacto. HTTPS y API en producción son requisitos para cookies Secure/`__Host-`; hosts separados no están soportados por este flujo.
-- Formularios RHF/Zod es/en integrados por Axios con cookies; registro pide `businessName`, mínimo 12 caracteres y máximo 72 bytes UTF-8. Login va a dashboard y registro a onboarding; el wizard no modifica Business real.
+- Formularios RHF/Zod es/en integrados por Axios con cookies; registro pide `businessName`, mínimo 12 caracteres y máximo 72 bytes UTF-8. Login va a dashboard y registro a onboarding; el wizard precarga ese Business y permite actualizar solo su nombre, sin crear otro.
 - CSRF en memoria, bootstrap antes de cada mutación y tras autenticarse, header `X-CSRF-Token`; JWT solo en cookies HttpOnly. Perfil público React Query a partir de `/auth/me`, negocio decidido por servidor.
 - Web Locks serializa operaciones auth entre pestañas; refresh revalida primero `/me`. Una marca booleana local, sin credenciales, bloquea repetir una renovación incierta incluso tras recarga. Sin Web Locks/almacenamiento se exige relogin al expirar access. No hay retries automáticos de mutaciones ni interceptor global de refresh.
 - Server boundary bajo Suspense consulta `/me` sin caché con cookies access; no rota cookies en RSC. Recuperación cliente fuerza una nueva comprobación aunque haya perfil fresco en caché, renueva si procede y vuelve a pedir render servidor. Gates cliente sin shell mientras la identidad es desconocida; contenido remontado por usuario/negocio y oculto durante reconciliación al volver a la pestaña.
-- Logout y logout-all, avisos BroadcastChannel, revalidación al recuperar visibilidad/foco/conexión y polling 60 s; limpieza de cachés comerciales/repositorio/borradores al cambiar identidad o salir. Las notificaciones son auxiliares: API y revalidación siguen siendo la autoridad.
+- Logout y logout-all, avisos BroadcastChannel, revalidación al recuperar conexión y polling 60 s con pestaña visible, sin revalidación forzada por foco/visibilidad; limpieza de cachés comerciales/repositorio/borradores al cambiar identidad o salir. Las notificaciones son auxiliares: API y revalidación siguen siendo la autoridad.
 
-Los contratos, archivos y límites exactos están en [authentication.md](./authentication.md). Pendientes selección autorizada de negocio, API comercial y verificación de runtime; no reenviar futuras mutaciones no idempotentes sin contrato de idempotencia.
+Los contratos, archivos y límites exactos están en [authentication.md](./authentication.md). Pendientes selección autorizada de negocio, API del resto del comercio y verificación de runtime; no reenviar futuras mutaciones no idempotentes sin contrato de idempotencia.
 
 ## 2. Operación y seguridad pendientes
 
@@ -27,7 +27,7 @@ Los contratos, archivos y límites exactos están en [authentication.md](./authe
 - Medir coste bcrypt en el entorno objetivo; gestionar y rotar los tres secretos separados. Actualmente no hay keyring para rotación gradual de firma.
 - Programar retención/limpieza sin destruir evidencia de refresh consumidos antes de que expire la familia; auditoría sin contraseñas/cookies/JWT; backups/restauración y roles PostgreSQL de mínimo privilegio.
 - Diseñar recuperación y cambio de contraseña, verificación de email, MFA e invitaciones con proveedores/contratos reales. No exponer recuperaciones que devuelvan tokens por canales inseguros.
-- Implementar RBAC y repositorios business-scoped al añadir endpoints comerciales. Las FK compuestas garantizan integridad, no autorización de consultas.
+- Ampliar el RBAC y los repositorios business-scoped de productos al añadir los demás endpoints comerciales. Las FK compuestas garantizan integridad, no autorización de consultas.
 
 ## 3. Verificación
 

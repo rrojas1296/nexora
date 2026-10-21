@@ -40,7 +40,11 @@ export function OnboardingSummary({
                   <dd className="min-w-0 break-words whitespace-pre-wrap">
                     {field === "agentTone"
                       ? t(`tones.${values.agentTone}`)
-                      : String(values[field] || t("notProvided"))}
+                      : field === "whatsappCountry"
+                        ? t(`countries.${values.whatsappCountry}`)
+                        : field === "timezone"
+                          ? `${t(`timezones.${values.timezone}`)} · ${values.timezone}`
+                          : String(values[field] || t("notProvided"))}
                   </dd>
                 </div>
               ))}

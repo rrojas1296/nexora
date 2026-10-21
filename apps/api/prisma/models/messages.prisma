@@ -12,6 +12,7 @@ enum MessageStatus {
 }
 
 model Message {
+  isDeleted      Boolean          @default(false)
   id             String           @id @default(uuid()) @db.Uuid
   businessId     String           @db.Uuid
   conversationId String           @db.Uuid
@@ -24,4 +25,5 @@ model Message {
 
   @@unique([businessId, id])
   @@index([businessId, conversationId, createdAt])
+  @@map("Messages")
 }

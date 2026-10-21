@@ -1,3 +1,4 @@
+import { PageEntrance } from "@/components/ui/page-entrance";
 import { Suspense } from "react";
 import { ArrowUpLeft } from "lucide-react";
 import { AuthenticatedContent } from "@/features/auth/components/authenticated-content";
@@ -27,7 +28,8 @@ export default async function OnboardingPage() {
               <ThemeSelect />
             </div>
           </header>
-          <main
+          <PageEntrance
+            as="main"
             id="main-content"
             tabIndex={-1}
             className="px-5 py-10 outline-none sm:px-8 sm:py-14 lg:px-12"
@@ -39,7 +41,7 @@ export default async function OnboardingPage() {
               </p>
             </div>
             <OnboardingWizard />
-          </main>
+          </PageEntrance>
         </div>
       </AuthenticatedContent>
     </Suspense>

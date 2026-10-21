@@ -7,10 +7,12 @@ export function MutationNotice({
   error,
   success,
   pending,
+  message,
 }: {
   error: Error | null;
   success?: boolean;
   pending?: boolean;
+  message?: string;
 }) {
   const t = useTranslations("Demo");
   if (pending)
@@ -21,7 +23,7 @@ export function MutationNotice({
         role="alert"
         className="mt-4 rounded-xl border border-destructive/30 p-3 text-xs leading-6 text-destructive"
       >
-        {t(`errors.${error instanceof DemoDataError ? error.code : "unexpected"}`)}
+        {message ?? t(`errors.${error instanceof DemoDataError ? error.code : "unexpected"}`)}
       </p>
     );
   if (success) return <output className="mt-4 block text-xs text-primary">{t("saved")}</output>;

@@ -2,17 +2,19 @@
 
 import { LoaderCircle, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { PageEntrance } from "@/components/ui/page-entrance";
 import { Button } from "@/components/ui/button";
 import type { ReactNode } from "react";
 
 type Props = {
   pending: boolean;
   error: boolean;
+  errorMessage?: string;
   empty?: boolean;
   retry: () => void;
   children: ReactNode;
 };
-export function QueryState({ pending, error, empty, retry, children }: Props) {
+export function QueryState({ pending, error, errorMessage, empty, retry, children }: Props) {
   const t = useTranslations("Demo");
   if (pending)
     return (
@@ -29,7 +31,7 @@ export function QueryState({ pending, error, empty, retry, children }: Props) {
       <section className="rounded-3xl border bg-card p-8">
         <h2 className="text-lg">{t("loadError")}</h2>
         <p role="alert" className="mt-2 text-sm text-muted-foreground">
-          {t("loadErrorHint")}
+          {errorMessage ?? t("loadErrorHint")}
         </p>
         <Button variant="outline" className="mt-5" onClick={retry}>
           <RefreshCw className="size-4" aria-hidden="true" />
@@ -44,5 +46,5 @@ export function QueryState({ pending, error, empty, retry, children }: Props) {
         <p className="mt-2 text-sm text-muted-foreground">{t("emptyHint")}</p>
       </section>
     );
-  return children;
+  return <PageEntrance nested>{children}</PageEntrance>;
 }

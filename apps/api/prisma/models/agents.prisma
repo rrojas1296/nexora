@@ -5,6 +5,7 @@ enum AgentTone {
 }
 
 model Agent {
+  isDeleted    Boolean   @default(false)
   id           String    @id @default(uuid()) @db.Uuid
   businessId   String    @db.Uuid
   storeId      String?   @db.Uuid
@@ -20,4 +21,5 @@ model Agent {
 
   @@unique([businessId, id])
   @@unique([businessId, storeId])
+  @@map("Agents")
 }

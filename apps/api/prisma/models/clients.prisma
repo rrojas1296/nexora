@@ -5,6 +5,7 @@ enum ClientSegment {
 }
 
 model Client {
+  isDeleted        Boolean        @default(false)
   id               String         @id @default(uuid()) @db.Uuid
   businessId       String         @db.Uuid
   name             String
@@ -31,4 +32,5 @@ model Client {
   @@unique([businessId, id])
   @@unique([businessId, email])
   @@index([businessId, phone])
+  @@map("Clients")
 }

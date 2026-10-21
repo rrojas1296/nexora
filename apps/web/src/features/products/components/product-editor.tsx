@@ -3,14 +3,15 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { productInputSchema } from "@/features/demo/schemas/workspace-schema";
-import type { Product, ProductInput } from "@/features/demo/types/workspace";
-import { useWorkspaceMutation } from "@/features/demo/hooks/use-workspace";
+import { productInputSchema, type Product, type ProductInput } from "../schemas/product-schema";
+import { useProductAccess, useProductMutation } from "../hooks/use-products";
+import { productErrorKey } from "../services/product-error";
 import { RecordForm } from "@/features/demo/components/record-form";
 
 export function ProductEditor({ product, onClose }: { product?: Product; onClose: () => void }) {
   const t = useTranslations("Products");
-  const mutation = useWorkspaceMutation();
+  const mutation = useProductMutation();
+  const access = useProductAccess();
   const form = useForm<ProductInput>({
     resolver: zodResolver(productInputSchema),
     defaultValues: product ?? {
@@ -36,6 +37,9 @@ export function ProductEditor({ product, onClose }: { product?: Product; onClose
       columns
       pending={mutation.isPending}
       error={mutation.error}
+      errorMessage={
+        mutation.error ? t(`errors.${productErrorKey(mutation.error, true)}`) : undefined
+      }
       onCancel={onClose}
       fields={[
         { name: "name", label: t("name"), section: t("identity") },
@@ -86,8 +90,8 @@ export function ProductEditor({ product, onClose }: { product?: Product; onClose
       ]}
       onSave={async (input) => {
         try {
-          await mutation.mutateAsync({ type: "product.save", id: product?.id, input });
-          onClose();
+          await mutation.mutateAsync({ type: "save", id: product?.id, input });
+          if (access.isCurrent()) onClose();
         } catch {
           /* Preserve the draft on failure; the form renders the error. */
         }

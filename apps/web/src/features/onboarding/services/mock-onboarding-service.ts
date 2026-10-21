@@ -3,6 +3,7 @@ import { createOnboardingSchema, type OnboardingValues } from "../schemas/onboar
 
 const schema = createOnboardingSchema({
   name: "name",
+  businessName: "businessName",
   description: "description",
   instructions: "instructions",
   required: "required",

@@ -1,4 +1,5 @@
 model Store {
+  isDeleted     Boolean        @default(false)
   id            String         @id @default(uuid()) @db.Uuid
   businessId    String         @db.Uuid
   name          String
@@ -15,4 +16,5 @@ model Store {
 
   @@unique([businessId, id])
   @@index([businessId, active])
+  @@map("Stores")
 }

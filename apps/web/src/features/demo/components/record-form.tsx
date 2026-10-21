@@ -25,6 +25,7 @@ export function RecordForm<T extends FieldValues>({
   onSave,
   pending,
   error,
+  errorMessage,
   success,
   onCancel,
   readOnly = false,
@@ -35,6 +36,7 @@ export function RecordForm<T extends FieldValues>({
   onSave: (values: T) => Promise<void>;
   pending: boolean;
   error: Error | null;
+  errorMessage?: string;
   success?: boolean;
   onCancel?: () => void;
   readOnly?: boolean;
@@ -59,7 +61,7 @@ export function RecordForm<T extends FieldValues>({
             </Fragment>
           ))}
         </div>
-        <MutationNotice error={error} success={success} />
+        <MutationNotice error={error} message={errorMessage} success={success} />
         <div className="flex flex-wrap justify-end gap-2 border-t pt-5">
           {onCancel ? (
             <Button variant="outline" onClick={onCancel}>

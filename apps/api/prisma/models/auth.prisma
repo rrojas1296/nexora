@@ -6,6 +6,7 @@ enum MembershipRole {
 }
 
 model User {
+  isDeleted    Boolean      @default(false)
   id           String       @id @default(uuid()) @db.Uuid
   email        String       @unique
   name         String
@@ -14,9 +15,12 @@ model User {
   createdAt    DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime     @updatedAt @db.Timestamptz(3)
   memberships  Membership[]
+
+  @@map("Users")
 }
 
 model Membership {
+  isDeleted             Boolean          @default(false)
   businessId            String           @db.Uuid
   userId                String           @db.Uuid
   role                  MembershipRole   @default(VIEWER)
@@ -30,9 +34,11 @@ model Membership {
 
   @@id([businessId, userId])
   @@index([userId])
+  @@map("Memberships")
 }
 
 model AuthSession {
+  isDeleted     Boolean          @default(false)
   id            String           @id @default(uuid()) @db.Uuid
   businessId    String           @db.Uuid
   userId        String           @db.Uuid
@@ -47,9 +53,11 @@ model AuthSession {
   @@unique([businessId, userId, id])
   @@index([userId, revokedAt])
   @@index([expiresAt])
+  @@map("AuthSessions")
 }
 
 model RefreshSession {
+  isDeleted        Boolean     @default(false)
   id               String      @id @default(uuid()) @db.Uuid
   businessId       String      @db.Uuid
   userId           String      @db.Uuid
@@ -65,4 +73,5 @@ model RefreshSession {
   @@index([businessId, userId])
   @@index([businessId, familyId])
   @@index([expiresAt])
+  @@map("RefreshSessions")
 }

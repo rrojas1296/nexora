@@ -26,7 +26,13 @@ export class AuthExceptionFilter implements ExceptionFilter {
 
   catch(exception: unknown, host: ArgumentsHost): void {
     const response = host.switchToHttp().getResponse<Response>();
-    const authStatuses = { unauthorized: 401, forbidden: 403, conflict: 409, invalid: 400 };
+    const authStatuses = {
+      unauthorized: 401,
+      forbidden: 403,
+      conflict: 409,
+      invalid: 400,
+      incorrect_password: 400,
+    };
     const oversizedBody =
       exception instanceof Error &&
       "type" in exception &&
@@ -48,6 +54,10 @@ export class AuthExceptionFilter implements ExceptionFilter {
       response.setHeader("X-Request-Id", incident);
     }
     response.setHeader("Cache-Control", "no-store");
-    response.status(status).json({ statusCode: status, error: errors[status] ?? errors[500] });
+    const error =
+      exception instanceof AuthError && exception.code === "incorrect_password"
+        ? { code: "INCORRECT_PASSWORD", message: "Current password is incorrect." }
+        : (errors[status] ?? errors[500]);
+    response.status(status).json({ statusCode: status, error });
   }
 }

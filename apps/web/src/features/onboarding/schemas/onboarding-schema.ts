@@ -1,17 +1,15 @@
 import { z } from "zod";
 
 import { currencies } from "@/lib/config/currency";
+import { getCallingCode, phoneCountries } from "../config/phone-countries";
+import { timezones } from "../config/timezones";
 
 export { currencies } from "@/lib/config/currency";
-export const timezones = [
-  "America/Mexico_City",
-  "America/Bogota",
-  "America/New_York",
-  "Europe/Madrid",
-] as const;
+export { timezones } from "../config/timezones";
 export const agentTones = ["friendly", "professional", "concise"] as const;
 export type OnboardingValidation = {
   name: string;
+  businessName: string;
   description: string;
   instructions: string;
   required: string;
@@ -24,7 +22,7 @@ export function createOnboardingSchema(messages: OnboardingValidation) {
   const time = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, messages.hours);
   return z
     .object({
-      businessName: name,
+      businessName: z.string().trim().min(1, messages.businessName).max(120, messages.businessName),
       businessDescription: z
         .string()
         .trim()
@@ -42,12 +40,25 @@ export function createOnboardingSchema(messages: OnboardingValidation) {
         .trim()
         .min(20, messages.instructions)
         .max(2000, messages.instructions),
+      whatsappCountry: z.enum(
+        phoneCountries.map(({ country }) => country),
+        {
+          error: messages.required,
+        },
+      ),
       whatsappPhone: z
         .string()
         .trim()
         .refine((value) => value === "" || /^\+[1-9]\d{7,14}$/.test(value), messages.phone),
       whatsappPreview: z.boolean(),
     })
+    .refine(
+      (value) =>
+        value.whatsappPhone === "" ||
+        (value.whatsappPhone.startsWith(getCallingCode(value.whatsappCountry)) &&
+          /^\d{6,}$/.test(value.whatsappPhone.slice(getCallingCode(value.whatsappCountry).length))),
+      { path: ["whatsappPhone"], message: messages.phone },
+    )
     .refine((value) => value.closingTime > value.openingTime, {
       path: ["closingTime"],
       message: messages.hours,

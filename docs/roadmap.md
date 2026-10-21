@@ -157,6 +157,73 @@ Los seis pasos están completados: frontend funcional con mocks y revisiones vis
 - Las cuatro páginas del workspace (dashboard, módulos, alta y edición) declaran `instant = false`, mecanismo documentado por Next.js 16.4.2 y Context7 para excluir esos segmentos de validación. No se modifica la configuración global, los guards, las consultas `no-store`, Suspense/loading ni Cache Components/Partial Prefetching. Onboarding conserva su límite interno y las páginas públicas siguen validadas.
 - Es una exclusión deliberada de validación, no una garantía u optimización de navegación instantánea. Verificación limitada a lint, formato, tipos, build y diff; sin tests, peticiones HTTP ni navegador. El overlay de desarrollo no se comprueba durante la restricción vigente.
 
+## Ajuste posterior — Sesión sin reconsulta al recuperar foco
+
+- Eliminados los listeners de `focus` y `visibilitychange` de `AuthProvider` que invalidaban manualmente la sesión, al margen de `refetchOnWindowFocus: false`. Recuperar foco/visibilidad ya no dispara esa invalidación ni oculta el contenido por reconciliación de esos eventos.
+- Conservados polling de 60 s en pestaña visible, revalidación al recuperar conexión, sincronización BroadcastChannel y comprobaciones de sesión al montar/recargar. La detección de revocaciones sin aviso depende de la siguiente revalidación; no hay push entre dispositivos.
+- `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y `git diff --check` correctos; builds sin caché y 53 páginas generadas. Sin tests ni comprobaciones de navegador/runtime por la restricción vigente.
+
+## Ampliación — Registro conectado con onboarding
+
+- Implementado `PATCH /api/v1/businesses/:businessId` para `{ name }` (trim, 1–120 caracteres), sin modificar slug ni crear otro negocio. UUID/body estricto, sesión global, CSRF/Origin y respuesta sin caché.
+- Autorización acotada al negocio activo verificado y membresía OWNER/ADMIN activa de usuario activo; el adaptador Prisma incluye membresía y rol en la misma sentencia de actualización. Capas domain/application libres de Nest/Prisma.
+- Wizard precarga el nombre real de `/me`; al finalizar lo guarda bajo el lock auth con verificación de identidad y CSRF, actualiza React Query y revalida el perfil. No hay reenvío automático de mutaciones; ante pérdida de respuesta se comunica resultado incierto.
+- Nombre del negocio alineado con registro (1–120); textos es/en distinguen persistencia real de demo. Descripción, tienda, agente, WhatsApp, progreso y marca de completado permanecen solo en memoria; sin migraciones, seeds ni conexiones adicionales a la base.
+- Verificación: `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y `git diff --check` correctos. Build de ambas apps, 53 páginas generadas; sin migraciones ni acceso adicional a la base. No se implementaron ni ejecutaron tests ni comprobaciones HTTP/navegador por la restricción vigente.
+
+## Ajuste — Onboarding orientado a Latinoamérica
+
+- Teléfono WhatsApp separado en selector de país/código (26 países) y número nacional opcional, con Perú (+51) como valor inicial. Conserva los dígitos al cambiar de país, admite separadores habituales y pegar un número internacional con el mismo prefijo seleccionado. El borrador/resumen mantienen el número combinado y el país para distinguir códigos compartidos (+1).
+- Validación estructural del teléfono: mínimo 6 dígitos nacionales y 8–15 dígitos totales. Sin verificación por país, envío de mensajes ni conexión real con WhatsApp; los datos siguen solo en memoria.
+- Ampliadas de 4 a 38 las zonas IANA del onboarding, con etiquetas traducidas de país/ciudad: Sudamérica, Centroamérica y Caribe, variantes regionales de México, Brasil y Chile; conservadas Nueva York y Madrid. Lima como valor inicial, sin offsets fijos ni cambios en el editor de tiendas o backend.
+- Campos accesibles, controles bloqueados al guardar y traducciones es/en. `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y `git diff --check` correctos (53 páginas). Sin tests, peticiones HTTP ni navegador por la restricción vigente.
+
+## Ampliación — Tablas plurales y borrado lógico
+
+- Los 13 modelos Prisma mantienen nombres singulares y delegates existentes; `@@map` define tablas plurales (`Users`, `Businesses`, `Memberships`, `AuthSessions`, `RefreshSessions`, `Stores`, `Products`, `Clients`, `Orders`, `OrderItems`, `Conversations`, `Messages`, `Agents`). Todos incorporan `isDeleted Boolean @default(false)`.
+- Migración `20261020170000_plural_tables_soft_delete` no destructiva: renombra tablas, PK, FK e índices y añade el flag; conserva filas y claves únicas. Migración inicial intacta. Aplicada explícitamente al destino configurado tras autorización del usuario; no fue necesario usar su permiso excepcional de borrar datos. Sin reset ni seeds: `migrate status` al día y diff de base a esquema sin diferencias.
+- Credenciales, inicio/validación de sesión, refresh y perfil excluyen registros y relaciones eliminados; actualización del negocio exige negocio/membresía/usuario no eliminados. SQL de bloqueo actualizado a `AuthSessions`. Revocaciones incluyen filas eliminadas deliberadamente.
+- Sin endpoints de borrado/restauración, cascadas lógicas, liberación de claves únicas ni filtro Prisma global. Documentados los límites y el despliegue coordinado; futuros repositorios deberán filtrar tenant y borrado explícitamente.
+- Verificación: Prisma format/validate/generate, lint, formato, tipos, build y `git diff --check` correctos. No se implementaron ni ejecutaron tests, peticiones HTTP ni navegador. La verificación de migración confirma sincronización del esquema, no comportamiento runtime de auth o aislamiento.
+
+## Ampliación — Cambio de contraseña autenticado
+
+- Pantalla dedicada `/{locale}/settings/password`, acceso desde header y Seguridad de Configuración. Formularios RHF/Zod es/en con contraseña actual, nueva y confirmación local, autocomplete, mostrar/ocultar y bloqueo al enviar. Separada de preferencias mock; recuperaciones por email siguen fuera de alcance.
+- `POST /api/v1/auth/change-password` con body estricto, guard de sesión, CSRF/Origin, límite de 5 intentos por minuto/IP/proceso y respuesta 204 sin cookies de sesión vigentes. Comprueba la contraseña actual con bcrypt; nueva distinta, mínimo 12 caracteres y máximo 72 bytes UTF-8. Identidad solo desde claims, sin edición de otras cuentas.
+- Transacción con bloqueo `Users FOR NO KEY UPDATE`, revalidación de sesión/relaciones y comparación de hash anterior: hash nuevo y revocación de todas las sesiones/refresh del usuario se confirman juntos. Login toma el mismo bloqueo y revalida el hash para evitar crear sesiones con una contraseña anterior durante la rotación. Sin migraciones, seeds, dependencias nuevas ni acceso a la base durante esta etapa.
+- Cliente serializa el POST bajo lock auth y verifica identidad; no almacena contraseñas en QueryClient/Zustand ni reenvía mutaciones inciertas. Éxito limpia caché/perfil/borradores, notifica pestañas y navega a un documento nuevo de login con aviso. Errores de red/5xx indican que el cambio puede haberse guardado y recomiendan probar la nueva contraseña antes de repetirlo.
+- Verificación: lint, formato, tipos, build y diff. No se implementaron ni ejecutaron tests, peticiones HTTP ni comprobaciones de navegador; la concurrencia y el comportamiento de sesiones requieren verificaciones runtime autorizadas antes de declarar el flujo listo para producción.
+
+## Ampliación — Cambio de contraseña desde el login
+
+- Enlace visible en login hacia `/{locale}/change-password`, fuera del shell del workspace. Reutiliza formulario RHF/Zod es/en con email, contraseña actual, nueva y confirmación; no exige iniciar sesión ni crea sesión intermedia. Cambio desde Configuración conservado.
+- `POST /api/v1/auth/change-password-with-credentials`: público con CSRF/Origin y throttling de 5 intentos/minuto/IP/proceso, DTO estricto y respuesta 204. Bcrypt compara también contra hash ficticio para emails inexistentes; credenciales incorrectas/cuenta inactiva o eliminada reciben el mismo 401 genérico. Sin IDs arbitrarios ni requisito de membresía para cambiar las credenciales de la propia cuenta.
+- Comparte bloqueo de usuario, comparación del hash y transacción de actualización/revocación con el cambio autenticado. Revoca las sesiones de la cuenta verificada, borra cookies locales, limpia estado/notifica pestañas y abre documento nuevo de login con aviso. Contraseñas transitorias, sin caché/persistencia ni replay; conserva solo el email al fallar. Sin dependencias, migraciones, acceso a DB ni proveedores nuevos.
+- Los códigos de recuperación por email siguen pendientes por decisión del usuario; conocer la contraseña actual es obligatorio. La verificación de esta etapa se limita a lint, formato, tipos, build y diff; sin tests, peticiones HTTP ni navegador. Concurrencia/comportamiento runtime pendientes de autorización antes de declarar producción.
+
+## Ajuste — Animación de entrada de pantallas
+
+- Entrada compartida de 320 ms con desvanecimiento y desplazamiento vertical corto, definida como token Tailwind v4 en `styles/motion.css`. Aplicada a dashboard/módulos, formularios de alta/edición, login/registro, cambio de contraseña público/autenticado y onboarding; sidebar/header permanecen estables.
+- Solo se animan opacidad y transform, sin librerías, timers, listeners de navegación ni templates que remonten layouts. Claves de pantalla en las composiciones compartidas renuevan la entrada por módulo/recurso/ID/modo, no por escribir, filtrar, revalidar datos o cambiar tema. Sin cascadas por tarjeta ni transformaciones persistentes.
+- Variante `motion-safe` para respetar movimiento reducido del sistema. Sin cambios de datos, auth, APIs ni dependencias. Verificación limitada a lint, formato, tipos, build y diff; sin tests ni comprobación visual/HTTP/navegador por la restricción vigente.
+
+## Corrección — Entrada visible de los bloques al navegar
+
+- Tras el aviso del usuario de que el contenido aparecía de golpe, sustituida la entrada única del contenedor por `PageEntrance`, límite cliente pequeño con bloques escalonados: 560 ms y retrasos acotados de 0/80/160/240 ms. Sustituye los tiempos y la ausencia de cascada descritos en el ajuste anterior.
+- Reinicia solo CSS animations `page-enter` al montar/reactivar usando la API nativa de animaciones; permite reproducir la entrada después de hidratación y en rutas reactivadas, sin medir layout ni reiniciar indicadores de espera/gráficas. Sin listeners, timers, librerías ni cambios a providers/guards.
+- `QueryState` incorpora la entrada cuando el contenido de datos está listo, para no depender de una animación exterior que puede terminar durante la carga. Movimiento reducido conservado mediante `motion-safe`; sin disparadores por escritura/filtros/tema ni replay de consultas/mutaciones. El contenido desmontado que vuelve a montarse sí anima de nuevo.
+- Verificación limitada a lint, formato, tipos, build y diff. No se ejecutaron tests, HTTP ni navegador por la restricción vigente; el resultado visual y las navegaciones reales siguen sin comprobación runtime autorizada.
+
+## Ampliación — Productos con API y persistencia real
+
+- Primer módulo comercial conectado a PostgreSQL: `GET/POST /api/v1/businesses/:businessId/products` y `GET/PATCH/DELETE /:id`. DTOs estrictos, UUIDs, filtros/búsqueda, paginación remota estable y detalle; respuesta con importes decimales string y timestamps. Reutiliza el esquema/índices existentes, sin nueva migración, seed ni acceso operativo a la base.
+- Capas domain/application sin Nest/Prisma; repositorio por negocio activo verificado. Revalida sesión, usuario, negocio y membresía no eliminados dentro de la transacción, con bloqueo compartido de membresía/negocio. Lecturas para membresía activa; escrituras solo OWNER/ADMIN. CSRF/Origin y guard global conservados; no confía en tenant/rol del body.
+- CRUD completo de los campos existentes de la pantalla, importes de dos decimales en PEN, stock manual, activación/desactivación y SKU único por negocio (constraint sensible a mayúsculas). Borrado lógico, sin liberar SKU y bloqueado si tiene OrderItems históricos vinculados. Sin restauración ni edición con versiones.
+- Listado/KPIs en snapshot RepeatableRead: catálogo, activos, activos con stock bajo y valor total del inventario; globales del negocio y sin depender de filtros/páginas. Formulario y listado usan schemas/servicios/hooks propios, claves React Query por usuario/negocio y lecturas cancelables; errores/carga/vacío y permisos es/en.
+- Creación/edición en páginas dedicadas y diálogo solo para confirmar borrado. Recupera sesión/CSRF bajo Web Lock y valida identidad/negocio esperados antes de enviar; invalida lecturas tras el resultado, sin retry de escrituras ni replay ante resultados inciertos, conservando el borrador al fallar.
+- Productos queda fuera de escenarios/restablecimiento demo y persiste tras recarga/logout. Dashboard, pedidos y reportes conservan fixtures independientes: no sincronizan productos ni afectan stock real. Sin nuevas dependencias ni integraciones externas. Contratos y límites en [products.md](./products.md).
+- Verificación: lint, formato, tipos, build y diff; sin tests, smoke checks, peticiones HTTP ni navegador por la restricción vigente. Estas verificaciones no demuestran comportamiento runtime, concurrencia ni aislamiento efectivo; no declarar producción.
+
 ## Fase posterior, fuera del alcance actual
 
-Recuperación/verificación de email y MFA; rate limits distribuidos/por cuenta, auditoría durable, retención de sesiones, rotación gradual de claves y verificaciones de seguridad; selección autorizada de negocio, RBAC comercial y repositorios business-scoped; endpoints de negocio y persistencia comercial; WhatsApp Cloud API y proveedores de IA.
+Recuperación/verificación de email y MFA; rate limits distribuidos/por cuenta, auditoría durable, retención de sesiones, rotación gradual de claves y verificaciones de seguridad; selección autorizada de negocio y ampliación de RBAC/repositorios business-scoped más allá de productos; endpoints de pedidos y del resto del comercio, persistencia del resto del onboarding; WhatsApp Cloud API y proveedores de IA.

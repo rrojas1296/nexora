@@ -2,7 +2,7 @@
 
 ## Estado implementado
 
-Base NestJS 12 con TypeScript strict, ESM y compilación mediante el ejecutable `tsc` de TypeScript 7. `auth` implementa registro/login, sesión actual, refresh, logout/logout-all y CSRF con jose, bcrypt y repositorio Prisma. `users`, `business`, `stores`, `products`, `orders`, `clients`, `conversations` y `agents` siguen registrados sin endpoints ni comportamiento comercial. El frontend consume auth real por un proxy de mismo origen; onboarding y módulos comerciales siguen mock.
+Base NestJS 12 con TypeScript strict, ESM y compilación mediante el ejecutable `tsc` de TypeScript 7. `auth` implementa registro/login, sesión actual, refresh, logout/logout-all y CSRF con jose, bcrypt y repositorio Prisma. `business` permite actualizar el nombre del negocio activo; `products` implementa listado/detalle/alta/edición/borrado lógico con autorización del negocio activo. `users`, `stores`, `orders`, `clients`, `conversations` y `agents` siguen registrados sin endpoints comerciales. El frontend consume auth, actualización del nombre y productos por un proxy de mismo origen; el resto del onboarding y del comercio sigue mock.
 
 Se conserva el controlador original `GET /` → `Hello World!` como ejemplo del starter. No es un health check, no comprueba PostgreSQL y no acredita disponibilidad del SaaS. Auth usa `/api/v1`; la raíz del starter está excluida del prefijo, pero protegida por el guard global.
 
@@ -28,7 +28,16 @@ apps/api/
       presentation/                   Controladores y contratos HTTP
 ```
 
-El concepto de negocio se llama `Business`, con módulo singular `src/modules/business/business.module.ts` (`BusinessModule`) y referencias `businessId`. Sigue siendo la unidad de aislamiento multi-tenant; las rutas de colecciones propuestas usan el plural `/businesses`. No hay endpoints nuevos por este renombrado.
+El concepto de negocio se llama `Business`, con módulo singular `src/modules/business/business.module.ts` (`BusinessModule`) y referencias `businessId`. Sigue siendo la unidad de aislamiento multi-tenant; las rutas de colecciones propuestas usan el plural `/businesses`. El renombrado no añadió endpoints; posteriormente se implementó la actualización del nombre descrita a continuación.
+
+### Actualización del nombre del negocio (implementada)
+
+`PATCH /api/v1/businesses/:businessId` recibe exclusivamente `{ name: string }` (trim, 1–120 caracteres) y devuelve `{ data: { id, name, slug } }`. No modifica el slug, no crea otro negocio ni guarda los demás campos del wizard.
+
+- Guard global de sesión y CSRF/Origin; nunca toma usuario o rol del body. El ID debe ser UUID y coincidir con el negocio activo de los claims verificados.
+- Repositorio Prisma con filtro por ID y membresía activa OWNER/ADMIN de usuario activo en la misma sentencia de actualización. Negocio, membresía y usuario deben tener `isDeleted: false`. No admite otros negocios, AGENT ni VIEWER; ausencia/no autorización devuelve 403 sin revelar existencia.
+- 400 para parámetros/body inválidos (incluidos campos extra), 401 sin sesión válida, 403 por permisos/CSRF y 429 por límite global. Respuestas normalizadas por el filtro global y `Cache-Control: no-store`.
+- Domain/application sin Nest ni Prisma; factories de `BusinessModule` componen servicio, puerto y adaptador. Sin cambios de esquema, migraciones ni seeds.
 
 Auth contiene tipos/errores de dominio, casos de uso y puertos, adaptadores bcrypt/jose/Prisma/CSRF y controladores/DTOs/guards; los otros módulos conservan sus capas reservadas. Las dependencias fluyen de presentation/infrastructure hacia application/domain, sin Nest/Prisma en las capas internas; factories del módulo componen los adaptadores. `DatabaseModule` no es global y auth lo importa expresamente.
 
@@ -65,7 +74,7 @@ CORS permite credenciales, métodos GET/POST/PUT/PATCH/DELETE/OPTIONS y headers 
 
 Prisma CLI, cliente y adaptador PostgreSQL están fijados a **7.10.1**. Al instalar, el tag `latest` de CLI apuntaba a `8.0.0-rc.23`; se eligió la versión estable, no la candidata. `pg` usa su versión estable consultada. Los scripts de instalación permitidos incluyen `prisma`, `@prisma/engines` y `bcrypt` (binario nativo). La excepción de antigüedad de jose queda acotada a `jose@6.2.13` en pnpm-workspace.yaml, sin desactivar políticas globales.
 
-`PrismaService` crea el cliente con `@prisma/adapter-pg`: pool máximo 10, espera de conexión 5 segundos, inactividad 30 segundos. No ejecuta `$connect`, migraciones ni seeds al arrancar; las consultas se ejecutan cuando se usan los endpoints auth y el guard. Una conexión fallará al usarse si la base no está disponible: arrancar **no prueba salud de PostgreSQL**. `enableShutdownHooks` permite desconectar el cliente mediante `onModuleDestroy`. El cliente crudo no aplica aislamiento tenant automático; no exponerlo desde controladores.
+`PrismaService` crea el cliente con `@prisma/adapter-pg`: pool máximo 10, espera de conexión 5 segundos, inactividad 30 segundos. No ejecuta `$connect`, migraciones ni seeds al arrancar; las consultas se ejecutan cuando se usan los endpoints auth y el guard. Una conexión fallará al usarse si la base no está disponible: arrancar **no prueba salud de PostgreSQL**. `enableShutdownHooks` permite desconectar el cliente mediante `onModuleDestroy`. El cliente crudo no aplica aislamiento tenant ni borrado lógico automáticos; no exponerlo desde controladores. Los 13 modelos tienen `isDeleted` y `@@map` a tablas plurales; auth, actualización del negocio y productos filtran explícitamente los registros eliminados. La migración `20261020170000_plural_tables_soft_delete` ya se aplicó al destino autorizado, sin reset ni borrado de datos; status al día y diff sin diferencias. En otros destinos, coordinar su ejecución explícita con el despliegue de esta API (la versión anterior usa tablas singulares). Ver `docs/database.md` para semántica, unicidad y límites.
 
 Build, typecheck y el inicio de dev generan el cliente antes de compilar. Después de editar el esquema durante dev, regenerar y reiniciar el supervisor. No ejecutar Nest CLI build/start mientras TypeScript 7 no exponga la API programática necesaria.
 
@@ -78,27 +87,31 @@ pnpm --filter @whatsapp/api build
 
 Validar el esquema, generar tipos y compilar no conectan a una base ni verifican queries. Ver [database.md](./database.md) para migraciones explícitas y límites del modelo.
 
+## Cambio de contraseña
+
+`POST /api/v1/auth/change-password` exige access, CSRF/Origin y contraseña actual, no un rol administrativo. El servicio valida bcrypt y una nueva contraseña distinta de 12 caracteres mínimo/72 bytes UTF-8 máximo. El repositorio compara el hash anterior bajo bloqueo de usuario `FOR NO KEY UPDATE`, revalida sesión/relaciones y actualiza hash y revoca todas las familias/refresh del usuario en una transacción. Login usa el mismo bloqueo y comprueba que el hash verificado no cambió antes de emitir la sesión. No cambia esquema ni usa proveedores externos. También existe `POST /api/v1/auth/change-password-with-credentials`, público con CSRF/Origin y límite de 5 intentos/minuto/IP/proceso, para cambiar desde login con email y contraseña actual. Credenciales desconocidas/incorrectas o cuenta no disponible devuelven 401 genérico; no inicia sesión. Comparte la transacción de hash/revocación, identificando la cuenta solo por credenciales, sin requerir membresía ni aceptar IDs arbitrarios. Contrato, límites y precauciones de concurrencia/runtime en [authentication.md](./authentication.md).
+
 ## Contratos HTTP
 
-Auth está implementado bajo `/api/v1`; contratos y respuestas exactas en [authentication.md](./authentication.md). DTOs Zod validan entradas y se devuelven perfiles filtrados, no entidades Prisma. Los demás recursos de la tabla son **propuestas no implementadas**. Usarán UUID, no IDs cortos de fixtures, y Decimal como string.
+Auth está implementado bajo `/api/v1`; contratos y respuestas exactas en [authentication.md](./authentication.md). DTOs Zod validan entradas y se devuelven perfiles filtrados, no entidades Prisma. Business y productos también están implementados; los recursos restantes de la tabla son **propuestas no implementadas**. Productos incluye capas domain/application sin Nest/Prisma, adaptador Prisma y presentación con DTOs/filtro: contrato completo y límites en [products.md](./products.md). Usarán UUID, no IDs cortos de fixtures, y Decimal como string.
 
-| Recurso                                 | Operaciones propuestas                                                                           |
-| --------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `/auth/*`                               | **Implementado:** registro, login, refresh, logout/logout-all, sesión actual y bootstrap CSRF.   |
-| `/businesses/:businessId/stores`        | GET/POST colección; GET/PATCH `/:id`.                                                            |
-| `/businesses/:businessId/products`      | GET/POST colección; GET/PATCH/DELETE `/:id`, con protección del historial.                       |
-| `/businesses/:businessId/clients`       | GET/POST colección; GET/PATCH `/:id`; historial vinculado autorizado.                            |
-| `/businesses/:businessId/orders`        | GET/POST colección; GET/PATCH `/:id`; reglas de transición e idempotencia por diseñar.           |
-| `/businesses/:businessId/conversations` | GET colección/detalle; PATCH estado/asignación; GET/POST `/:id/messages`. No implica envío real. |
-| `/businesses/:businessId/agents`        | GET/POST colección; GET/PATCH `/:id`. Activación futura requiere integración real.               |
-| `/businesses/:businessId/reports/sales` | GET con rango UTC y tienda autorizada; agregaciones en servidor.                                 |
+| Recurso                                 | Operaciones y estado                                                                                                 |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `/auth/*`                               | **Implementado:** registro, login, refresh, logout/logout-all, cambio de contraseña, sesión actual y bootstrap CSRF. |
+| `/businesses/:businessId/stores`        | GET/POST colección; GET/PATCH `/:id`.                                                                                |
+| `/businesses/:businessId/products`      | **Implementado:** GET/POST colección; GET/PATCH/DELETE `/:id`, soft delete, OWNER/ADMIN y protección del historial.  |
+| `/businesses/:businessId/clients`       | GET/POST colección; GET/PATCH `/:id`; historial vinculado autorizado.                                                |
+| `/businesses/:businessId/orders`        | GET/POST colección; GET/PATCH `/:id`; reglas de transición e idempotencia por diseñar.                               |
+| `/businesses/:businessId/conversations` | GET colección/detalle; PATCH estado/asignación; GET/POST `/:id/messages`. No implica envío real.                     |
+| `/businesses/:businessId/agents`        | GET/POST colección; GET/PATCH `/:id`. Activación futura requiere integración real.                                   |
+| `/businesses/:businessId/reports/sales` | GET con rango UTC y tienda autorizada; agregaciones en servidor.                                                     |
 
-Listas previstas: `page`, `pageSize` (máximo 100), `search` y filtros tipados; respuesta `{ data: T[], pagination: { page, pageSize, total } }`. Detalle: `{ data: T }`; eliminación sin cuerpo: 204. Errores previstos `{ code, message, requestId?, details? }`, sin stack ni secretos; `details` solo errores de validación de campos, no datos privados. Estados 400/401/403/404/409/429 según validación, sesión, permisos, pertenencia, conflicto y límites. Paginación y errores de recursos comerciales no están implementados. Auth sí tiene filtro de errores uniforme y respuestas controladas; no confundirlo con contratos comerciales definitivos.
+Listas previstas: `page`, `pageSize` (máximo 100), `search` y filtros tipados; respuesta `{ data: T[], pagination: { page, pageSize, total } }`. Detalle: `{ data: T }`; eliminación sin cuerpo: 204. Errores previstos `{ code, message, requestId?, details? }`, sin stack ni secretos; `details` solo errores de validación de campos, no datos privados. Estados 400/401/403/404/409/429 según validación, sesión, permisos, pertenencia, conflicto y límites. Estas propuestas no se implementaron para los módulos restantes. Productos ya devuelve `pagination` (incluido `pages`), `summary` global, importes string y errores controlados con envelope `{ statusCode, error: { code, message } }`. Auth sí tiene filtro de errores uniforme y respuestas controladas; no confundirlo con contratos comerciales definitivos.
 
 La URL puede seleccionar un tenant, pero jamás autorizarlo: verificar usuario, sesión y Membership activa en cada petición, después RBAC y consultas con tenant. Un ID de otro tenant debe producir una respuesta que no confirme su existencia. Configuración, preferencias y reporting requerirán contratos definitivos antes de conectar Axios; el snapshot y los comandos locales del frontend no son esta API.
 
 ## Pendiente antes de producción
 
-RBAC comercial y selección autorizada de negocio, repositorios tenant-scoped, recuperación/verificación de email y MFA, auditoría durable sin secretos, observabilidad, rate limits distribuidos/por cuenta e IP tras proxy, limpieza de sesiones, rotación gradual de claves, backup/TLS y verificaciones de seguridad. WhatsApp/IA continúan sin integrar. Aunque el código de autenticación y la migración están implementados, no se declara preparado para producción sin las verificaciones autorizadas.
+Ampliar RBAC comercial/repositorios tenant-scoped más allá de productos y añadir selección autorizada de negocio; recuperación/verificación de email y MFA, auditoría durable sin secretos, observabilidad, rate limits distribuidos/por cuenta e IP tras proxy, limpieza de sesiones, rotación gradual de claves, backup/TLS y verificaciones de seguridad. WhatsApp/IA continúan sin integrar. Aunque el código de autenticación y la migración están implementados, no se declara preparado para producción sin las verificaciones autorizadas.
 
 Por restricción vigente no se implementan ni ejecutan tests, smoke checks, peticiones al servidor ni validaciones de navegador. Las pruebas existentes permanecen sin cambios y requerirán configuración y revisión cuando se autoricen.

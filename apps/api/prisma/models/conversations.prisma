@@ -10,6 +10,7 @@ enum ConversationAssignment {
 }
 
 model Conversation {
+  isDeleted      Boolean                @default(false)
   id             String                 @id @default(uuid()) @db.Uuid
   businessId     String                 @db.Uuid
   clientId       String                 @db.Uuid
@@ -30,4 +31,5 @@ model Conversation {
   @@index([businessId, clientId])
   @@index([businessId, storeId])
   @@index([businessId, assigneeUserId])
+  @@map("Conversations")
 }

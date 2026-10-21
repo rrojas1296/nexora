@@ -27,6 +27,16 @@ export const loginSchema = z
   })
   .strict();
 
+export const changePasswordSchema = z
+  .object({
+    currentPassword: password(1),
+    newPassword: password(12),
+  })
+  .strict()
+  .refine((value) => value.currentPassword !== value.newPassword);
+
+export const credentialsChangePasswordSchema = changePasswordSchema.safeExtend({ email });
+
 export function parseDto<T>(schema: z.ZodType<T>, body: unknown): T {
   const result = schema.safeParse(body);
   if (!result.success) throw new AuthError("invalid");

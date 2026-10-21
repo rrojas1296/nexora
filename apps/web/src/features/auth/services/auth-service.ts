@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { apiClient } from "@/lib/api/client";
 import { normalizeApiError } from "@/lib/api/api-error";
+import type { ChangePasswordValues } from "../schemas/change-password-schema";
 import type { LoginValues, RegisterValues } from "../schemas/auth-schema";
 import { sessionResponseSchema, type Session } from "../schemas/session-schema";
 import { beginRefresh, clearRefreshMarker, withAuthLock } from "./auth-lock";
@@ -46,6 +47,16 @@ async function restoreSession(): Promise<Session | null> {
   return readSession();
 }
 
+export function withAuthenticatedSession<T>(
+  operation: (session: Session, headers: Record<string, string>) => Promise<T>,
+): Promise<T> {
+  return withAuthLock(async () => {
+    const session = await restoreSession();
+    if (!session) throw new Error("AUTHENTICATED_SESSION_REQUIRED");
+    return operation(session, await csrfHeaders());
+  });
+}
+
 export const authService = {
   current: () => withAuthLock(restoreSession),
   login: (values: LoginValues) =>
@@ -77,6 +88,34 @@ export const authService = {
       );
       clearRefreshMarker();
       return sessionResponseSchema.parse(response.data).data;
+    }),
+  changePassword: (userId: string, values: ChangePasswordValues, signal: AbortSignal) =>
+    withAuthenticatedSession(async (session, headers) => {
+      signal.throwIfAborted();
+      if (session.user.id !== userId) throw new Error("SESSION_CHANGED");
+      // Confirmation is local only. Never replay this mutation after an uncertain response.
+      await apiClient.post(
+        "/auth/change-password",
+        { currentPassword: values.currentPassword, newPassword: values.newPassword },
+        { headers, signal },
+      );
+      clearRefreshMarker();
+    }),
+  changePasswordWithCredentials: (values: ChangePasswordValues, signal: AbortSignal) =>
+    withAuthLock(async () => {
+      signal.throwIfAborted();
+      const headers = await csrfHeaders();
+      signal.throwIfAborted();
+      await apiClient.post(
+        "/auth/change-password-with-credentials",
+        {
+          email: values.email,
+          currentPassword: values.currentPassword,
+          newPassword: values.newPassword,
+        },
+        { headers, signal },
+      );
+      clearRefreshMarker();
     }),
   logout: (all = false) =>
     withAuthLock(async () => {

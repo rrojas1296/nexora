@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import type { UseFormReturn } from "react-hook-form";
 import { InputField, fieldClassName } from "@/components/ui/input-field";
 import { FormSelectField } from "@/components/ui/form-select-field";
+import { OnboardingPhoneField } from "./onboarding-phone-field";
 import {
   agentTones,
   currencies,
@@ -18,15 +19,19 @@ export function OnboardingFields({ fields, form }: Props) {
   return (
     <div className="grid gap-5 sm:grid-cols-2">
       {fields
-        .filter((field) => field !== "whatsappPreview")
+        .filter((field) => field !== "whatsappPreview" && field !== "whatsappCountry")
         .map((field) => {
+          if (field === "whatsappPhone") return <OnboardingPhoneField key={field} form={form} />;
           const error = form.formState.errors[field]?.message;
           const id = `onboarding-${field}`;
           const options =
             field === "currency"
               ? currencies.map((value) => ({ value, label: value }))
               : field === "timezone"
-                ? timezones.map((value) => ({ value, label: value }))
+                ? timezones.map((value) => ({
+                    value,
+                    label: `${t(`timezones.${value}`)} · ${value}`,
+                  }))
                 : field === "agentTone"
                   ? agentTones.map((value) => ({ value, label: t(`tones.${value}`) }))
                   : null;
@@ -79,23 +84,11 @@ export function OnboardingFields({ fields, form }: Props) {
               id={id}
               label={t(`fields.${field}`)}
               {...form.register(field)}
-              type={
-                field === "openingTime" || field === "closingTime"
-                  ? "time"
-                  : field === "whatsappPhone"
-                    ? "tel"
-                    : "text"
-              }
-              maxLength={field === "whatsappPhone" ? 16 : 80}
-              autoComplete={field === "whatsappPhone" ? "tel" : "off"}
+              type={field === "openingTime" || field === "closingTime" ? "time" : "text"}
+              maxLength={field === "businessName" ? 120 : 80}
+              autoComplete="off"
               error={error}
-              hint={
-                field === "whatsappPhone"
-                  ? t("phoneHint")
-                  : field === "closingTime"
-                    ? t("hoursHint")
-                    : undefined
-              }
+              hint={field === "closingTime" ? t("hoursHint") : undefined}
             />
           );
         })}

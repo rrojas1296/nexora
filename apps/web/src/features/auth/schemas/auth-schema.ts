@@ -9,7 +9,7 @@ export type AuthValidation = {
   confirm: string;
 };
 
-function password(min: number, message: string) {
+export function passwordSchema(min: number, message: string) {
   return z
     .string()
     .min(min, message)
@@ -20,13 +20,13 @@ function password(min: number, message: string) {
 export function createAuthSchemas(messages: AuthValidation) {
   const login = z.object({
     email: z.string().trim().toLowerCase().max(254, messages.email).pipe(z.email(messages.email)),
-    password: password(1, messages.password),
+    password: passwordSchema(1, messages.password),
   });
   const register = login
     .extend({
       name: z.string().trim().min(1, messages.name).max(100, messages.name),
       businessName: z.string().trim().min(1, messages.businessName).max(120, messages.businessName),
-      password: password(12, messages.registerPassword),
+      password: passwordSchema(12, messages.registerPassword),
       confirmPassword: z.string(),
     })
     .refine((value) => value.password === value.confirmPassword, {

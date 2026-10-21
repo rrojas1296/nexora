@@ -1,3 +1,4 @@
+import { PageEntrance } from "@/components/ui/page-entrance";
 import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -5,6 +6,7 @@ import { validateResource } from "../lib/resources";
 import { DemoToolbar } from "./demo-toolbar";
 import { DemoContent } from "./demo-content";
 import { ResourceEditorScreen } from "./resource-editor-screen";
+import { ProductEditorScreen } from "@/features/products/components/product-editor-screen";
 
 const namespaces = {
   products: "Products",
@@ -19,7 +21,7 @@ export async function ResourceWorkspace({ module, id }: { module: string; id?: s
     getTranslations("Nav"),
   ]);
   return (
-    <div className="space-y-6">
+    <PageEntrance key={`${resource}:${id ?? "new"}`} className="space-y-6">
       <header className="space-y-4">
         <Link
           href={`/${resource}`}
@@ -33,10 +35,16 @@ export async function ResourceWorkspace({ module, id }: { module: string; id?: s
         </h1>
         <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{t("formHint")}</p>
       </header>
-      <DemoToolbar />
-      <DemoContent>
-        <ResourceEditorScreen resource={resource} id={id} />
-      </DemoContent>
-    </div>
+      {resource === "products" ? (
+        <ProductEditorScreen id={id} />
+      ) : (
+        <>
+          <DemoToolbar />
+          <DemoContent>
+            <ResourceEditorScreen resource={resource} id={id} />
+          </DemoContent>
+        </>
+      )}
+    </PageEntrance>
   );
 }

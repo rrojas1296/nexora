@@ -95,7 +95,7 @@
     "compareHint": "Optional. Use 0 if not applicable.",
     "lowStockThreshold": "Low stock threshold",
     "weight": "Weight · grams",
-    "table": "Demo product catalog",
+    "table": "Product catalog",
     "create": "New product",
     "edit": "Edit product",
     "name": "Name",
@@ -106,7 +106,27 @@
     "active": "Available in the catalog",
     "formHint": "Name: 2 to 100 characters. References must be unique and prices allow up to two decimal places. The catalog uses PEN; changes do not affect past orders.",
     "deleteTitle": "Delete product",
-    "deleteDescription": "Delete “{name}” from the demo? Products linked to orders cannot be deleted; you can deactivate them."
+    "deleteDescription": "Delete “{name}” from the catalog? This is a soft delete. If it has linked orders, deactivate it to preserve its history.",
+    "eyebrow": "Business catalog",
+    "workspaceDescription": "Manage your business products. Changes are saved to the database; the other commercial modules remain in demo mode.",
+    "readOnly": "You can view the catalog. Only owners and administrators can create, edit or delete products.",
+    "lowStock": "Low stock",
+    "deleted": "Product deleted from the catalog.",
+    "storageTitle": "Persistent catalog",
+    "storageHint": "Changes are saved to the active business. Prices use PEN and stock is managed manually; demo orders do not affect this inventory.",
+    "securityHint": "References are unique per business, even after deletion. Do not close the page while saving. Writes are never retried automatically.",
+    "errors": {
+      "sku": "A product with this reference already exists in your business, even if deleted. Use a different reference.",
+      "linked": "This product has linked orders and cannot be deleted. You can deactivate it instead.",
+      "session": "Your session or active business changed. Sign in again before continuing.",
+      "forbidden": "You do not have permission to perform this action in the active business.",
+      "missing": "This product does not exist or has been deleted from this business.",
+      "invalid": "Review the data. Prices allow up to two decimal places; stock must be a valid integer.",
+      "conflict": "The product changed or a conflict occurred. Refresh the catalog before continuing.",
+      "rateLimit": "Too many requests. Wait a moment before trying again.",
+      "unexpected": "The catalog could not be loaded. Check your connection and try again.",
+      "uncertain": "The result could not be confirmed. The change may have been saved. Check the catalog before repeating the operation; your form has been preserved."
+    }
   },
   "Orders": {
     "create": "New order",
@@ -221,8 +241,8 @@
     "notifications": "Prefer notifications (configuration value only)",
     "preferences": "Language and appearance",
     "preferencesHint": "The theme persists in this browser. The language is part of the URL. Business preferences are in memory only; they do not change the demo profile, onboarding or reporting periods.",
-    "security": "Real security: pending",
-    "securityHint": "There are no real accounts, password changes, permissions or server sessions. Secure authentication and business isolation will be added in a later stage."
+    "security": "Account security",
+    "securityHint": "Your password belongs to your real account, not the demo. Change it by verifying your current password; all your sessions will be signed out."
   },
   "Analytics": {
     "period": "Demo period",

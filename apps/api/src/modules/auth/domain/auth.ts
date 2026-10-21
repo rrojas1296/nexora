@@ -1,5 +1,7 @@
 export class AuthError extends Error {
-  constructor(readonly code: "unauthorized" | "conflict" | "forbidden" | "invalid") {
+  constructor(
+    readonly code: "unauthorized" | "conflict" | "forbidden" | "invalid" | "incorrect_password",
+  ) {
     super(code);
   }
 }
@@ -57,6 +59,15 @@ export interface RegisterInput {
   email: string;
   password: string;
   businessName: string;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface CredentialsChangePasswordInput extends ChangePasswordInput {
+  email: string;
 }
 
 export interface LoginInput {

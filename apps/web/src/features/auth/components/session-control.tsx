@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, MonitorX, UserRound } from "lucide-react";
+import { KeyRound, LogOut, MonitorX, UserRound } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { notifySessionChange } from "../services/session-events";
 
 export function SessionControl() {
   const t = useTranslations("Auth");
+  const security = useTranslations("PasswordChange");
   const { data: session } = useSession();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -53,6 +54,14 @@ export function SessionControl() {
         >
           <UserRound className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
           <span className="max-w-24 truncate">{session.user.name}</span>
+        </Link>
+        <Link
+          href="/settings/password"
+          title={security("title")}
+          aria-label={security("title")}
+          className="flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <KeyRound className="size-3.5" aria-hidden="true" />
         </Link>
         <Button
           variant="ghost"

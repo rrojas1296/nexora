@@ -4,7 +4,13 @@ import type { Response } from "express";
 import { AuthService } from "../application/auth.service.js";
 import { AuthError } from "../domain/auth.js";
 import { AuthCookies } from "./auth.cookies.js";
-import { loginSchema, parseDto, registerSchema } from "./auth.dto.js";
+import {
+  changePasswordSchema,
+  credentialsChangePasswordSchema,
+  loginSchema,
+  parseDto,
+  registerSchema,
+} from "./auth.dto.js";
 import type { AuthRequest } from "./auth.request.js";
 import { CsrfProtection } from "./csrf.protection.js";
 import { Public } from "./public.decorator.js";
@@ -21,7 +27,9 @@ export class AuthController {
   @Get("csrf")
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
   async bootstrap(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
-    return { data: { csrfToken: await this.csrf.bootstrap(request, response) } };
+    return {
+      data: { csrfToken: await this.csrf.bootstrap(request, response) },
+    };
   }
 
   @Public()
@@ -45,6 +53,7 @@ export class AuthController {
 
   @Get("me")
   me(@Req() request: AuthRequest) {
+    console.log({ user: request.auth });
     if (!request.auth) throw new AuthError("unauthorized");
     return { data: request.auth.identity };
   }
@@ -67,6 +76,31 @@ export class AuthController {
   async logout(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     await this.auth.logout(this.cookies.read(request, "refresh"), "refresh");
     await this.auth.logout(this.cookies.read(request, "access"), "access");
+    this.cookies.clear(response);
+  }
+
+  @Post("change-password")
+  @HttpCode(204)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async changePassword(
+    @Body() body: unknown,
+    @Req() request: AuthRequest,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    if (!request.auth) throw new AuthError("unauthorized");
+    await this.auth.changePassword(request.auth.claims, parseDto(changePasswordSchema, body));
+    this.cookies.clear(response);
+  }
+
+  @Public()
+  @Post("change-password-with-credentials")
+  @HttpCode(204)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
+  async changePasswordWithCredentials(
+    @Body() body: unknown,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    await this.auth.changePasswordWithCredentials(parseDto(credentialsChangePasswordSchema, body));
     this.cookies.clear(response);
   }
 
