@@ -17,6 +17,7 @@ import { useDebounce } from "@/lib/hooks/use-debounce";
 import { useProductAccess, useProductMutation, useProducts } from "../hooks/use-products";
 import type { Product, ProductListFilters } from "../schemas/product-schema";
 import { productErrorKey } from "../services/product-error";
+import { ProductImage } from "./product-image";
 import { ProductKpis } from "./product-kpis";
 
 export function ProductsScreen() {
@@ -62,6 +63,9 @@ export function ProductsScreen() {
             ]}
           />
         </label>
+        <Button asChild variant="outline">
+          <Link href="/products/categories">{t("manageCategories")}</Link>
+        </Button>
         {access.canWrite ? (
           <Button asChild>
             <Link href="/products/new">
@@ -88,11 +92,15 @@ export function ProductsScreen() {
               key: "name",
               label: t("name"),
               render: (product) => (
-                <div>
-                  <p className="font-medium">{product.name}</p>
-                  <p className="mt-1 max-w-xs text-xs leading-5 text-muted-foreground">
-                    {product.description}
-                  </p>
+                <div className="flex items-center gap-3">
+                  <ProductImage url={product.imageUrl} name={product.name} />
+                  <div>
+                    <p className="font-medium">{product.name}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{product.category}</p>
+                    <p className="mt-1 max-w-xs text-xs leading-5 text-muted-foreground">
+                      {product.description}
+                    </p>
+                  </div>
                 </div>
               ),
             },

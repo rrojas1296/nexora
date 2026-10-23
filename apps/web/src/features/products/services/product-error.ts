@@ -2,6 +2,11 @@ import { normalizeApiError } from "@/lib/api/api-error";
 
 export function productErrorKey(error: unknown, mutation = false) {
   const { status, code } = normalizeApiError(error);
+  if (code === "PRODUCT_IMAGE_INVALID") return "imageInvalid";
+  if (code === "PRODUCT_IMAGE_LIMIT") return "imageLimit";
+  if (status === 413) return "imageSize";
+  if (code === "PRODUCT_CATEGORY_EXISTS") return "categoryExists";
+  if (code === "PRODUCT_CATEGORY_INVALID") return "categoryInvalid";
   if (code === "PRODUCT_SKU_EXISTS") return "sku";
   if (code === "PRODUCT_HAS_ORDERS") return "linked";
   if (

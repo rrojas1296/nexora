@@ -8,15 +8,27 @@ import {
   Req,
   UnauthorizedException,
 } from "@nestjs/common";
+import { ApiTags } from "@nestjs/swagger";
+import { ApiRoute } from "../../../common/documentation/api-route.js";
+import { businessResponse } from "../../../common/documentation/response-schemas.js";
 import type { AuthRequest } from "../../auth/presentation/auth.request.js";
 import { BusinessService } from "../application/business.service.js";
 import { businessIdSchema, updateBusinessSchema } from "./business.dto.js";
 
+@ApiTags("Negocio")
 @Controller("businesses")
 export class BusinessController {
   constructor(private readonly business: BusinessService) {}
 
   @Patch(":businessId")
+  @ApiRoute({
+    summary: "Actualizar nombre del negocio activo (OWNER/ADMIN)",
+    csrf: true,
+    params: ["businessId"],
+    body: updateBusinessSchema,
+    response: businessResponse,
+    description: "Actualiza únicamente el nombre; no crea negocio ni cambia slug.",
+  })
   async update(
     @Req() request: AuthRequest,
     @Param("businessId") id: string,

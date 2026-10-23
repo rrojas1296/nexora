@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 import type { FieldValues, Path, UseFormReturn } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { useValidationMessage } from "../hooks/use-validation-message";
 export type RecordField<T extends FieldValues> = {
   name: Path<T>;
   label: string;
-  kind?: "text" | "email" | "tel" | "number" | "textarea" | "select" | "checkbox";
+  kind?: "text" | "url" | "email" | "tel" | "number" | "textarea" | "select" | "checkbox";
+  placeholder?: string;
   options?: readonly { value: string; label: string }[];
   hint?: string;
   section?: string;
@@ -32,6 +33,7 @@ export function RecordForm<T extends FieldValues>({
   onCancel,
   readOnly = false,
   columns = false,
+  children,
 }: {
   form: UseFormReturn<T>;
   fields: readonly RecordField<T>[];
@@ -44,6 +46,7 @@ export function RecordForm<T extends FieldValues>({
   onCancel?: () => void;
   readOnly?: boolean;
   columns?: boolean;
+  children?: ReactNode;
 }) {
   const t = useTranslations("Demo");
   const fieldMessage = useValidationMessage();
@@ -74,6 +77,7 @@ export function RecordForm<T extends FieldValues>({
             </ul>
           </div>
         ) : null}
+        {children}
         <div className={columns ? "grid items-start gap-5 sm:grid-cols-2" : "space-y-5"}>
           {fields.map((field) => (
             <Fragment key={field.name}>

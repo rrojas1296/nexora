@@ -35,6 +35,10 @@ const originsSchema = z
 export const environmentSchema = z
   .object({
     NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
+    SWAGGER_ENABLED: z
+      .enum(["true", "false"])
+      .transform((value) => value === "true")
+      .optional(),
     HOST: z.string().trim().min(1).default("127.0.0.1"),
     PORT: z.coerce.number().int().min(1).max(65535).default(8000),
     DATABASE_URL: z.string().refine(isPostgresUrl),
@@ -49,6 +53,46 @@ export const environmentSchema = z
     AUTH_SESSION_TTL_SECONDS: z.coerce.number().int().min(3600).max(7776000).default(2592000),
     AUTH_CSRF_TTL_SECONDS: z.coerce.number().int().min(60).max(86400).default(3600),
     BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
+    WHATSAPP_WEBHOOK_VERIFY_TOKEN: z.string().trim().min(1).max(256).optional(),
+    WHATSAPP_APP_SECRET: z.string().trim().min(1).max(256).optional(),
+    WHATSAPP_LOGIN_CONFIG_ID: z
+      .string()
+      .regex(/^[1-9]\d{4,29}$/)
+      .optional(),
+    WHATSAPP_OAUTH_REDIRECT_URI: z
+      .url()
+      .refine((value) => {
+        try {
+          const url = new URL(value);
+          return (
+            url.protocol === "http:" &&
+            !url.username &&
+            !url.password &&
+            !value.includes("?") &&
+            !value.includes("#") &&
+            url.pathname === "/api/v1/whatsapp/oauth/callback"
+          );
+        } catch {
+          return false;
+        }
+      })
+      .optional(),
+    WHATSAPP_APP_ID: z
+      .string()
+      .regex(/^[1-9]\d{4,29}$/)
+      .optional(),
+    WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID: z
+      .string()
+      .regex(/^[1-9]\d{4,29}$/)
+      .optional(),
+    WHATSAPP_GRAPH_API_VERSION: z
+      .string()
+      .regex(/^v[1-9]\d{0,2}\.0$/)
+      .optional(),
+    WHATSAPP_CREDENTIALS_KEY: z
+      .string()
+      .regex(/^[A-Za-z0-9+/]{43}=$/)
+      .optional(),
   })
   .superRefine((environment, context) => {
     if (
@@ -72,6 +116,16 @@ export const environmentSchema = z
         code: "custom",
         path: ["AUTH_REFRESH_TTL_SECONDS"],
         message: "TTL must satisfy access < refresh <= session",
+      });
+    }
+    const callback = environment.WHATSAPP_OAUTH_REDIRECT_URI
+      ? URL.parse(environment.WHATSAPP_OAUTH_REDIRECT_URI)
+      : null;
+    if (callback && !environment.CORS_ORIGINS.includes(callback.origin)) {
+      context.addIssue({
+        code: "custom",
+        path: ["WHATSAPP_OAUTH_REDIRECT_URI"],
+        message: "OAuth callback must use an allowed public web origin",
       });
     }
     if (

@@ -10,6 +10,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "turbo dev",
+    "ngrok": "node --env-file-if-exists=.env.ngrok scripts/ngrok.mjs",
     "build": "turbo build",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
@@ -19,6 +20,7 @@
     "test": "turbo test"
   },
   "devDependencies": {
+    "@ngrok/ngrok": "1.7.0",
     "oxfmt": "^0.74.0",
     "oxlint": "1.89.0",
     "turbo": "^2.11.9",

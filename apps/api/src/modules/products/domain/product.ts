@@ -4,10 +4,24 @@ export class ProductError extends Error {
       | "PRODUCT_FORBIDDEN"
       | "PRODUCT_NOT_FOUND"
       | "PRODUCT_SKU_EXISTS"
-      | "PRODUCT_HAS_ORDERS",
+      | "PRODUCT_HAS_ORDERS"
+      | "PRODUCT_CATEGORY_EXISTS"
+      | "PRODUCT_CATEGORY_INVALID"
+      | "PRODUCT_IMAGE_INVALID"
+      | "PRODUCT_IMAGE_LIMIT",
   ) {
     super(code);
   }
+}
+
+export interface StoredProductImage {
+  id: string;
+  data: Uint8Array;
+}
+
+export interface ProductCategory {
+  id: string;
+  name: string;
 }
 
 export interface ProductActor {
@@ -21,6 +35,7 @@ export interface ProductInput {
   sku: string;
   description: string;
   category: string;
+  imageUrl: string;
   brand: string;
   supplier: string;
   barcode: string;

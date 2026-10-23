@@ -6,6 +6,7 @@ model Product {
   sku               String
   description       String      @default("") @db.Text
   category          String      @default("")
+  imageUrl          String      @default("") @db.VarChar(2048)
   brand             String      @default("")
   supplier          String      @default("")
   barcode           String      @default("")

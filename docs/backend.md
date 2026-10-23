@@ -2,7 +2,7 @@
 
 ## Estado implementado
 
-Base NestJS 12 con TypeScript strict, ESM y compilación mediante el ejecutable `tsc` de TypeScript 7. `auth` implementa registro/login, sesión actual, refresh, logout/logout-all y CSRF con jose, bcrypt y repositorio Prisma. `business` permite actualizar el nombre del negocio activo; `products` implementa listado/detalle/alta/edición/borrado lógico con autorización del negocio activo. `agents` implementa lectura y guardado de configuración general del negocio; `users`, `stores`, `orders`, `clients` y `conversations` siguen registrados sin endpoints comerciales. El frontend consume auth, actualización del nombre, productos y configuración de agente por un proxy de mismo origen; el resto del onboarding y del comercio sigue mock.
+Base NestJS 12 con TypeScript strict, ESM y compilación mediante el ejecutable `tsc` de TypeScript 7. `auth` implementa registro/login, sesión actual, refresh, logout/logout-all y CSRF con jose, bcrypt y repositorio Prisma. `business` permite actualizar el nombre del negocio activo; `products` implementa listado/detalle/alta/edición/borrado lógico con autorización del negocio activo. `agents` implementa lectura y guardado de configuración general del negocio; `users`, `stores`, `orders`, `clients` y `conversations` siguen registrados sin endpoints comerciales. El frontend consume auth, actualización del nombre, productos, configuración de agente, conexión WhatsApp y conversaciones con lectura/respuesta de texto por un proxy de mismo origen; el resto del onboarding y del comercio sigue mock.
 
 Se conserva el controlador original `GET /` → `Hello World!` como ejemplo del starter. No es un health check, no comprueba PostgreSQL y no acredita disponibilidad del SaaS. Auth usa `/api/v1`; la raíz del starter está excluida del prefijo, pero protegida por el guard global.
 
@@ -15,7 +15,7 @@ apps/api/
     app.module.ts                     Composición de módulos
     main.ts                           Prefijo, CORS, shutdown y listen
     config/environment.ts             Configuración validada con Zod
-    common/                           Reservado para infraestructura transversal
+    common/                           Infraestructura transversal y documentación OpenAPI
     infrastructure/database/
       database.module.ts
       prisma.service.ts               Cliente Prisma con adapter-pg
@@ -40,6 +40,12 @@ El concepto de negocio se llama `Business`, con módulo singular `src/modules/bu
 - Domain/application sin Nest ni Prisma; factories de `BusinessModule` componen servicio, puerto y adaptador. Sin cambios de esquema, migraciones ni seeds.
 
 Auth contiene tipos/errores de dominio, casos de uso y puertos, adaptadores bcrypt/jose/Prisma/CSRF y controladores/DTOs/guards; los otros módulos conservan sus capas reservadas. Las dependencias fluyen de presentation/infrastructure hacia application/domain, sin Nest/Prisma en las capas internas; factories del módulo componen los adaptadores. `DatabaseModule` no es global y auth lo importa expresamente.
+
+## Swagger / OpenAPI
+
+Documentadas las 29 operaciones actuales con `@nestjs/swagger` 12.0.2 y esquemas explícitos derivados de Zod: UI `/api/v1/docs`, JSON `/api/v1/docs-json`, YAML `/api/v1/docs-yaml`. Habilitado fuera de producción por defecto; override privado `SWAGGER_ENABLED=true|false`. La documentación habilitada es pública; no elimina sesión, CSRF ni autorización de las operaciones. En producción permanece deshabilitada salvo autorización explícita mediante configuración; proteger el acceso en proxy si se habilita.
+
+Ver [openapi.md](./openapi.md) para contratos cubiertos, login por cookies/CSRF desde Swagger, autorización de su Origin, advertencias sobre operaciones reales y el aviso peer de TypeScript 7 (sin plugin Swagger/Nest). No se ha comprobado el UI ni ejecutado peticiones por la restricción vigente.
 
 ## Configuración
 
@@ -68,7 +74,7 @@ Este último comando inicia la aplicación; no se ha ejecutado durante la restri
 
 También son obligatorios tres secretos independientes `AUTH_ACCESS_SECRET`, `AUTH_REFRESH_SECRET`, `AUTH_CSRF_SECRET` de al menos 64 caracteres. `auth:configure` genera únicamente los ausentes en el .env local sin imprimirlos. TTLs, issuer/audience y BCRYPT_ROUNDS están documentados en `.env.example` y [authentication.md](./authentication.md). Turborepo permite pasar estas variables solo al dev del backend.
 
-CORS permite credenciales, métodos GET/POST/PUT/PATCH/DELETE/OPTIONS y headers `Content-Type`, `X-CSRF-Token`, `X-Request-Id`, con preflight máximo de 600 segundos. No sustituye autorización. Cookie-parser lee cookies y el guard global verifica sesión. Mutaciones validan Origin/Referer exacto y double-submit CSRF firmado ligado a pre-sesión/sesión. Body parsers limitan JSON y formularios a 16 KiB. Throttler limita por IP/proceso; almacenamiento distribuido y configuración de IP tras proxy quedan pendientes.
+CORS permite credenciales, métodos GET/POST/PUT/PATCH/DELETE/OPTIONS y headers `Content-Type`, `X-CSRF-Token`, `X-Request-Id`, `Idempotency-Key`, con preflight máximo de 600 segundos. No sustituye autorización. Cookie-parser lee cookies y el guard global verifica sesión. Mutaciones validan Origin/Referer exacto y double-submit CSRF firmado ligado a pre-sesión/sesión. Body parsers limitan JSON y formularios a 16 KiB, excepto el JSON del webhook exacto `/api/v1/whatsapp/webhook` (1 MiB, sin compresión). Ese POST usa firma HMAC de Meta en lugar de cookies/CSRF; ver [whatsapp.md](./whatsapp.md). Throttler limita por IP/proceso; almacenamiento distribuido y configuración de IP tras proxy quedan pendientes.
 
 ## Prisma y lifecycle
 
@@ -112,6 +118,6 @@ La URL puede seleccionar un tenant, pero jamás autorizarlo: verificar usuario, 
 
 ## Pendiente antes de producción
 
-Ampliar RBAC comercial/repositorios tenant-scoped más allá de productos y añadir selección autorizada de negocio; recuperación/verificación de email y MFA, auditoría durable sin secretos, observabilidad, rate limits distribuidos/por cuenta e IP tras proxy, limpieza de sesiones, rotación gradual de claves, backup/TLS y verificaciones de seguridad. WhatsApp/IA continúan sin integrar. Aunque el código de autenticación y la migración están implementados, no se declara preparado para producción sin las verificaciones autorizadas.
+Ampliar RBAC comercial/repositorios tenant-scoped más allá de productos y añadir selección autorizada de negocio; recuperación/verificación de email y MFA, auditoría durable sin secretos, observabilidad, rate limits distribuidos/por cuenta e IP tras proxy, limpieza de sesiones, rotación gradual de claves, backup/TLS y verificaciones de seguridad. WhatsApp dispone de Facebook Login for Business por redirección desde Configuración para números Cloud API ya configurados (state aleatorio de un uso persistido como hash y ligado a sesión/usuario/Business, callback/canje backend, token transitorio cifrado y selección/revalidación de activos). Sin SDK/popup ni alta/registro de números; nueva migración `20261020210000_whatsapp_authorization_redirect` pendiente de aplicación explícita, callback en el mismo origen web HTTPS y configuración/revisión Meta. Los endpoints anteriores de Embedded Signup permanecen por compatibilidad, sin UI actual. También conserva conexión manual por Business y envío autenticado OWNER/ADMIN de texto/plantillas con idempotencia, tokens Graph cifrados y persistencia de intentos; requiere migración explícita pendiente y configuración privada. El webhook verifica y persiste mensajes entrantes firmados antes del 200, resuelve el negocio por el número de conexión activa y deduplica por Business/ID Meta. `WhatsAppModule` expone GET `/businesses/:businessId/whatsapp/conversations` y `/:threadId/messages`, paginados y autorizados para cualquier membresía activa, consumidos por Conversaciones sin fixtures. POST `/:threadId/messages` añade respuesta OWNER/ADMIN con CSRF, idempotencia, conexión del mismo número y ventana local de 24h basada solo en entrantes. Reserva saliente/intento atómicamente antes de Graph; GET `/:threadId/send-attempts/:key` reconcilia respuestas perdidas sin reenviar. El timeline incluye dirección y estado local, no entrega/lectura. El módulo reservado `conversations` no incorpora endpoints propios. Migraciones `20261020220000_whatsapp_inbox` y `20261020230000_whatsapp_inbox_sending` pendientes de aplicación explícita; se conserva la tabla física `WhatsappInboundMessages` para ambas direcciones, sin escribir en `Messages`. Sin importar historial anterior/envíos genéricos, estados de entrega ni IA; ver [whatsapp.md](./whatsapp.md). IA continúa sin integrar. Aunque el código de autenticación y la migración están implementados, no se declara preparado para producción sin las verificaciones autorizadas.
 
 Por restricción vigente no se implementan ni ejecutan tests, smoke checks, peticiones al servidor ni validaciones de navegador. Las pruebas existentes permanecen sin cambios y requerirán configuración y revisión cuando se autoricen.

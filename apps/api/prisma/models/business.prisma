@@ -1,19 +1,26 @@
 model Business {
-  isDeleted     Boolean        @default(false)
-  id            String         @id @default(uuid()) @db.Uuid
-  slug          String         @unique
-  name          String
-  createdAt     DateTime       @default(now()) @db.Timestamptz(3)
-  updatedAt     DateTime       @updatedAt @db.Timestamptz(3)
-  memberships   Membership[]
-  stores        Store[]
-  products      Product[]
-  clients       Client[]
-  orders        Order[]
-  orderItems    OrderItem[]
-  conversations Conversation[]
-  messages      Message[]
-  agents        Agent[]
+  isDeleted               Boolean                        @default(false)
+  id                      String                         @id @default(uuid()) @db.Uuid
+  slug                    String                         @unique
+  name                    String
+  createdAt               DateTime                       @default(now()) @db.Timestamptz(3)
+  updatedAt               DateTime                       @updatedAt @db.Timestamptz(3)
+  memberships             Membership[]
+  stores                  Store[]
+  products                Product[]
+  productCategories       ProductCategory[]
+  productImages           ProductImage[]
+  clients                 Client[]
+  orders                  Order[]
+  orderItems              OrderItem[]
+  conversations           Conversation[]
+  messages                Message[]
+  agents                  Agent[]
+  whatsappAuthorizations  WhatsappAuthorizationAttempt[]
+  whatsappConnection      WhatsappConnection?
+  whatsappSendAttempts    WhatsappSendAttempt[]
+  whatsappThreads         WhatsappThread[]
+  whatsappInboundMessages WhatsappInboundMessage[]
 
   @@map("Businesses")
 }

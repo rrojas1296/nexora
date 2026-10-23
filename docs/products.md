@@ -4,7 +4,7 @@
 
 `/{locale}/products`, `/products/new` y `/products/[id]/edit` (siempre bajo `/es` o `/en`) consumen PostgreSQL mediante la API del mismo origen. No utilizan fixtures ni los controles de escenario/restablecimiento. No hay seeds ni transferencia automática del catálogo demo. Un negocio sin productos muestra un catálogo vacío con alta habilitada para OWNER/ADMIN.
 
-Dashboard, reportes y pedidos siguen con su catálogo ficticio independiente. Crear pedidos demo **no descuenta stock real**, ni un producto real aparece automáticamente en esos módulos. El inventario se modifica manualmente en el formulario; no hay movimientos, reservas, importaciones, imágenes, inventario por tienda ni integración externa.
+Dashboard, reportes y pedidos siguen con su catálogo ficticio independiente. Crear pedidos demo **no descuenta stock real**, ni un producto real aparece automáticamente en esos módulos. El inventario se modifica manualmente en el formulario; no hay movimientos, reservas, importaciones masivas, inventario por tienda ni integración con almacenamiento externo. Cada producto admite una imagen opcional: archivo subido o URL HTTP/HTTPS.
 
 ## Endpoints implementados
 
@@ -41,7 +41,7 @@ POST requiere todos estos campos; PATCH acepta un subconjunto no vacío. El body
 
 | Campos                                 | Validación                                                                                                                   |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `name`, `category`                     | String con trim, 2–100 caracteres                                                                                            |
+| `name`, `category`                     | String con trim, 2–100 caracteres; categoría existente y no eliminada del negocio                                            |
 | `sku`                                  | String con trim, 2–30 caracteres; único por negocio según la constraint PostgreSQL, sensible a mayúsculas                    |
 | `description`                          | String con trim, máximo 2000 caracteres; permite vacío                                                                       |
 | `brand`, `supplier`                    | String con trim, máximo 100; permiten vacío                                                                                  |
@@ -49,6 +49,18 @@ POST requiere todos estos campos; PATCH acepta un subconjunto no vacío. El body
 | `price`, `cost`, `compareAtPrice`      | **Strings** decimales de 0 a 999999, hasta dos decimales, sin exponentes; usar `"0.00"` para precio comparativo no aplicable |
 | `stock`, `lowStockThreshold`, `weight` | Números enteros de 0 a 1000000; peso en gramos                                                                               |
 | `active`                               | Boolean                                                                                                                      |
+
+`imageUrl` es obligatorio en POST (puede ser `""`), opcional en PATCH: URL HTTP/HTTPS de hasta 2048 caracteres, ruta interna exacta devuelta al subir un archivo, o cadena vacía para quitarla. Se devuelve en todas las respuestas de producto. Una ruta interna debe pertenecer a una imagen no eliminada del mismo negocio: la API lo verifica en la transacción, sin aceptar rutas arbitrarias. Las URLs externas solo se guardan: el servidor no las descarga ni valida su contenido. Listado/editor muestran miniatura con alternativa si falla, con `referrerPolicy="no-referrer"` y sin optimizador/proxy. El sitio externo recibe la solicitud del navegador; HTTPS es recomendable para evitar contenido mixto.
+
+### Archivos de imagen y editor
+
+El editor ofrece dos orígenes: **Desde tu dispositivo** (arrastrar un archivo o abrir el selector nativo) y **URL de imagen** (pegar y pulsar «Usar URL», también con Enter). Incluye vista previa, eliminación, estados de subida/error y mensajes es/en. Elegir un archivo inicia su subida; el producto solo se modifica al guardar. No se puede guardar ni cambiar de origen durante la subida. Si falla, se conserva el valor anterior. Quitar la imagen vacía la referencia al guardar; no elimina el archivo almacenado.
+
+- `POST /api/v1/businesses/:businessId/products/images`: multipart con un solo campo de archivo `image`, sin campos adicionales. Devuelve 201 `{ data: { imageUrl } }`, ruta relativa del mismo origen. Solo OWNER/ADMIN, con sesión/CSRF/Origin y autorización revalidada al persistir. Límite específico: 10 peticiones/minuto por IP/proceso, no una cuota distribuida.
+- `GET /api/v1/businesses/:businessId/products/images/:imageId`: bytes WebP, lectura para miembros activos del negocio. Sesión y relaciones revalidadas; recursos ajenos/eliminados dan 404. Respuesta privada sin caché, `nosniff`, `Cross-Origin-Resource-Policy: same-origin`. No son URLs públicas para WhatsApp, emails o terceros.
+- Un archivo JPG/PNG/WebP de hasta **2 MiB**, máximo **20 millones de píxeles**. El navegador comprueba MIME/tamaño como ayuda; el servidor decodifica con Sharp **0.35.2**, valida formato real, limita píxeles, aplica orientación y reencoda a WebP (calidad 85, hasta 2048 × 2048 sin agrandar). Descarta metadatos y nunca sirve los bytes originales. SVG/GIF no admitidos; no hay animación, recorte ni escáner antivirus.
+- Almacenamiento persistente de bytes en PostgreSQL (`ProductImages`), sin servicios externos ni disco local. Hasta **1000 archivos por negocio**, contando incluso registros marcados eliminados; un advisory lock transaccional por negocio serializa la cuota (una colisión de hash solo serializa negocios adicionales, sin compartir datos). La capacidad física, backups, concurrencia de decodificación y límites del proxy requieren revisión operativa antes de producción.
+- Subir/reemplazar/quitar una imagen o abandonar el formulario no borra archivos anteriores: no hay endpoint/UI de borrado ni recolector de huérfanos. Incluso una subida cuya respuesta se perdió puede consumir cuota. No reintentar automáticamente; la limpieza requiere intervención operativa revisada. No se agregaron consultas de bytes al listado del catálogo.
 
 La API guarda importes con Prisma Decimal/PostgreSQL `Decimal(18,2)`, sin usar floats como representación autoritativa. Productos nuevos usan PEN; no se admite cambio de moneda. `weight` se mapea a `weightGrams`; `compareAtPrice` nulo existente se devuelve como `"0.00"`. La respuesta añade `id`, `currency`, `createdAt` y `updatedAt` (ISO); los importes se devuelven como strings de dos decimales. El cliente los transforma para formulario/formato visual y serializa a dos decimales al guardar.
 
@@ -62,7 +74,20 @@ Errores de dominio: `{ statusCode, error: { code, message } }`:
 - 404 `PRODUCT_NOT_FOUND`: recurso inexistente o eliminado dentro del negocio autorizado; no revela recursos de otro negocio.
 - 409 `PRODUCT_SKU_EXISTS`: conflicto de unicidad.
 - 409 `PRODUCT_HAS_ORDERS`: historial vinculado.
+- 409 `PRODUCT_CATEGORY_EXISTS`: nombre de categoría ya reservado en el negocio.
+- 400 `PRODUCT_CATEGORY_INVALID`: la categoría enviada no existe o está eliminada en el negocio.
+- 400 `PRODUCT_IMAGE_INVALID`: archivo no decodificable, formato/límites inválidos o referencia interna inexistente/ajena.
+- 409 `PRODUCT_IMAGE_LIMIT`: cuota de imágenes del negocio alcanzada.
+- 413 para archivo multipart demasiado grande; 400 para multipart inválido.
 - 400 para UUID/body/query inválidos; 401 de auth; 403 de CSRF/Origin; 429 del límite global por proceso/IP.
+
+## Categorías persistentes
+
+`GET /api/v1/businesses/:businessId/products/categories` devuelve `{ data: [{ id, name }] }`, ordenadas por nombre e ID y filtradas por negocio e `isDeleted: false`. `POST` en la misma ruta recibe `{ name }` estricto (trim, 2–100 caracteres) y devuelve 201 `{ data: { id, name } }`. Las rutas estáticas se declaran antes de `/:id`. Comparten autorización, CSRF, sesiones y permisos de productos: lectura para miembros activos, creación solo OWNER/ADMIN. El nombre es único por negocio, sensible a mayúsculas.
+
+La pantalla `/{locale}/products/categories`, accesible desde el listado/editor, permite consultar y crear categorías; no implementa edición ni borrado. El formulario de producto usa el Select compartido y bloquea el guardado si las categorías están cargando, fallaron o no hay ninguna. Crear una categoría no crea productos. Las consultas usan el prefijo React Query de productos con identidad/negocio y las mutaciones reconcilian lecturas sin reenvíos automáticos. Al navegar a categorías desde un producto, un borrador no guardado no se conserva.
+
+Se conserva `Products.category` como nombre para compatibilidad con los registros existentes: la API valida su pertenencia al catálogo de categorías en la transacción de escritura. No hay FK producto-categoría ni renombrado/cascadas; escritores externos deben respetar esta invariancia. La migración importa las categorías existentes válidas (2–100 caracteres) de productos no eliminados, sin modificar productos ni inventar categorías para valores vacíos/inválidos.
 
 ## Frontend y consistencia
 
@@ -74,6 +99,6 @@ Creación/edición siguen en páginas dedicadas; solo la confirmación de elimin
 
 ## Esquema y verificación
 
-Reutiliza `Products` y sus campos/índices existentes, incluidos `isDeleted` y `@@unique([businessId, sku])`. **No se añadió ni ejecutó una migración, seed ni operación de base de datos en esta etapa.** Requiere las migraciones existentes aplicadas en el destino de despliegue.
+Conserva los índices de `Products`, incluidos `isDeleted` y `@@unique([businessId, sku])`. La ampliación de imágenes/categorías añade `Products.imageUrl` y `ProductCategory` → `ProductCategories`, con `isDeleted`, FK al negocio y unicidad `[businessId, name]`. La migración versionada `20261020180000_product_images_categories` está preparada, **no ejecutada**: requiere revisión y despliegue explícito coordinado con esta API. No se conectó a la base ni se ejecutaron seeds. La migración posterior `20261020190000_product_image_uploads`, también **no aplicada**, añade `ProductImage` → `ProductImages` (bytes, FK al negocio, `isDeleted` e índice de negocio). Ambas requieren revisión y aplicación explícita en orden antes de usar la API ampliada. No hay cambios de datos existentes ni ejecución automática en install/build/dev.
 
 Verificación limitada a lint, formato, TypeScript, build y revisión estática. Por la restricción vigente no se implementaron ni ejecutaron tests, smoke checks, peticiones HTTP ni comprobaciones de navegador; compilar no demuestra comportamiento en ejecución, concurrencia, seguridad ni aislamiento efectivo. No declarar listo para producción.

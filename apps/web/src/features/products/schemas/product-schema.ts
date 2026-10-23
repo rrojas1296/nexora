@@ -14,6 +14,13 @@ export const productInputSchema = z.object({
   sku: z.string().trim().min(2, "sku").max(30, "sku"),
   description: z.string().trim().max(2000, "text"),
   category: name,
+  imageUrl: z.union([
+    z.literal(""),
+    z.url({ protocol: /^https?$/, error: "imageUrl" }).max(2048, "imageUrl"),
+    z.templateLiteral(["/api/v1/businesses/", z.uuid(), "/products/images/", z.uuid()], {
+      error: "imageUrl",
+    }),
+  ]),
   brand: shortText,
   supplier: shortText,
   barcode: z.string().trim().max(50, "text"),
@@ -37,6 +44,14 @@ export const productSchema = productInputSchema.extend({
   currency: z.string().length(3),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
+});
+export const categoryInputSchema = z.object({ name });
+export const categorySchema = z.object({ id: z.uuid(), name });
+export const categoriesResponseSchema = z.object({ data: z.array(categorySchema) });
+export const categoryResponseSchema = z.object({ data: categorySchema });
+export type CategoryInput = z.infer<typeof categoryInputSchema>;
+export const imageUploadResponseSchema = z.object({
+  data: z.object({ imageUrl: productInputSchema.shape.imageUrl }),
 });
 export const productResponseSchema = z.object({ data: productSchema });
 export const productSummarySchema = z.object({

@@ -8,6 +8,34 @@ La migración posterior `20261020170000_plural_tables_soft_delete` también est�
 
 `prisma.config.ts` carga el `.env` propio de la API mediante dotenv. La URL se declara allí, no en el bloque datasource del esquema (Prisma 7). Para validate/generate sin base disponible se omite la sección datasource si no existe `DATABASE_URL`; los comandos de migración necesitan una URL configurada. No hay una URL de producción de fallback.
 
+## Migración pendiente — Imágenes y categorías
+
+`20261020180000_product_images_categories` está versionada pero **no aplicada**. Añade `Products.imageUrl` (VARCHAR(2048), vacío por defecto) y el modelo `ProductCategory` → tabla `ProductCategories`: UUID, `businessId`, nombre, timestamps y `isDeleted`. El nombre es único por negocio y la FK al negocio usa Restrict. La migración copia los nombres válidos (2–100 caracteres) de categorías de productos no eliminados; no elimina ni modifica productos. Tras esta ampliación el esquema contiene 14 modelos; los 13 citados abajo describen la etapa anterior.
+
+Revisar y aplicar explícitamente la migración antes de desplegar la API ampliada; no hay migración automática. No se ha conectado a la base ni comprobado el estado/diff del destino durante esta ampliación. Productos conserva `category` como string validado por la API, sin FK a categorías, renombrado ni borrado de categorías. Ver [products.md](./products.md).
+
+## Migración pendiente — Archivos de imagen de productos
+
+`20261020190000_product_image_uploads` está versionada y **no aplicada**. Añade `ProductImage` → `ProductImages`, con UUID, `businessId`, `data Bytes` (BYTEA), `createdAt`, `isDeleted`, FK Restrict a `Businesses` e índice por negocio/borrado. No modifica ni elimina datos existentes; requiere la base previa y las migraciones anteriores. Con esta ampliación son 15 modelos. No se conectó a la base ni se ejecutaron migraciones.
+
+Las imágenes normalizadas WebP se almacenan en PostgreSQL, no en servicios externos. La API limita a 2 MiB por archivo y 1000 registros por negocio, contando eliminados. No hay recolector de imágenes huérfanas ni eliminación desde la UI: revisar crecimiento, backups, limpieza operativa y límites de infraestructura antes de desplegar. Las lecturas y referencias se autorizan por negocio; las FK no sustituyen esos controles. Ver [products.md](./products.md).
+
+## Migración pendiente — Inbox entrante WhatsApp
+
+`20261020220000_whatsapp_inbox` añade `WhatsappThread` → `WhatsappThreads` y `WhatsappInboundMessage` → `WhatsappInboundMessages`, con `isDeleted`, FK a `Businesses` y FK compuesta `(businessId, threadId)` al hilo. Identidad del hilo: `(businessId, phoneNumberId, contactWaId)`; deduplicación del mensaje: `(businessId, providerMessageId)`, incluidos borrados. Índices para paginación por fecha/UUID. No usa los modelos reservados `Conversation`/`Message` ni crea clientes mock; los envíos existentes no contienen cuerpos que puedan reconstruirse como historial. Texto, captions, nombre y teléfono son datos personales persistentes sin cifrado aplicativo/retención/purga automática; los adjuntos no se descargan. Migración aditiva revisable, **no aplicada por el asistente**; coordinar despliegue antes de activar la API nueva y revisar todas las pendientes antes de `db:migrate:deploy`. No se conectó a DB. Ver [whatsapp.md](./whatsapp.md).
+
+## Migración pendiente — Respuestas de texto desde Conversaciones
+
+`20261020230000_whatsapp_inbox_sending` amplía la tabla física heredada `WhatsappInboundMessages` para ambas direcciones, sin renombrarla ni mover datos. Añade enum `WhatsappInboxDirection`, `direction` (default `INBOUND`), `sendAttemptId` UUID opcional, ID Meta nullable para salientes todavía sin aceptar, índice de ventana de atención y unicidad/FK compuesta `(businessId, sendAttemptId)` a `(businessId, id)` de `WhatsappSendAttempts`. CHECK SQL: entrantes requieren ID Meta y no tienen intento; salientes requieren intento. Los registros existentes conservan dirección entrante y sus IDs.
+
+La reserva del intento, cuerpo saliente y actualización de resumen son atómicos; el resultado/ID Meta también se guardan juntos. Texto personal se almacena en inbox, no en los intentos ni en `Messages`, que sigue reservado. No reconstruye envíos genéricos/anteriores ni añade estados de entrega, retención o cifrado de contenido. Requiere la migración previa de inbox. **No aplicada por el asistente**: revisar backup/destino/todas las pendientes y ejecutar explícitamente `pnpm --filter @whatsapp/api db:migrate:deploy` antes de desplegar API/frontend nuevos; aplica todas las pendientes. Prisma format/validate/generate son locales y no aplican cambios a DB.
+
+## Migración pendiente — Autorización WhatsApp por redirección
+
+`20261020210000_whatsapp_authorization_redirect` añade `WhatsappAuthorizationAttempt` → `WhatsappAuthorizationAttempts`, con UUID, `businessId`, `userId`, `sessionId`, SHA-256 único del state aleatorio, locale, status, `expiresAt`, token temporal AES-GCM, opciones de activos JSON, timestamps e `isDeleted`. FK Restrict a `Businesses`; los identificadores de usuario/sesión se verifican con auth y repositorios autorizados, no mediante nuevas FK. No almacena código OAuth ni state en claro ni modifica conexiones existentes. Requiere migraciones anteriores, incluida `20261020200000_whatsapp_connection_sending`. Está **pendiente de aplicación explícita**: durante esta etapa no se conectó a DB ni se ejecutaron migraciones. Revisar SQL/destino y coordinar despliegue con la API; ver [whatsapp.md](./whatsapp.md).
+
+El token de autorización se elimina al terminar/fallar/cancelar y la limpieza diferida elimina los vencidos del mismo ámbito usuario/sesión/Business al acceder; no existe job de retención ni borrado puntual sin tráfico. Diseñar limpieza programada antes de producción. El intento queda como metadato sin código/token, y no permite reintentar operaciones externas automáticamente.
+
 ## Organización del esquema
 
 `apps/api/prisma.config.ts` apunta a la carpeta `prisma`: Prisma 7 carga recursivamente sus archivos `.prisma` como un único esquema lógico, sin imports ni flags experimentales. `prisma/schema.prisma` conserva únicamente generator/datasource; la ruta relativa del cliente generado no cambia. Las migraciones continúan en `prisma/migrations`.
@@ -20,11 +48,15 @@ apps/api/prisma/
     auth.prisma                 User, Membership, AuthSession, RefreshSession y MembershipRole
     stores.prisma               Store
     products.prisma             Product
+    product-categories.prisma   ProductCategory
+    product-images.prisma       ProductImage
     clients.prisma              Client y ClientSegment
     orders.prisma               Order, OrderItem y OrderStatus
     conversations.prisma        Conversation, ConversationStatus y ConversationAssignment
     messages.prisma             Message, MessageDirection y MessageStatus
     agents.prisma               Agent y AgentTone
+    whatsapp.prisma             WhatsappConnection, WhatsappSendAttempt y WhatsappAuthorizationAttempt
+    whatsapp-inbox.prisma       WhatsappThread, WhatsappInboundMessage y WhatsappInboxDirection (inbox real, ambas direcciones)
 ```
 
 Los enums viven junto al dominio que los utiliza. Las relaciones entre archivos no requieren declaraciones adicionales. La separación original en archivos solo reorganizó el esquema, sin cambiar tablas ni requerir una migración. La posterior pluralización y el campo de borrado lógico sí requieren la migración descrita abajo. Los comandos existentes `db:validate`, `db:generate` y de migraciones siguen leyendo la configuración común. Mantener los futuros modelos en el archivo de su dominio o añadir otro archivo bajo `models/`, sin duplicar generadores o datasource.
@@ -128,6 +160,6 @@ Si el destino ya tiene tablas o migraciones ajenas, detenerse y diseñar un base
 
 ## Seguridad y operación pendientes
 
-TLS verificado según proveedor (no desactivar la validación de certificados), backups y restauración, rotación de credenciales, separación de roles, índices revisados con carga real, transacciones, políticas de borrado y datos personales, auditoría, expiración/limpieza de sesiones y límites de pools según réplicas. Las integraciones necesitarán almacenamiento seguro de secretos; no se incluyen tokens WhatsApp o AI en estas tablas.
+TLS verificado según proveedor (no desactivar la validación de certificados), backups y restauración, rotación de credenciales, separación de roles, índices revisados con carga real, transacciones, políticas de borrado y datos personales, auditoría, expiración/limpieza de sesiones y límites de pools según réplicas. Los modelos comerciales iniciales no incluyen tokens WhatsApp o AI. La ampliación WhatsApp añade `WhatsappConnection` y `WhatsappSendAttempt` (tablas plurales y `isDeleted`) mediante la migración pendiente `20261020200000_whatsapp_connection_sending`: token Graph AES-256-GCM ligado al negocio/número y claves únicas de idempotencia por Business, sin guardar cuerpos ni destinatarios en los intentos. La clave de cifrado vive únicamente en entorno privado; conservarla y coordinar su rotación. No se aplicó esta migración ni se verificó el flujo contra DB/Meta. Ver [whatsapp.md](./whatsapp.md) para contrato, concurrencia y límites.
 
 La familia de sesiones implementa bloqueo FOR UPDATE, rotación transaccional, consumo persistido y revocación por replay; ver [authentication.md](./authentication.md). Programar limpieza preservando evidencia hasta la expiración de la familia; no hay job de retención. La operación de migración confirmó sincronización de esquema, no el comportamiento de las consultas de autenticación ni aislamiento comercial. El usuario mantiene prohibida la implementación y ejecución de tests, incluidos smoke checks; schema validate/typecheck/build tampoco demuestran esas garantías. No declarar listo para producción.

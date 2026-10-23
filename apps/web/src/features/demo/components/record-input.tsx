@@ -41,6 +41,7 @@ export function RecordInput<T extends FieldValues>({
             name={field.name}
             id={id}
             options={field.options ?? []}
+            placeholder={field.placeholder}
             disabled={disabled}
             aria-describedby={message ? `${id}-error` : undefined}
           />

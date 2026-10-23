@@ -1,0 +1,64 @@
+model WhatsappAuthorizationAttempt {
+  id                   String   @id @default(uuid()) @db.Uuid
+  businessId           String   @db.Uuid
+  userId               String   @db.Uuid
+  sessionId            String   @db.Uuid
+  stateHash            String   @unique
+  locale               String
+  status               String   @default("PENDING")
+  encryptedAccessToken String?
+  assets               Json     @default("[]")
+  expiresAt            DateTime @db.Timestamptz(3)
+  isDeleted            Boolean  @default(false)
+  createdAt            DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(3)
+  business             Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+
+  @@index([businessId, userId, sessionId])
+  @@index([expiresAt])
+  @@map("WhatsappAuthorizationAttempts")
+}
+
+enum WhatsappSendStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  UNKNOWN
+}
+
+model WhatsappConnection {
+  id                   String   @id @default(uuid()) @db.Uuid
+  businessId           String   @unique @db.Uuid
+  phoneNumberId        String   @unique
+  displayPhoneNumber   String
+  verifiedName         String
+  encryptedAccessToken String?
+  isDeleted            Boolean  @default(false)
+  createdAt            DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime @updatedAt @db.Timestamptz(3)
+  business             Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+
+  @@map("WhatsappConnections")
+}
+
+model WhatsappSendAttempt {
+  id                 String             @id @default(uuid()) @db.Uuid
+  businessId         String             @db.Uuid
+  idempotencyKey     String             @db.Uuid
+  requestHash        String
+  status             WhatsappSendStatus @default(PENDING)
+  providerMessageId  String?
+  providerErrorCode  Int?
+  providerHttpStatus Int?
+  isDeleted          Boolean            @default(false)
+  createdAt          DateTime           @default(now()) @db.Timestamptz(3)
+  updatedAt          DateTime           @updatedAt @db.Timestamptz(3)
+  business           Business           @relation(fields: [businessId], references: [id], onDelete: Restrict)
+
+  inboxMessage WhatsappInboundMessage?
+
+  @@unique([businessId, id])
+  @@unique([businessId, idempotencyKey])
+  @@index([businessId, createdAt])
+  @@map("WhatsappSendAttempts")
+}

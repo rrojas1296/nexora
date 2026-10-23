@@ -14,6 +14,7 @@ const validationKeys = [
   "message",
   "instructions",
   "greeting",
+  "imageUrl",
 ] as const;
 export function useValidationMessage() {
   const t = useTranslations("Demo.validation");

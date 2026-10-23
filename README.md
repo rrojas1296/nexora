@@ -1,6 +1,6 @@
 # Nexora — WhatsApp AI Sales SaaS
 
-Monorepo de ventas y atención por WhatsApp con agentes AI. **Frontend y backend integran autenticación real con cookies HttpOnly, jose/bcrypt y PostgreSQL; productos usa un catálogo persistente con API y la pantalla de agente guarda su configuración general en PostgreSQL. Los demás módulos comerciales siguen usando datos ficticios en memoria.** Workspace/onboarding requieren sesión. La base configurada recibió la migración inicial; no se crearon cuentas ni seeds durante implementación. El onboarding reutiliza el negocio registrado y guarda su nombre; hay API de productos, pero no de pedidos, conexión WhatsApp ni proveedor de IA.
+Monorepo de ventas y atención por WhatsApp con agentes AI. **Frontend y backend integran autenticación real con cookies HttpOnly, jose/bcrypt y PostgreSQL; productos usa un catálogo persistente con API y la pantalla de agente guarda su configuración general en PostgreSQL y Conversaciones lee mensajes persistentes de WhatsApp y permite responder con texto. Los demás módulos comerciales siguen usando datos ficticios en memoria.** Workspace/onboarding requieren sesión. La base configurada recibió la migración inicial; no se crearon cuentas ni seeds durante implementación. El onboarding reutiliza el negocio registrado y guarda su nombre; hay API de productos, pero no de pedidos ni proveedor de IA. WhatsApp dispone de [conexión por negocio con Facebook Login por redirección desde Configuración para números Cloud API existentes (o manual por API) y envío real de texto/plantillas con idempotencia](./docs/whatsapp.md), sujetos a credenciales y migración explícita pendiente. El webhook verifica Meta y persiste mensajes entrantes deduplicados para el número conectado; Conversaciones los consulta con paginación y refresco cada 10 s. Requiere las migraciones explícitas `20261020220000_whatsapp_inbox` y `20261020230000_whatsapp_inbox_sending`, además del webhook/suscripción `messages` de Meta. El compositor OWNER/ADMIN valida conexión y ventana de 24h, persiste salientes e intentos con idempotencia y permite consultar resultados sin reenviar. Aceptación de Meta no significa entrega. No importa historial anterior ni envíos externos a la pantalla, estados de entrega o respuestas AI.
 
 ## Stack y estructura
 
@@ -41,11 +41,27 @@ Web usa el puerto de desarrollo Next (3000 por defecto); API usa `127.0.0.1:8000
 
 Los comandos de arranque son instrucciones para el operador: no se han ejecutado como verificación de esta fase, por la restricción de tests y smoke checks.
 
+## Documentación interactiva de la API
+
+Swagger documenta las 29 operaciones actuales en **<http://localhost:8000/api/v1/docs>**, con contratos de bodies/respuestas, parámetros, upload y seguridad. Especificación JSON: `/api/v1/docs-json`; YAML: `/api/v1/docs-yaml`. Habilitado fuera de producción por defecto; `SWAGGER_ENABLED=true|false` en el entorno privado de API permite sobrescribirlo.
+
+Para ejecutar mutaciones desde Swagger se necesitan cookies de sesión, bootstrap CSRF y un origen autorizado; **no usa Bearer JWT**. Try it out ejecuta operaciones reales, incluido envío de WhatsApp. Ver [guía Swagger/OpenAPI](./docs/openapi.md) para login, configuración CORS, acceso en producción y límites de verificación.
+
 ## Qué incluye la demo
 
-Shell responsive con sidebar izquierdo colapsable, contenido limitado a 1428px, temas propios light/dark/system y español/inglés. Login/registro reales y onboarding de cinco pasos con nombre del negocio persistido; el resto sigue mock. Dashboard con comparativa de ventas; conversaciones locales; configuración persistente de agente (sin ejecución IA/WhatsApp, ver [docs/agents.md](./docs/agents.md)); productos, clientes, pedidos y tiendas con páginas de creación/edición; reportes diferenciados con filtros y CSV; ajustes y ayuda. Productos, pedidos y clientes incluyen KPIs de colección. Productos consulta PostgreSQL con filtros/paginación remotos, valida referencias únicas por negocio y usa borrado lógico; sus KPIs provienen de la colección completa del negocio. Dashboard, pedidos y reportes no consumen este catálogo real.
+Shell responsive con sidebar izquierdo colapsable, contenido limitado a 1428px, temas propios light/dark/system y español/inglés. Login/registro reales y onboarding de cinco pasos con nombre del negocio persistido; el resto sigue mock. Dashboard con comparativa de ventas; conversaciones reales con compositor de texto y estados locales del intento (sin cruces con clientes/pedidos mock); configuración persistente de agente (sin ejecución IA/WhatsApp, ver [docs/agents.md](./docs/agents.md)); productos, clientes, pedidos y tiendas con páginas de creación/edición; reportes diferenciados con filtros y CSV; ajustes y ayuda. Productos, pedidos y clientes incluyen KPIs de colección. Productos consulta PostgreSQL con filtros/paginación remotos, valida referencias únicas por negocio y usa borrado lógico; sus KPIs provienen de la colección completa del negocio. Dashboard, pedidos y reportes no consumen este catálogo real.
 
-Registrar una cuenta crea usuario y negocio reales; exige contraseña de al menos 12 caracteres y como máximo 72 bytes UTF-8. La sesión se recupera al recargar por cookies, con renovación coordinada entre pestañas y cierre actual/global en el header. Cambio de contraseña real en `/{locale}/settings/password`, accesible desde el header y Configuración: exige la actual, guarda un hash bcrypt nuevo y revoca todas las sesiones antes de pedir login de nuevo. Desde login también hay enlace a `/{locale}/change-password`: email y contraseña actual permiten cambiarla sin entrar al panel ni crear una sesión. Ambos flujos revocan las sesiones de la cuenta verificada. No es recuperación por email; los códigos quedan pendientes. No hay credenciales precreadas ni emails especiales. Los escenarios de los módulos mock permiten normal/vacío/error; el vacío es de solo lectura. Productos y configuración de agente quedan fuera de esos controles y conservan sus registros al recargar, cerrar sesión o restablecer la demo. Recargar, cambiar de identidad o restablecer descarta cambios mock; completar el wizard guarda únicamente el nombre del negocio real; el resto sigue en memoria. Los productos se persisten en PostgreSQL, no en almacenamiento web. No se persisten tokens ni colecciones comerciales en almacenamiento web: solo tema y una marca booleana conservadora contra replay de refresh incierto.
+Registrar una cuenta crea usuario y negocio reales; exige contraseña de al menos 12 caracteres y como máximo 72 bytes UTF-8. La sesión se recupera al recargar por cookies, con renovación coordinada entre pestañas y cierre actual/global en el header. Cambio de contraseña real en `/{locale}/settings/password`, accesible desde el header y Configuración: exige la actual, guarda un hash bcrypt nuevo y revoca todas las sesiones antes de pedir login de nuevo. Desde login también hay enlace a `/{locale}/change-password`: email y contraseña actual permiten cambiarla sin entrar al panel ni crear una sesión. Ambos flujos revocan las sesiones de la cuenta verificada. No es recuperación por email; los códigos quedan pendientes. No hay credenciales precreadas ni emails especiales. Los escenarios de los módulos mock permiten normal/vacío/error; el vacío es de solo lectura. Productos, configuración de agente y conversaciones reales quedan fuera de esos controles y conservan sus registros al recargar, cerrar sesión o restablecer la demo. Recargar, cambiar de identidad o restablecer descarta cambios mock; completar el wizard guarda únicamente el nombre del negocio real; el resto sigue en memoria. Los productos se persisten en PostgreSQL, no en almacenamiento web. No se persisten tokens ni colecciones comerciales en almacenamiento web: solo tema y una marca booleana conservadora contra replay de refresh incierto.
+
+## Túnel ngrok para el webhook
+
+Instalado el SDK oficial de ngrok como dependencia de desarrollo. Copia `.env.ngrok.example` a `.env.ngrok` en la raíz y completa `NGROK_AUTHTOKEN` con el token de tu cuenta. Con la API ejecutándose en otra terminal:
+
+```sh
+pnpm ngrok
+```
+
+Expone `127.0.0.1:8000` (configurable con `NGROK_PORT`) y muestra la URL HTTPS del webhook para Meta. `Ctrl+C` cierra el túnel. **Expone toda la API: usar solo con datos de desarrollo.** Más detalles en [docs/whatsapp.md](./docs/whatsapp.md).
 
 ## Verificaciones permitidas
 
@@ -70,6 +86,7 @@ pnpm --filter @whatsapp/api db:validate
 - [Features y límites de los mocks](./docs/features.md)
 - [Design system](./docs/design-system.md)
 - [Backend y contratos REST futuros](./docs/backend.md)
+- [Swagger / OpenAPI de todas las rutas actuales](./docs/openapi.md)
 - [Autenticación y sesiones actuales](./docs/authentication.md)
 - [Plan de implementación del login real](./docs/login-plan.md)
 - [Base de datos y migraciones](./docs/database.md)

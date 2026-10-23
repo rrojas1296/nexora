@@ -5,6 +5,10 @@ import { normalizeApiError } from "@/lib/api/api-error";
 import { authService, withAuthenticatedSession } from "@/features/auth/services/auth-service";
 import {
   productListSchema,
+  imageUploadResponseSchema,
+  categoriesResponseSchema,
+  categoryResponseSchema,
+  type CategoryInput,
   productResponseSchema,
   type ProductInput,
   type ProductListFilters,
@@ -52,6 +56,23 @@ function serialize(input: ProductInput) {
 }
 
 export const productsService = {
+  uploadImage: (scope: ProductScope, file: File) =>
+    mutate(scope, async (url, headers) => {
+      const body = new FormData();
+      body.append("image", file);
+      const response = await apiClient.post(`${url}/images`, body, { headers, timeout: 60_000 });
+      return imageUploadResponseSchema.parse(response.data).data.imageUrl;
+    }),
+  categories: (scope: ProductScope, signal: AbortSignal) =>
+    read(scope, signal, async () => {
+      const response = await apiClient.get(`${productUrl(scope)}/categories`, { signal });
+      return categoriesResponseSchema.parse(response.data).data;
+    }),
+  createCategory: (scope: ProductScope, input: CategoryInput) =>
+    mutate(scope, async (url, headers) => {
+      const response = await apiClient.post(`${url}/categories`, input, { headers });
+      return categoryResponseSchema.parse(response.data).data;
+    }),
   // GETs use session cookies and API authorization, without mutation-only CSRF bootstrap.
   list: (scope: ProductScope, filters: ProductListFilters, signal: AbortSignal) =>
     read(scope, signal, async () => {

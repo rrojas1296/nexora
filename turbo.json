@@ -28,6 +28,7 @@
       "persistent": true,
       "cache": false,
       "passThroughEnv": [
+        "SWAGGER_ENABLED",
         "HOST",
         "PORT",
         "DATABASE_URL",
@@ -41,7 +42,15 @@
         "AUTH_REFRESH_TTL_SECONDS",
         "AUTH_SESSION_TTL_SECONDS",
         "AUTH_CSRF_TTL_SECONDS",
-        "BCRYPT_ROUNDS"
+        "BCRYPT_ROUNDS",
+        "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
+        "WHATSAPP_APP_SECRET",
+        "WHATSAPP_APP_ID",
+        "WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID",
+        "WHATSAPP_LOGIN_CONFIG_ID",
+        "WHATSAPP_OAUTH_REDIRECT_URI",
+        "WHATSAPP_GRAPH_API_VERSION",
+        "WHATSAPP_CREDENTIALS_KEY"
       ]
     }
   }

@@ -22,6 +22,7 @@ function serialize(product: ProductRecord): Product {
     sku: product.sku,
     description: product.description,
     category: product.category,
+    imageUrl: product.imageUrl,
     brand: product.brand,
     supplier: product.supplier,
     barcode: product.barcode,
@@ -64,6 +65,78 @@ export class PrismaProductsRepository implements ProductsRepository {
     if (!membership || (write && !["OWNER", "ADMIN"].includes(membership.role))) {
       throw new ProductError("PRODUCT_FORBIDDEN");
     }
+  }
+
+  checkImageWriteAccess(actor: ProductActor) {
+    return this.write(actor, async () => {});
+  }
+
+  createImage(actor: ProductActor, data: Uint8Array) {
+    return this.write(actor, async (tx) => {
+      // Serialize uploads for this business so concurrent requests cannot exceed its quota.
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(72001, hashtext(${actor.businessId}))`;
+      const count = await tx.productImage.count({ where: { businessId: actor.businessId } });
+      if (count >= 1000) throw new ProductError("PRODUCT_IMAGE_LIMIT");
+      const image = await tx.productImage.create({
+        data: { businessId: actor.businessId, data: new Uint8Array(data) },
+      });
+      return `/api/v1/businesses/${actor.businessId}/products/images/${image.id}`;
+    });
+  }
+
+  getImage(actor: ProductActor, id: string) {
+    return this.client.$transaction(async (tx) => {
+      await this.authorize(tx, actor);
+      const image = await tx.productImage.findFirst({
+        where: { id, businessId: actor.businessId, isDeleted: false },
+        select: { id: true, data: true },
+      });
+      if (!image) throw new ProductError("PRODUCT_NOT_FOUND");
+      return image;
+    });
+  }
+
+  private async validateImage(tx: Transaction, actor: ProductActor, url?: string) {
+    if (!url?.startsWith("/")) return;
+    const prefix = `/api/v1/businesses/${actor.businessId}/products/images/`;
+    if (!url.startsWith(prefix)) throw new ProductError("PRODUCT_IMAGE_INVALID");
+    const image = await tx.productImage.findFirst({
+      where: { id: url.slice(prefix.length), businessId: actor.businessId, isDeleted: false },
+      select: { id: true },
+    });
+    if (!image) throw new ProductError("PRODUCT_IMAGE_INVALID");
+  }
+
+  listCategories(actor: ProductActor) {
+    return this.client.$transaction(async (tx) => {
+      await this.authorize(tx, actor);
+      return tx.productCategory.findMany({
+        where: { businessId: actor.businessId, isDeleted: false },
+        select: { id: true, name: true },
+        orderBy: [{ name: "asc" }, { id: "asc" }],
+      });
+    });
+  }
+
+  createCategory(actor: ProductActor, name: string) {
+    return this.write(
+      actor,
+      (tx) =>
+        tx.productCategory.create({
+          data: { businessId: actor.businessId, name },
+          select: { id: true, name: true },
+        }),
+      "PRODUCT_CATEGORY_EXISTS",
+    );
+  }
+
+  private async validateCategory(tx: Transaction, actor: ProductActor, name?: string) {
+    if (name === undefined) return;
+    const category = await tx.productCategory.findFirst({
+      where: { businessId: actor.businessId, name, isDeleted: false },
+      select: { id: true },
+    });
+    if (!category) throw new ProductError("PRODUCT_CATEGORY_INVALID");
   }
 
   private summary(tx: Transaction, actor: ProductActor) {
@@ -127,6 +200,7 @@ export class PrismaProductsRepository implements ProductsRepository {
   private async write<T>(
     actor: ProductActor,
     operation: (tx: Transaction) => Promise<T>,
+    conflict: "PRODUCT_SKU_EXISTS" | "PRODUCT_CATEGORY_EXISTS" = "PRODUCT_SKU_EXISTS",
   ): Promise<T> {
     try {
       return await this.client.$transaction(async (tx) => {
@@ -135,15 +209,17 @@ export class PrismaProductsRepository implements ProductsRepository {
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
-        throw new ProductError("PRODUCT_SKU_EXISTS");
+        throw new ProductError(conflict);
       }
       throw error;
     }
   }
 
   create(actor: ProductActor, input: ProductInput) {
-    return this.write(actor, async (tx) =>
-      serialize(
+    return this.write(actor, async (tx) => {
+      await this.validateCategory(tx, actor, input.category);
+      await this.validateImage(tx, actor, input.imageUrl);
+      return serialize(
         await tx.product.create({
           data: {
             ...productData(input),
@@ -154,12 +230,14 @@ export class PrismaProductsRepository implements ProductsRepository {
             currency: "PEN",
           },
         }),
-      ),
-    );
+      );
+    });
   }
 
   update(actor: ProductActor, id: string, input: Partial<ProductInput>) {
     return this.write(actor, async (tx) => {
+      await this.validateCategory(tx, actor, input.category);
+      await this.validateImage(tx, actor, input.imageUrl);
       const [product] = await tx.product.updateManyAndReturn({
         where: { id, businessId: actor.businessId, isDeleted: false },
         data: productData(input),

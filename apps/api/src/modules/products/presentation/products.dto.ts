@@ -8,12 +8,18 @@ const money = z
   .regex(/^(?:0|[1-9]\d{0,5})(?:\.\d{1,2})?$/)
   .refine((value) => Number(value) <= 999999);
 const inventory = z.number().int().min(0).max(1000000);
+export const categoryInputSchema = z.strictObject({ name });
 export const productIdSchema = z.uuid();
 export const productInputSchema = z.strictObject({
   name,
   sku: z.string().trim().min(2).max(30),
   description: z.string().trim().max(2000),
   category: name,
+  imageUrl: z.union([
+    z.literal(""),
+    z.url({ protocol: /^https?$/ }).max(2048),
+    z.templateLiteral(["/api/v1/businesses/", z.uuid(), "/products/images/", z.uuid()]),
+  ]),
   brand: shortText,
   supplier: shortText,
   barcode: z.string().trim().max(50),

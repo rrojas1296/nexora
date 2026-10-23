@@ -1,0 +1,49 @@
+model WhatsappThread {
+  id              String                   @id @default(uuid()) @db.Uuid
+  businessId      String                   @db.Uuid
+  phoneNumberId   String
+  contactWaId     String
+  contactName     String
+  lastMessageAt   DateTime                 @db.Timestamptz(3)
+  lastMessageBody String                   @db.Text
+  lastMessageType String
+  isDeleted       Boolean                  @default(false)
+  createdAt       DateTime                 @default(now()) @db.Timestamptz(3)
+  updatedAt       DateTime                 @updatedAt @db.Timestamptz(3)
+  business        Business                 @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  messages        WhatsappInboundMessage[]
+
+  @@unique([businessId, id])
+  @@unique([businessId, phoneNumberId, contactWaId])
+  @@index([businessId, isDeleted, lastMessageAt, id])
+  @@map("WhatsappThreads")
+}
+
+enum WhatsappInboxDirection {
+  INBOUND
+  OUTBOUND
+}
+
+// Physical table name retained for an additive, data-preserving migration.
+model WhatsappInboundMessage {
+  id                String                 @id @default(uuid()) @db.Uuid
+  businessId        String                 @db.Uuid
+  threadId          String                 @db.Uuid
+  providerMessageId String?
+  direction         WhatsappInboxDirection @default(INBOUND)
+  sendAttemptId     String?                @db.Uuid
+  sendAttempt       WhatsappSendAttempt?   @relation(fields: [businessId, sendAttemptId], references: [businessId, id], onDelete: Restrict)
+  type              String
+  body              String                 @db.Text
+  sentAt            DateTime               @db.Timestamptz(3)
+  receivedAt        DateTime               @default(now()) @db.Timestamptz(3)
+  isDeleted         Boolean                @default(false)
+  business          Business               @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  thread            WhatsappThread         @relation(fields: [businessId, threadId], references: [businessId, id], onDelete: Restrict)
+
+  @@unique([businessId, providerMessageId])
+  @@unique([businessId, sendAttemptId])
+  @@index([businessId, threadId, isDeleted, sentAt, id], map: "WhatsappInboundMessages_thread_timeline_idx")
+  @@index([businessId, threadId, direction, isDeleted, sentAt], map: "WhatsappInboundMessages_reply_window_idx")
+  @@map("WhatsappInboundMessages")
+}

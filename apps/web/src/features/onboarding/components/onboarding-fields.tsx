@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import type { UseFormReturn } from "react-hook-form";
+import { Controller, type UseFormReturn } from "react-hook-form";
 import { InputField, fieldClassName } from "@/components/ui/input-field";
 import { FormSelectField } from "@/components/ui/form-select-field";
 import { OnboardingPhoneField } from "./onboarding-phone-field";
@@ -62,14 +62,20 @@ export function OnboardingFields({ fields, form }: Props) {
                 <label htmlFor={id} className="block text-xs font-medium">
                   {t(`fields.${field}`)}
                 </label>
-                <textarea
-                  {...form.register(field)}
-                  id={id}
-                  rows={field === "agentInstructions" ? 5 : 3}
-                  maxLength={field === "agentInstructions" ? 2000 : 500}
-                  className={fieldClassName}
-                  aria-invalid={Boolean(error)}
-                  aria-describedby={error ? `${id}-error` : undefined}
+                <Controller
+                  control={form.control}
+                  name={field}
+                  render={({ field: input }) => (
+                    <textarea
+                      {...input}
+                      id={id}
+                      rows={field === "agentInstructions" ? 5 : 3}
+                      maxLength={field === "agentInstructions" ? 2000 : 500}
+                      className={fieldClassName}
+                      aria-invalid={Boolean(error)}
+                      aria-describedby={error ? `${id}-error` : undefined}
+                    />
+                  )}
                 />
                 {error ? (
                   <p id={`${id}-error`} className="text-xs text-destructive">
@@ -79,16 +85,22 @@ export function OnboardingFields({ fields, form }: Props) {
               </div>
             );
           return (
-            <InputField
+            <Controller
               key={field}
-              id={id}
-              label={t(`fields.${field}`)}
-              {...form.register(field)}
-              type={field === "openingTime" || field === "closingTime" ? "time" : "text"}
-              maxLength={field === "businessName" ? 120 : 80}
-              autoComplete="off"
-              error={error}
-              hint={field === "closingTime" ? t("hoursHint") : undefined}
+              control={form.control}
+              name={field}
+              render={({ field: input }) => (
+                <InputField
+                  {...input}
+                  id={id}
+                  label={t(`fields.${field}`)}
+                  type={field === "openingTime" || field === "closingTime" ? "time" : "text"}
+                  maxLength={field === "businessName" ? 120 : 80}
+                  autoComplete="off"
+                  error={error}
+                  hint={field === "closingTime" ? t("hoursHint") : undefined}
+                />
+              )}
             />
           );
         })}

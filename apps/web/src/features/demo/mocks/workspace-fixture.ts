@@ -3,6 +3,7 @@ import type { Workspace } from "../types/workspace";
 import { monthlyOrdersFixture } from "./monthly-orders-fixture";
 
 const productDefaults = {
+  imageUrl: "",
   brand: "Conversa Studio",
   supplier: "Demo Supply",
   barcode: "",

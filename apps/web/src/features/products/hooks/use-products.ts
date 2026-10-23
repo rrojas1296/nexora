@@ -7,6 +7,7 @@ import { productsService } from "../services/products-service";
 import {
   productSchema,
   type ProductInput,
+  type CategoryInput,
   type ProductListFilters,
   type ProductScope,
 } from "../schemas/product-schema";
@@ -36,6 +37,32 @@ export function useProductAccess() {
 
 function productKey(scope: ProductScope | null) {
   return ["products", scope?.userId, scope?.businessId] as const;
+}
+
+export function useProductImageUpload() {
+  const { scope, canWrite } = useProductAccess();
+  return useMutation({
+    mutationKey: [...productKey(scope), "image-upload"],
+    mutationFn: (file: File) => {
+      if (!scope || !canWrite) throw new Error("PRODUCT_FORBIDDEN");
+      return productsService.uploadImage(scope, file);
+    },
+    gcTime: 0,
+    retry: false,
+  });
+}
+
+export function useCategories() {
+  const { scope } = useProductAccess();
+  return useQuery({
+    queryKey: [...productKey(scope), "categories"],
+    queryFn: ({ signal }) => {
+      if (!scope) throw new Error("AUTHENTICATED_SESSION_REQUIRED");
+      return productsService.categories(scope, signal);
+    },
+    enabled: !!scope,
+    retry: false,
+  });
 }
 
 export function useProducts(filters: ProductListFilters) {
@@ -69,7 +96,8 @@ export function useProduct(id?: string) {
 
 type ProductCommand =
   | { type: "save"; input: ProductInput; id?: string }
-  | { type: "delete"; id: string };
+  | { type: "delete"; id: string }
+  | { type: "category"; input: CategoryInput };
 
 export function useProductMutation() {
   const { scope, canWrite, isCurrent } = useProductAccess();
@@ -78,6 +106,7 @@ export function useProductMutation() {
     mutationKey: [...productKey(scope), "write"],
     mutationFn: async (command: ProductCommand) => {
       if (!scope || !canWrite) throw new Error("PRODUCT_FORBIDDEN");
+      if (command.type === "category") return productsService.createCategory(scope, command.input);
       return command.type === "delete"
         ? productsService.delete(scope, command.id)
         : productsService.save(scope, command.input, command.id);

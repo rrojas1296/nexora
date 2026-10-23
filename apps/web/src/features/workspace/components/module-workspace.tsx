@@ -7,14 +7,15 @@ import { ModuleContent } from "./module-content";
 import { SetupCard } from "./setup-card";
 
 export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
-  const [nav, t, dashboard, products, agent] = await Promise.all([
+  const [nav, t, dashboard, products, agent, inbox] = await Promise.all([
     getTranslations("Nav"),
     getTranslations("Demo"),
     getTranslations("Dashboard"),
     getTranslations("Products"),
     getTranslations("Agent"),
+    getTranslations("WhatsappInbox"),
   ]);
-  const persisted = module === "products" || module === "agent";
+  const persisted = module === "products" || module === "agent" || module === "conversations";
   return (
     <PageEntrance key={module} className="w-full space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -24,7 +25,9 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
               ? products("eyebrow")
               : module === "agent"
                 ? agent("eyebrow")
-                : t("eyebrow")}
+                : module === "conversations"
+                  ? inbox("eyebrow")
+                  : t("eyebrow")}
           </p>
           <h1
             id="module-title"

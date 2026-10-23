@@ -95,6 +95,6 @@ function settings(config: ConfigService<Environment, true>): AuthSettings {
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_FILTER, useClass: AuthExceptionFilter },
   ],
-  exports: [AuthService],
+  exports: [AuthService, AuthCookies],
 })
 export class AuthModule {}

@@ -11,6 +11,7 @@ import { OrdersModule } from "./modules/orders/orders.module.js";
 import { ClientsModule } from "./modules/clients/clients.module.js";
 import { ConversationsModule } from "./modules/conversations/conversations.module.js";
 import { AgentsModule } from "./modules/agents/agents.module.js";
+import { WhatsappModule } from "./modules/whatsapp/whatsapp.module.js";
 import { AppController } from "./app.controller.js";
 import { AppService } from "./app.service.js";
 
@@ -32,6 +33,7 @@ import { AppService } from "./app.service.js";
     ClientsModule,
     ConversationsModule,
     AgentsModule,
+    WhatsappModule,
   ],
   controllers: [AppController],
   providers: [AppService],

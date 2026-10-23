@@ -1,93 +1,76 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
-import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fieldClassName } from "@/components/ui/input-field";
-import { SelectField } from "@/components/ui/select-field";
 import { cn } from "@/lib/utils/cn";
-import { useWorkspaceMutation } from "@/features/demo/hooks/use-workspace";
-import { useValidationMessage } from "@/features/demo/hooks/use-validation-message";
-import { messageInputSchema, conversationStatuses } from "@/features/demo/schemas/workspace-schema";
-import type { Client, Conversation, Order } from "@/features/demo/types/workspace";
-import { MutationNotice } from "@/features/demo/components/mutation-notice";
+import { ConversationComposer } from "./conversation-composer";
+import { useInboxMessages } from "../hooks/use-inbox";
+import type { InboxScope, InboxThread } from "../schemas/inbox-schema";
 
 export function ConversationPanel({
+  scope,
   conversation,
-  client,
-  orders,
+  onSelect,
 }: {
-  conversation: Conversation;
-  client?: Client;
-  orders: readonly Order[];
+  scope: InboxScope;
+  conversation: InboxThread;
+  onSelect: () => void;
 }) {
-  const t = useTranslations("Conversations");
-  const common = useTranslations("Demo");
+  const t = useTranslations("WhatsappInbox");
   const format = useFormatter();
-  const validationMessage = useValidationMessage();
-  const mutation = useWorkspaceMutation();
-  const form = useForm<{ body: string }>({
-    resolver: zodResolver(messageInputSchema),
-    defaultValues: { body: "" },
-  });
+  const [cursors, setCursors] = useState<string[]>([]);
+  const cursor = cursors.at(-1);
+  const query = useInboxMessages(scope, conversation.id, cursor);
+  const messages = query.isError ? [] : (query.data?.items.toReversed() ?? []);
+  const nextCursor = query.data?.nextCursor;
   const logRef = useRef<HTMLDivElement>(null);
+  const lastId = messages.at(-1)?.id;
   useEffect(() => {
-    const log = logRef.current;
-    if (log) log.scrollTop = log.scrollHeight;
-  }, [conversation.messages.length]);
+    if (!cursor && logRef.current) logRef.current.scrollTop = logRef.current.scrollHeight;
+  }, [lastId, cursor]);
+
   return (
     <section aria-label={t("chat")} className="min-w-0 rounded-3xl border bg-card xl:col-span-3">
-      <div className="border-b p-5">
-        <h2 className="text-lg">{client?.name ?? "—"}</h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {client?.phone} · {t("ordersCount", { count: orders.length })}
+      <div className="space-y-2 border-b p-5">
+        <h2 className="break-words text-lg">{conversation.contactName}</h2>
+        <p className="text-xs text-muted-foreground" dir="ltr">
+          +{conversation.contactWaId}
         </p>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
-          <label className="space-y-2 text-xs">
-            <span className="block">{common("statusLabel")}</span>
-            <SelectField
-              value={conversation.status}
-              disabled={mutation.isPending}
-              onValueChange={(value) => {
-                const status = conversationStatuses.find((status) => status === value);
-                if (status)
-                  mutation.mutate({
-                    type: "conversation.update",
-                    id: conversation.id,
-                    status,
-                    assignedTo: conversation.assignedTo,
-                  });
-              }}
-              options={conversationStatuses.map((status) => ({
-                value: status,
-                label: common(`status.${status}`),
-              }))}
-            />
-          </label>
-          <label className="space-y-2 text-xs">
-            <span className="block">{t("assignedTo")}</span>
-            <SelectField
-              value={conversation.assignedTo}
-              disabled={mutation.isPending}
-              onValueChange={(assignedTo) => {
-                if (assignedTo === "agent" || assignedTo === "human")
-                  mutation.mutate({
-                    type: "conversation.update",
-                    id: conversation.id,
-                    status: conversation.status,
-                    assignedTo,
-                  });
-              }}
-              options={[
-                { value: "agent", label: common("status.agent") },
-                { value: "human", label: common("status.human") },
-              ]}
-            />
-          </label>
-        </div>
+        <p className="break-all text-xs text-muted-foreground">
+          {t("businessNumber", { id: conversation.phoneNumberId })}
+        </p>
+      </div>
+      <div className="flex flex-wrap justify-between gap-2 border-b p-4">
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!nextCursor || query.isFetching}
+          onClick={() => {
+            if (nextCursor) setCursors((items) => [...items, nextCursor]);
+          }}
+        >
+          {t("olderMessages")}
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!cursors.length || query.isFetching}
+          onClick={() => setCursors((items) => items.slice(0, -1))}
+        >
+          {t("newer")}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={query.isFetching}
+          onClick={() => {
+            if (cursors.length) setCursors([]);
+            else void query.refetch();
+          }}
+        >
+          {t("latest")}
+        </Button>
       </div>
       <div
         ref={logRef}
@@ -95,77 +78,76 @@ export function ConversationPanel({
         aria-label={t("messages")}
         aria-live="polite"
         aria-relevant="additions"
-        className="flex h-80 flex-col gap-4 overflow-y-auto overscroll-contain p-5"
+        className="flex h-96 flex-col gap-4 overflow-y-auto overscroll-contain p-5"
       >
-        {conversation.messages.map((message) => (
+        {query.isPending ? <p className="text-xs text-muted-foreground">{t("loading")}</p> : null}
+        {query.isError ? (
+          <div className="space-y-3">
+            <p role="alert" className="text-xs text-destructive">
+              {t("error")}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={query.isFetching}
+              onClick={() => {
+                void query.refetch();
+              }}
+            >
+              {t("refresh")}
+            </Button>
+          </div>
+        ) : null}
+        {!query.isPending && !query.isError && !messages.length ? (
+          <p className="text-xs text-muted-foreground">{t("noMessages")}</p>
+        ) : null}
+        {messages.map((message) => (
           <article
             key={message.id}
             className={cn(
               "max-w-9/10 rounded-2xl px-4 py-3",
-              message.author === "team"
-                ? "self-end bg-accent text-accent-foreground"
+              message.direction === "OUTBOUND"
+                ? "self-end border border-primary/20 bg-primary/10"
                 : "self-start bg-secondary",
+              message.sendStatus === "REJECTED" && "border-destructive/30 bg-destructive/10",
             )}
           >
-            <p className="mb-1 text-xs text-muted-foreground">
-              {message.author === "team" ? t("team") : client?.name}
+            <p className="mb-1 text-xs font-medium">
+              {message.direction === "OUTBOUND" ? t("outbound") : t("inbound")}
             </p>
-            <p className="whitespace-pre-wrap break-words text-xs leading-6">{message.body}</p>
-            <time dateTime={message.createdAt} className="mt-2 block text-xs text-muted-foreground">
-              {format.dateTime(new Date(message.createdAt), {
+            {message.type !== "text" ? (
+              <p className="mb-1 text-xs text-muted-foreground">
+                {t("attachment", { type: message.type })}
+              </p>
+            ) : null}
+            {message.body ? (
+              <p className="whitespace-pre-wrap break-words text-xs leading-6">{message.body}</p>
+            ) : null}
+            <time dateTime={message.sentAt} className="mt-2 block text-xs text-muted-foreground">
+              {format.dateTime(new Date(message.sentAt), {
                 dateStyle: "short",
                 timeStyle: "short",
                 timeZone: "UTC",
               })}{" "}
               UTC
             </time>
+            {message.direction === "OUTBOUND" ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t(`sendStatuses.${message.sendStatus ?? "UNKNOWN"}`)}
+              </p>
+            ) : null}
           </article>
         ))}
       </div>
-      <div className="border-t p-5">
-        <p className="mb-3 text-xs leading-5 text-muted-foreground">
-          {t(conversation.status === "closed" ? "closedHint" : "sendHint")}
-        </p>
-        <form
-          method="post"
-          noValidate
-          onSubmit={form.handleSubmit(async (input) => {
-            try {
-              await mutation.mutateAsync({ type: "message.send", id: conversation.id, input });
-              form.reset();
-            } catch {
-              /* Preserve the message draft on error. */
-            }
-          })}
-        >
-          <label htmlFor="message-body" className="sr-only">
-            {t("message")}
-          </label>
-          <textarea
-            id="message-body"
-            {...form.register("body")}
-            disabled={mutation.isPending || conversation.status === "closed"}
-            rows={2}
-            maxLength={2000}
-            placeholder={t("message")}
-            aria-invalid={Boolean(form.formState.errors.body)}
-            aria-describedby={form.formState.errors.body ? "message-error" : undefined}
-            className={fieldClassName}
-          />
-          {form.formState.errors.body ? (
-            <p id="message-error" className="mt-2 text-xs text-destructive">
-              {validationMessage(form.formState.errors.body)}
-            </p>
-          ) : null}
-          <div className="mt-3 flex justify-end">
-            <Button type="submit" disabled={mutation.isPending || conversation.status === "closed"}>
-              <Send className="size-3.5" aria-hidden="true" />
-              {t(mutation.isPending ? "sending" : "send")}
-            </Button>
-          </div>
-        </form>
-        <MutationNotice error={mutation.error} pending={mutation.isPending} />
-      </div>
+      <ConversationComposer
+        scope={scope}
+        threadId={conversation.id}
+        reply={query.isError ? undefined : query.data?.reply}
+        onShowLatest={() => {
+          onSelect();
+          setCursors([]);
+        }}
+      />
     </section>
   );
 }

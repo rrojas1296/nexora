@@ -1,5 +1,6 @@
 import { Injectable, type CanActivate, type ExecutionContext } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { EXTERNAL_WEBHOOK_ROUTE } from "../../../common/external-webhook.js";
 import { AuthService } from "../application/auth.service.js";
 import { AuthError } from "../domain/auth.js";
 import { AuthCookies } from "./auth.cookies.js";
@@ -28,7 +29,13 @@ export class AuthGuard implements CanActivate {
       if (!token) throw new AuthError("unauthorized");
       request.auth = await this.auth.authenticate(token);
     }
-    if (!["GET", "HEAD", "OPTIONS"].includes(request.method)) await this.csrf.protect(request);
+    const isExternalWebhook = this.reflector.get<boolean>(
+      EXTERNAL_WEBHOOK_ROUTE,
+      context.getHandler(),
+    );
+    if (!(isPublic && isExternalWebhook) && !["GET", "HEAD", "OPTIONS"].includes(request.method)) {
+      await this.csrf.protect(request);
+    }
     return true;
   }
 }

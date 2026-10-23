@@ -14,6 +14,26 @@ export class ProductsService {
     return actor;
   }
 
+  checkImageWriteAccess(actor: ProductActor, businessId: string) {
+    return this.repository.checkImageWriteAccess(this.scope(actor, businessId));
+  }
+
+  createImage(actor: ProductActor, businessId: string, data: Uint8Array) {
+    return this.repository.createImage(this.scope(actor, businessId), data);
+  }
+
+  getImage(actor: ProductActor, businessId: string, id: string) {
+    return this.repository.getImage(this.scope(actor, businessId), id);
+  }
+
+  listCategories(actor: ProductActor, businessId: string) {
+    return this.repository.listCategories(this.scope(actor, businessId));
+  }
+
+  createCategory(actor: ProductActor, businessId: string, name: string) {
+    return this.repository.createCategory(this.scope(actor, businessId), name);
+  }
+
   list(actor: ProductActor, businessId: string, query: ProductListQuery) {
     return this.repository.list(this.scope(actor, businessId), query);
   }
