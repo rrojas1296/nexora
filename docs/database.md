@@ -135,7 +135,7 @@ pnpm --filter @whatsapp/api typecheck
 pnpm --filter @whatsapp/api build
 ```
 
-El cliente se genera en `apps/api/src/infrastructure/database/generated`, ignorado por Git y por Oxc; el build compila su salida a `dist`. Turbo conserva el cliente como artefacto de build. No editar archivos generados. Los scripts build/typecheck/dev ya generan el cliente; `db:generate` separado es útil tras editar el esquema. Ni generación ni compilación requieren conectarse a PostgreSQL.
+El cliente se genera en `apps/api/src/database/generated`, ignorado por Git y por Oxc; el build compila su salida a `dist`. Turbo conserva el cliente como artefacto de build. No editar archivos generados. Los scripts build/typecheck/dev ya generan el cliente; `db:generate` separado es útil tras editar el esquema. Ni generación ni compilación requieren conectarse a PostgreSQL.
 
 ## Migraciones explícitas
 

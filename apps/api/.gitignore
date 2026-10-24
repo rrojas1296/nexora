@@ -2,7 +2,7 @@
 /dist
 /node_modules
 /build
-/src/infrastructure/database/generated/
+/src/database/generated/
 
 # TypeScript build cache
 *.tsbuildinfo

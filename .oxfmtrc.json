@@ -10,6 +10,6 @@
     "**/.turbo/**",
     "**/coverage/**",
     "pnpm-lock.yaml",
-    "apps/api/src/infrastructure/database/generated/**"
+    "apps/api/src/database/generated/**"
   ]
 }

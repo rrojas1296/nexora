@@ -6,7 +6,7 @@ El plan inicial tras renombrar Tenant a Business ha sido sustituido por la autor
 
 Implementados en NestJS: registro transaccional de usuario/Business/Membership OWNER, login, perfil, refresh rotativo, logout, logout-all, bootstrap CSRF, cookies HttpOnly, guard global y rate limits. Sesiones y hashes persistidos mediante Prisma/PostgreSQL. Migración inicial versionada y aplicada; sin seeds, sin cuentas precreadas y sin migraciones automáticas en build/dev/start. Contratos y limitaciones exactos en [authentication.md](./authentication.md); operación de esquema en [database.md](./database.md).
 
-Las capas application/domain no dependen de Nest ni Prisma. Los adaptadores bcrypt, jose, CSRF y Prisma viven en infraestructura y se componen mediante factories del módulo auth. Business incorpora PATCH del nombre del negocio activo con OWNER/ADMIN; productos incorpora CRUD persistente business-scoped, lecturas con membresía activa y escrituras OWNER/ADMIN; los demás módulos comerciales siguen sin endpoints. Ver [products.md](./products.md). La comprobación de sesión/pertenencia no equivale a RBAC comercial completo.
+Los modelos, contratos y servicios no dependen de Nest ni Prisma. Auth agrupa por responsabilidad controllers, services, repositories, models, contracts, providers y auxiliares HTTP; los adaptadores bcrypt, jose, CSRF y Prisma se componen mediante factories del módulo auth. Ver la reorganización por funcionalidades en [backend.md](./backend.md). Business incorpora PATCH del nombre del negocio activo con OWNER/ADMIN; productos incorpora CRUD persistente business-scoped, lecturas con membresía activa y escrituras OWNER/ADMIN; los demás módulos comerciales siguen sin endpoints. Ver [products.md](./products.md). La comprobación de sesión/pertenencia no equivale a RBAC comercial completo.
 
 **Frontend integrado:** login/registro usan cuentas reales; workspace/onboarding comprueban sesión en servidor y cliente. El wizard reutiliza el Business registrado y guarda su nombre al finalizar; el resto del wizard y los datos comerciales excepto productos siguen siendo mocks independientes. No se ha verificado runtime por la restricción de tests.
 
@@ -33,7 +33,7 @@ Los contratos, archivos y límites exactos están en [authentication.md](./authe
 
 Habilitados: `lint`, `format:check`, `typecheck`, `build`, validación/generación Prisma y operación explícitamente autorizada de migraciones. La migración inicial se aplicó sin reset; `migrate status` y el diff contra el esquema confirmaron sincronización. No hubo seeds ni creación de cuentas.
 
-**Sigue prohibido implementar o ejecutar tests**, incluidos unitarios, integración, e2e, smoke checks, peticiones HTTP y navegador. Cuando el usuario lo autorice, cubrir credenciales inválidas, membresía inactiva, negocio ajeno, cookies, CSRF, expiración, replay, concurrencia refresh/logout, rate limits y topología real. Sin esas verificaciones no declarar listo para producción.
+La restricción original tiene una excepción para ejecutar los tests backend existentes durante la reorganización arquitectónica; resultado y fallo e2e preexistente en [backend.md](./backend.md). No se autoriza una nueva suite ni verificar PostgreSQL/Meta reales. Cuando el usuario lo autorice, cubrir credenciales inválidas, membresía inactiva, negocio ajeno, cookies, CSRF, expiración, replay, concurrencia refresh/logout, rate limits y topología real. Sin esas verificaciones no declarar listo para producción.
 
 ## Referencias
 

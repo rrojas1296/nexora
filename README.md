@@ -5,7 +5,7 @@ Monorepo de ventas y atención por WhatsApp con agentes AI. **Frontend y backend
 ## Stack y estructura
 
 - `apps/web`: Next.js App Router, React, Tailwind v4, next-intl es/en, Zustand, React Query, Axios, RHF/Zod, Radix y Recharts.
-- `apps/api`: NestJS modular, Zod, Prisma 7 estable y adaptador PostgreSQL. Auth hexagonal real, cookies HttpOnly, access/refresh rotativos, CSRF y sesiones revocables; PATCH del nombre del negocio activo y CRUD de productos/configuración general de agente, con escrituras OWNER/ADMIN; otros módulos sin endpoints de negocio.
+- `apps/api`: NestJS modular, Zod, Prisma 7 estable y adaptador PostgreSQL. Arquitectura por funcionalidades, servicios y contratos independientes de Nest/Prisma; auth real, cookies HttpOnly, access/refresh rotativos, CSRF y sesiones revocables; PATCH del nombre del negocio activo y CRUD de productos/configuración general de agente, con escrituras OWNER/ADMIN; otros módulos sin endpoints de negocio.
 - `packages/typescript-config`: TypeScript strict compartido.
 - pnpm Workspaces, Turborepo y Oxc exclusivamente.
 
@@ -21,9 +21,13 @@ cp apps/web/.env.example apps/web/.env.local
 cp apps/api/.env.example apps/api/.env
 # Editar cada archivo para el entorno local, sin compartir secretos entre apps.
 pnpm --filter @whatsapp/api auth:configure
+# PostgreSQL local de desarrollo (requiere Docker Compose).
+docker compose up -d db
 # En la base autorizada: aplicar migraciones revisadas (no hay seeds).
 pnpm --filter @whatsapp/api db:migrate:deploy
 ```
+
+`compose.yaml` levanta únicamente PostgreSQL 18 en `127.0.0.1:5432`, con base/usuario `conversa` y contraseña local `change-me`, igual que `apps/api/.env.example`. Los datos persisten en un volumen nombrado. No sobrescribe `apps/api/.env`: comprueba que `DATABASE_URL` apunte a esta base antes de aplicar migraciones. Detener con `docker compose down` conserva los datos; `docker compose down -v` los elimina. Configuración solo para desarrollo, sin migraciones ni seeds automáticos.
 
 Para arrancar solo el frontend (el acceso al workspace requiere API/PostgreSQL disponibles):
 

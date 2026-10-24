@@ -16,16 +16,20 @@ apps/api/
     main.ts                           Prefijo, CORS, shutdown y listen
     config/environment.ts             Configuración validada con Zod
     common/                           Infraestructura transversal y documentación OpenAPI
-    infrastructure/database/
+    database/
       database.module.ts
       prisma.service.ts               Cliente Prisma con adapter-pg
       generated/                      Generado e ignorado por Git/Oxc
     modules/<feature>/
       <feature>.module.ts
-      domain/                         Dominio sin dependencias de Nest/Prisma
-      application/                    Casos de uso y puertos
-      infrastructure/                 Adaptadores de puertos
-      presentation/                   Controladores y contratos HTTP
+      controllers/                    HTTP, autenticación, entradas y respuestas
+      services/                       Coordinación y reglas de aplicación
+      repositories/                   Contratos de persistencia y adaptadores Prisma
+      models/                         Tipos, errores y reglas independientes
+      dto/                            Entradas Zod y esquemas de respuesta OpenAPI
+      contracts/                      Puertos de integraciones cuando son necesarios
+      providers/                      Criptografía, imágenes e integraciones externas
+      guards/, filters/, http/         Solo donde existen responsabilidades reales
 ```
 
 El concepto de negocio se llama `Business`, con módulo singular `src/modules/business/business.module.ts` (`BusinessModule`) y referencias `businessId`. Sigue siendo la unidad de aislamiento multi-tenant; las rutas de colecciones propuestas usan el plural `/businesses`. El renombrado no añadió endpoints; posteriormente se implementó la actualización del nombre descrita a continuación.
@@ -37,9 +41,17 @@ El concepto de negocio se llama `Business`, con módulo singular `src/modules/bu
 - Guard global de sesión y CSRF/Origin; nunca toma usuario o rol del body. El ID debe ser UUID y coincidir con el negocio activo de los claims verificados.
 - Repositorio Prisma con filtro por ID y membresía activa OWNER/ADMIN de usuario activo en la misma sentencia de actualización. Negocio, membresía y usuario deben tener `isDeleted: false`. No admite otros negocios, AGENT ni VIEWER; ausencia/no autorización devuelve 403 sin revelar existencia.
 - 400 para parámetros/body inválidos (incluidos campos extra), 401 sin sesión válida, 403 por permisos/CSRF y 429 por límite global. Respuestas normalizadas por el filtro global y `Cache-Control: no-store`.
-- Domain/application sin Nest ni Prisma; factories de `BusinessModule` componen servicio, puerto y adaptador. Sin cambios de esquema, migraciones ni seeds.
+- Modelos, contrato de repositorio y servicio sin Nest ni Prisma; factories de `BusinessModule` componen servicio, contrato y adaptador. Sin cambios de esquema, migraciones ni seeds.
 
-Auth contiene tipos/errores de dominio, casos de uso y puertos, adaptadores bcrypt/jose/Prisma/CSRF y controladores/DTOs/guards; los otros módulos conservan sus capas reservadas. Las dependencias fluyen de presentation/infrastructure hacia application/domain, sin Nest/Prisma en las capas internas; factories del módulo componen los adaptadores. `DatabaseModule` no es global y auth lo importa expresamente.
+La API se organiza por funcionalidades reales: `auth`, `business`, `products`, `agents` y `whatsapp`. `users`, `stores`, `orders`, `clients` y `conversations` conservan únicamente su módulo registrado, sin endpoints ni carpetas reservadas. El árbol anterior muestra responsabilidades posibles, no una plantilla que deba replicarse: por ejemplo, `business` no necesita providers ni guards propios.
+
+Los servicios coordinan operaciones mediante contratos de repositorios o integraciones; modelos, contratos y servicios no importan Nest ni Prisma. Los controllers dependen de sus servicios y DTOs, no consultan Prisma ni ejecutan Sharp. Los adaptadores Prisma permanecen junto a sus contratos de persistencia; los puertos de proveedores externos están en `contracts/`. Las factories de cada módulo componen las dependencias sin añadir cadenas Service → UseCase que solo deleguen. No hay repositorio universal ni nuevos paquetes.
+
+`AuthModule` exporta únicamente los providers de autenticación/CSRF que otros componentes necesitan. Los módulos comerciales no acceden a repositorios o providers internos de otros módulos; reutilizan el contrato HTTP autenticado y los decoradores de auth. El extractor `getAuthenticatedActor` centraliza la comprobación de identidad en los controllers que usan el mismo actor. `DatabaseModule` no es global: cada consumidor lo importa explícitamente.
+
+En productos, `uploadImage` coordina autorización antes de decodificar, normalización mediante un contrato de función y persistencia, que vuelve a comprobar autorización en la transacción. WhatsApp registra sus repositorios, gateways y cifrado como providers privados compartidos en Nest. La autorización por redirección usa composición con el gateway de signup y un cliente Graph común, en lugar de herencia; conserva pruebas de app secret, paginación acotada, timeouts y errores sanitizados. Los esquemas de respuesta OpenAPI pertenecen al `dto/` de cada feature; `common/documentation` solo mantiene utilidades transversales.
+
+La reorganización no modifica rutas, decoradores, formatos de respuesta, variables, transacciones, bloqueos, autorización, webhooks ni modelos/migraciones de PostgreSQL. El único cambio en `prisma/schema.prisma` es la ruta de salida del generador a `src/database/generated`; Git, Oxc y Turbo se actualizaron de forma coordinada.
 
 ## Swagger / OpenAPI
 
@@ -99,7 +111,7 @@ Validar el esquema, generar tipos y compilar no conectan a una base ni verifican
 
 ## Contratos HTTP
 
-Auth está implementado bajo `/api/v1`; contratos y respuestas exactas en [authentication.md](./authentication.md). DTOs Zod validan entradas y se devuelven perfiles filtrados, no entidades Prisma. Business, productos y configuración de agente también están implementados (GET/PUT `/businesses/:businessId/agents/configuration`, [agents.md](./agents.md)); los recursos restantes de la tabla son **propuestas no implementadas**. Productos incluye capas domain/application sin Nest/Prisma, adaptador Prisma y presentación con DTOs/filtro: contrato completo y límites en [products.md](./products.md). Usarán UUID, no IDs cortos de fixtures, y Decimal como string.
+Auth está implementado bajo `/api/v1`; contratos y respuestas exactas en [authentication.md](./authentication.md). DTOs Zod validan entradas y se devuelven perfiles filtrados, no entidades Prisma. Business, productos y configuración de agente también están implementados (GET/PUT `/businesses/:businessId/agents/configuration`, [agents.md](./agents.md)); los recursos restantes de la tabla son **propuestas no implementadas**. Productos incluye modelos/servicio/contratos sin Nest/Prisma, repositorio Prisma y controllers con DTOs/filtro: contrato completo y límites en [products.md](./products.md). Usarán UUID, no IDs cortos de fixtures, y Decimal como string.
 
 | Recurso                                        | Operaciones y estado                                                                                                                              |
 | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -120,4 +132,4 @@ La URL puede seleccionar un tenant, pero jamás autorizarlo: verificar usuario, 
 
 Ampliar RBAC comercial/repositorios tenant-scoped más allá de productos y añadir selección autorizada de negocio; recuperación/verificación de email y MFA, auditoría durable sin secretos, observabilidad, rate limits distribuidos/por cuenta e IP tras proxy, limpieza de sesiones, rotación gradual de claves, backup/TLS y verificaciones de seguridad. WhatsApp dispone de Facebook Login for Business por redirección desde Configuración para números Cloud API ya configurados (state aleatorio de un uso persistido como hash y ligado a sesión/usuario/Business, callback/canje backend, token transitorio cifrado y selección/revalidación de activos). Sin SDK/popup ni alta/registro de números; nueva migración `20261020210000_whatsapp_authorization_redirect` pendiente de aplicación explícita, callback en el mismo origen web HTTPS y configuración/revisión Meta. Los endpoints anteriores de Embedded Signup permanecen por compatibilidad, sin UI actual. También conserva conexión manual por Business y envío autenticado OWNER/ADMIN de texto/plantillas con idempotencia, tokens Graph cifrados y persistencia de intentos; requiere migración explícita pendiente y configuración privada. El webhook verifica y persiste mensajes entrantes firmados antes del 200, resuelve el negocio por el número de conexión activa y deduplica por Business/ID Meta. `WhatsAppModule` expone GET `/businesses/:businessId/whatsapp/conversations` y `/:threadId/messages`, paginados y autorizados para cualquier membresía activa, consumidos por Conversaciones sin fixtures. POST `/:threadId/messages` añade respuesta OWNER/ADMIN con CSRF, idempotencia, conexión del mismo número y ventana local de 24h basada solo en entrantes. Reserva saliente/intento atómicamente antes de Graph; GET `/:threadId/send-attempts/:key` reconcilia respuestas perdidas sin reenviar. El timeline incluye dirección y estado local, no entrega/lectura. El módulo reservado `conversations` no incorpora endpoints propios. Migraciones `20261020220000_whatsapp_inbox` y `20261020230000_whatsapp_inbox_sending` pendientes de aplicación explícita; se conserva la tabla física `WhatsappInboundMessages` para ambas direcciones, sin escribir en `Messages`. Sin importar historial anterior/envíos genéricos, estados de entrega ni IA; ver [whatsapp.md](./whatsapp.md). IA continúa sin integrar. Aunque el código de autenticación y la migración están implementados, no se declara preparado para producción sin las verificaciones autorizadas.
 
-Por restricción vigente no se implementan ni ejecutan tests, smoke checks, peticiones al servidor ni validaciones de navegador. Las pruebas existentes permanecen sin cambios y requerirán configuración y revisión cuando se autoricen.
+La petición de reorganización autoriza ejecutar los tests existentes del backend, sin añadir una nueva suite ni probar integraciones reales. El unitario del starter pasa (1/1). El e2e compila e inicializa `AppModule` con sus providers, pero falla: `expected 200 "OK", got 401 "Unauthorized"` en `test/app.e2e-spec.ts:20`. Se reprodujo el mismo fallo con una copia previa al refactor y configuración sintética sin base accesible: el test heredado espera una raíz pública, aunque el guard global ya exige sesión. Se conserva la expectativa existente; no se elimina la protección para hacer pasar el test. Por autorización posterior del usuario, se omite el e2e al cerrar esta reorganización, sin borrarlo, deshabilitarlo ni declararlo aprobado. No acredita queries, autorización de otros endpoints ni disponibilidad de PostgreSQL/Meta. Ver el resultado completo de validaciones en [roadmap.md](./roadmap.md).

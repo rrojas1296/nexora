@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
-import { DatabaseModule } from "../../infrastructure/database/database.module.js";
-import { PrismaService } from "../../infrastructure/database/prisma.service.js";
-import { BusinessService } from "./application/business.service.js";
-import { PrismaBusinessRepository } from "./infrastructure/prisma-business-repository.js";
-import { BusinessController } from "./presentation/business.controller.js";
+import { DatabaseModule } from "../../database/database.module.js";
+import { PrismaService } from "../../database/prisma.service.js";
+import { BusinessService } from "./services/business.service.js";
+import { PrismaBusinessRepository } from "./repositories/prisma-business-repository.js";
+import { BusinessController } from "./controllers/business.controller.js";
 
 @Module({
   imports: [DatabaseModule],

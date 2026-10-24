@@ -1,6 +1,6 @@
 generator client {
   provider               = "prisma-client"
-  output                 = "../src/infrastructure/database/generated"
+  output                 = "../src/database/generated"
   moduleFormat           = "esm"
   generatedFileExtension = "ts"
   importFileExtension    = "js"

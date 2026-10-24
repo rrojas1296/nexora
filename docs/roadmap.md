@@ -2,7 +2,7 @@
 
 ## Restricción temporal
 
-Por instrucción del usuario, no implementar ni ejecutar tests por ahora, incluidos unitarios, integración, e2e y smoke tests. Conservar los tests existentes. La verificación de esta fase se limita a lint, formato, TypeScript y build hasta nueva autorización.
+La restricción original de no implementar ni ejecutar tests se mantuvo en las etapas históricas descritas abajo. La petición de reorganización backend autoriza ejecutar sus tests existentes; no añadir tests nuevos ni verificar integraciones externas. Lint, formato, TypeScript y build siguen habilitados. El fallo e2e preexistente y el alcance de esta excepción se documentan en la sección de reorganización.
 
 ## Paso 1 — Base del monorepo
 
@@ -373,6 +373,33 @@ Los seis pasos están completados: frontend funcional con mocks y revisiones vis
 
 - El compositor controla explícitamente `body` mediante React Hook Form (`useController`) para sincronizar el textarea y el valor validado después de `reset` al preparar otro mensaje. Usa `readOnly` durante el bloqueo, en lugar de deshabilitar el campo registrado; el botón de envío y las comprobaciones de permisos/pendientes siguen bloqueados. No cambia límites, CSRF, ventana, persistencia ni idempotencia.
 - Verificación limitada a formato, lint, tipos y build. Sin tests, navegador, envíos a Meta ni operaciones DB; pendiente confirmación del flujo de mensajes consecutivos en el entorno del usuario.
+
+## Configuración local — PostgreSQL con Docker Compose
+
+- Añadido `compose.yaml` con PostgreSQL 18 Alpine, puerto limitado a `127.0.0.1:5432`, credenciales locales alineadas con `apps/api/.env.example` y volumen nombrado persistente. Solo desarrollo; sin servicios adicionales, migraciones ni seeds automáticos.
+- README actualizado con arranque, conexión y parada; no se modifica el `.env` privado ni se inicia la base ni se aplican migraciones como parte de esta configuración.
+
+## Corrección — Selector de números tras Facebook Login
+
+- Sustituido el `<select>` nativo de la conexión WhatsApp en Configuración por `FormSelectField`, el selector compartido de la app integrado con React Hook Form. Conserva placeholder, número/nombre verificado, etiquetas accesibles, errores y bloqueo durante el guardado; sin cambios al flujo OAuth ni a las APIs.
+- Verificación estática de formato, lint, tipos y build; sin tests ni comprobaciones de navegador/runtime por la restricción vigente.
+
+## Corrección — Hidratación de sesión tras volver de Facebook
+
+- `SessionGate` podía renderizar `SessionStatus` en SSR y el shell en el primer render cliente si el `AuthProvider` ya había recuperado `/me` antes de hidratar ese límite de streaming. El retorno de OAuth por navegación completa expone esta carrera; no implica por sí solo un fallo del callback backend.
+- Añadido snapshot de hidratación con `useSyncExternalStore`: servidor e hidratación inicial muestran el mismo estado de carga; después se usa la sesión cliente. Conserva comprobación SSR, perfil autorizado, redirección al login, errores y reconciliación; sin `suppressHydrationWarning` ni desactivar SSR.
+- Verificación limitada a formato, lint, tipos y build; sin tests, navegador, llamadas Meta ni operaciones de base de datos. Confirmación del retorno OAuth en runtime pendiente en el entorno del usuario.
+
+## Reorganización backend — Arquitectura por funcionalidades
+
+- Análisis previo de los diez módulos Nest, controllers, servicios, repositorios, contratos, DTOs, guards, filtros, providers, Prisma/configuración y dependencias. La base ya separaba negocio/persistencia, pero mantenía carpetas de capas reservadas, respuestas OpenAPI centrales acopladas a DTOs comerciales, extracción duplicada de actores y composición repetida de adaptadores WhatsApp.
+- Reorganizados `auth`, `business`, `products`, `agents` y `whatsapp` en controllers/services/repositories/models/dto y contratos/providers/auxiliares solo cuando existen responsabilidades reales. Los cinco módulos reservados (`users`, `stores`, `orders`, `clients`, `conversations`) mantienen su registro sin carpetas vacías ni endpoints nuevos. No se añadieron clases UseCase ni repositorios universales.
+- Prisma centralizado en `src/database`: cliente generado en `src/database/generated`, imports, ignore de Git/Oxc y artefactos Turbo coordinados. Solo cambia el output del generador, no modelos, enums, migraciones ni datos; sin conexión/migración/seed ni nuevas dependencias.
+- Contratos de inbox/autorización WhatsApp separados de los modelos; adaptadores privados compartidos mediante providers Nest. Cliente Graph común para signup/autorización por composición, conservando firma app secret, límites, timeout y sanitización de errores. Sin cambios a endpoints, tokens, cookies, CSRF, OAuth, HMAC, idempotencia, locks o transacciones.
+- Esquemas de respuesta OpenAPI trasladados al `dto/` de cada feature; utilidades comunes sin dependencias comerciales. Extracción del actor autenticado centralizada en auth. Carga de imágenes coordinada por ProductsService, con normalizador inyectado y autorización antes de decodificar; persistencia sigue revalidando permisos en transacción.
+- Actualizados README, guías de arquitectura/backend/database/login e instrucciones del proyecto. Se preservaron cambios locales anteriores del usuario y del frontend.
+- Validaciones: `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y `git diff --check` correctos. Análisis estático de 97 archivos fuente: sin imports relativos sin resolver, sin ciclos (incluidas dependencias de tipos), sin Nest/Prisma en modelos, contratos y servicios. Registro Nest y resolución de providers alcanzan `app.init()` en el e2e existente.
+- Tests existentes ejecutados por la autorización de esta petición: unitario 1/1 correcto; e2e 0/1, `expected 200 "OK", got 401 "Unauthorized"` en `apps/api/test/app.e2e-spec.ts:20`. Mismo fallo reproducido en snapshot anterior al refactor con configuración sintética y PostgreSQL inaccesible: expectativa obsoleta del starter frente al guard global. Test conservado sin cambiar su expectativa ni hacer pública la raíz. Posteriormente, el usuario autorizó omitir el e2e y continuar: no se vuelve a ejecutar ni se considera bloqueo de cierre de este refactor; su fallo conocido queda registrado, no como una prueba aprobada. No se ejecutaron queries a PostgreSQL ni llamadas Meta y no se acredita funcionamiento completo de auth/comercio.
 
 ## Fase posterior, fuera del alcance actual
 

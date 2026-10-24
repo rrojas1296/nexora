@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import { MessageCircle, Unplug } from "lucide-react";
+import { FormSelectField } from "@/components/ui/form-select-field";
 import {
   authorizationSelectionSchema,
   type AuthorizationSelection,
@@ -77,21 +78,18 @@ export function WhatsappConnectionPanel({ scope }: { scope: WhatsappScope }) {
               <label htmlFor="whatsapp-number" className="block text-sm">
                 {t("selectNumber")}
               </label>
-              <select
+              <FormSelectField
                 id="whatsapp-number"
-                className="h-11 w-full rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                control={form.control}
+                name="phoneNumberId"
                 disabled={busy}
-                aria-invalid={!!form.formState.errors.phoneNumberId}
                 aria-describedby="whatsapp-number-error"
-                {...form.register("phoneNumberId")}
-              >
-                <option value="">{t("selectNumber")}</option>
-                {attempt.assets.map((asset) => (
-                  <option key={asset.phoneNumberId} value={asset.phoneNumberId}>
-                    {asset.displayPhoneNumber} — {asset.verifiedName}
-                  </option>
-                ))}
-              </select>
+                placeholder={t("selectNumber")}
+                options={attempt.assets.map((asset) => ({
+                  value: asset.phoneNumberId,
+                  label: `${asset.displayPhoneNumber} — ${asset.verifiedName}`,
+                }))}
+              />
               <p id="whatsapp-number-error" role="alert" className="text-xs text-destructive">
                 {form.formState.errors.phoneNumberId ? t("selectNumber") : null}
               </p>

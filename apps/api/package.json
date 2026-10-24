@@ -15,6 +15,7 @@
     "start:prod": "node dist/main.js",
     "typecheck": "pnpm db:generate && tsc --noEmit",
     "auth:configure": "node scripts/configure-auth.mjs",
+    "db:docker": "docker compose up -d db",
     "db:generate": "prisma generate",
     "db:validate": "prisma validate",
     "db:migrate:dev": "prisma migrate dev",
