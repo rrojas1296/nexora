@@ -30,6 +30,12 @@ export class AuthService {
     );
   }
 
+  switchBusiness(claims: TokenClaims, businessId: string) {
+    return this.repository.switchBusiness(claims, businessId, (session) =>
+      this.tokens.issue(session),
+    );
+  }
+
   async changePassword(claims: TokenClaims, input: ChangePasswordInput): Promise<void> {
     const user = await this.repository.findCredentialsById(claims.sub);
     if (!user?.active) throw new AuthError("unauthorized");

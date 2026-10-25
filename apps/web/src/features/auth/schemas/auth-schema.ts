@@ -30,7 +30,6 @@ export function createAuthSchemas(messages: AuthValidation) {
   const register = login
     .extend({
       name: z.string().trim().min(1, messages.name).max(100, messages.name),
-      businessName: z.string().trim().min(1, messages.businessName).max(120, messages.businessName),
       password: newPasswordSchema(messages.registerPassword),
       confirmPassword: z.string(),
     })

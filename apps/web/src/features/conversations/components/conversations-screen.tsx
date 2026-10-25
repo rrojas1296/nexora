@@ -8,7 +8,7 @@ export function ConversationsScreen() {
   const t = useTranslations("WhatsappInbox");
   const session = useSession();
   if (session.isPending) return <p className="text-sm text-muted-foreground">{t("loading")}</p>;
-  if (session.isError || !session.data)
+  if (session.isError || !session.data?.activeBusinessId)
     return (
       <p role="alert" className="text-sm text-destructive">
         {t("sessionError")}

@@ -11,7 +11,6 @@ import { ProductEditorScreen } from "@/features/products/components/product-edit
 const namespaces = {
   products: "Products",
   clients: "Clients",
-  stores: "Stores",
   orders: "Orders",
 } as const;
 export async function ResourceWorkspace({ module, id }: { module: string; id?: string }) {

@@ -59,6 +59,7 @@ export const productSummarySchema = z.object({
   available: z.number().int().nonnegative(),
   lowStock: z.number().int().nonnegative(),
   inventoryValue: decimal,
+  currency: z.string().length(3),
 });
 export const productListSchema = z.object({
   data: z.array(productSchema),

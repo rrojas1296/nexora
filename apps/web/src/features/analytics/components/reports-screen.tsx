@@ -18,22 +18,12 @@ import { ReportsBreakdown } from "./reports-breakdown";
 export function ReportsScreen() {
   const t = useTranslations("Reports");
   const analytics = useTranslations("Analytics");
-  const common = useTranslations("Demo");
   const format = useFormatter();
   const query = useWorkspace();
   const [days, setDays] = useState(30);
-  const [store, setStore] = useState("all");
   const [view, setView] = useState<ReportView>("products");
   const workspace = query.data;
-  const metrics = workspace
-    ? getMetrics(
-        {
-          ...workspace,
-          orders: workspace.orders.filter((row) => store === "all" || row.storeId === store),
-        },
-        days,
-      )
-    : null;
+  const metrics = workspace ? getMetrics(workspace, days) : null;
   const rows = workspace && metrics ? getReportRows(workspace, metrics.sales, view) : [];
   return (
     <div className="space-y-6">
@@ -53,17 +43,6 @@ export function ReportsScreen() {
               ]}
             />
           </label>
-          <label className="space-y-2 text-xs">
-            <span className="block">{t("store")}</span>
-            <SelectField
-              value={store}
-              onValueChange={setStore}
-              options={[
-                { value: "all", label: common("all") },
-                ...(workspace?.stores ?? []).map((row) => ({ value: row.id, label: row.name })),
-              ]}
-            />
-          </label>
         </div>
         <Button
           variant="outline"
@@ -78,7 +57,6 @@ export function ReportsScreen() {
                 `${t("share")} (%)`,
                 t("periodDays"),
                 t("cutoff"),
-                t("store"),
               ],
               rows.map((row) => [
                 row.name,
@@ -88,9 +66,6 @@ export function ReportsScreen() {
                 metrics?.revenue ? Number(((row.revenue / metrics.revenue) * 100).toFixed(2)) : 0,
                 days,
                 demoPeriodEnd,
-                store === "all"
-                  ? common("all")
-                  : (workspace?.stores.find((row) => row.id === store)?.name ?? store),
               ]),
               `report-${view}-${days}d.csv`,
             );
@@ -118,12 +93,7 @@ export function ReportsScreen() {
             <div className="grid items-start gap-5 xl:grid-cols-4">
               <ReportSummary metrics={metrics} />
               <div className="min-w-0 xl:col-span-3">
-                <ReportCharts
-                  workspace={workspace}
-                  orders={metrics.orders}
-                  sales={metrics.sales}
-                  store={store}
-                />
+                <ReportCharts workspace={workspace} orders={metrics.orders} sales={metrics.sales} />
               </div>
             </div>
             <section className="space-y-5">

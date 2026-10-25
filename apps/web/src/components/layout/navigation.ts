@@ -7,7 +7,7 @@ import {
   Package,
   Settings2,
   ShoppingBag,
-  Store,
+  Building2,
   Users,
 } from "lucide-react";
 
@@ -28,7 +28,7 @@ export const navigationGroups = [
     items: [
       { key: "reports", href: "/reports", icon: ChartNoAxesCombined },
       { key: "settings", href: "/settings", icon: Settings2 },
-      { key: "stores", href: "/stores", icon: Store },
+      { key: "businesses", href: "/businesses", icon: Building2 },
       { key: "help", href: "/help", icon: CircleHelp },
     ],
   },

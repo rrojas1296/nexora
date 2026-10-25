@@ -55,14 +55,3 @@ export function getReportRows(
     (a, b) => b.revenue - a.revenue || a.name.localeCompare(b.name),
   );
 }
-export function getStoreRevenue(workspace: Workspace, sales: readonly Order[]) {
-  return workspace.stores
-    .map((store) => ({
-      id: store.id,
-      name: store.name,
-      revenue: sales
-        .filter((order) => order.storeId === store.id)
-        .reduce((sum, order) => sum + orderTotal(order), 0),
-    }))
-    .toSorted((a, b) => b.revenue - a.revenue);
-}

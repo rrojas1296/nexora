@@ -25,7 +25,6 @@ export function OrdersScreen() {
   const query = useWorkspace();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
-  const [store, setStore] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const clients = new Map(query.data?.clients.map((client) => [client.id, client.name]));
   const orders = (query.data?.orders ?? [])
@@ -34,8 +33,7 @@ export function OrdersScreen() {
         `${order.id} ${clients.get(order.clientId) ?? ""}`
           .toLowerCase()
           .includes(search.toLowerCase()) &&
-        (status === "all" || order.status === status) &&
-        (store === "all" || order.storeId === store),
+        (status === "all" || order.status === status),
     )
     .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
   const paging = usePagedRows(orders);
@@ -63,20 +61,6 @@ export function OrdersScreen() {
             options={[
               { value: "all", label: common("all") },
               ...orderStatuses.map((value) => ({ value, label: common(`status.${value}`) })),
-            ]}
-          />
-        </label>
-        <label className="space-y-2 text-xs">
-          <span className="block">{t("store")}</span>
-          <SelectField
-            value={store}
-            onValueChange={(value) => {
-              setStore(value);
-              paging.setPage(1);
-            }}
-            options={[
-              { value: "all", label: common("all") },
-              ...(query.data?.stores ?? []).map((item) => ({ value: item.id, label: item.name })),
             ]}
           />
         </label>

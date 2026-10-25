@@ -8,7 +8,7 @@ import { WhatsappConnectionPanel } from "./whatsapp-connection-panel";
 export function WhatsappConnectionCard() {
   const t = useTranslations("WhatsappConnection");
   const { data: session } = useSession();
-  if (!session) return null;
+  if (!session?.activeBusinessId) return null;
   const membership = session.memberships.find(
     (entry) => entry.businessId === session.activeBusinessId,
   );

@@ -3,7 +3,7 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { useFormatter, useTranslations } from "next-intl";
 
-export function StoreRevenueChart({
+export function ProductRevenueChart({
   data,
 }: {
   data: readonly { name: string; revenue: number }[];
@@ -13,7 +13,7 @@ export function StoreRevenueChart({
   return (
     <figure
       className="h-60 min-w-0 text-xs text-muted-foreground [&_.recharts-cartesian-axis-tick-value]:fill-current"
-      aria-label={t("storeChartHint")}
+      aria-label={t("productChartHint")}
     >
       <ResponsiveContainer width="100%" height="100%" minWidth={0}>
         <BarChart data={data} layout="vertical" accessibilityLayer>

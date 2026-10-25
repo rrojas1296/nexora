@@ -112,30 +112,11 @@ export const workspaceFixture: Workspace = {
       notes: "",
     },
   ],
-  stores: [
-    {
-      id: "s1",
-      name: "Conversa Studio",
-      address: "123 Demo Street",
-      currency: defaultCurrency,
-      timezone: "America/New_York",
-      active: true,
-    },
-    {
-      id: "s2",
-      name: "Conversa Norte",
-      address: "456 Example Avenue",
-      currency: defaultCurrency,
-      timezone: "America/Mexico_City",
-      active: false,
-    },
-  ],
   orders: [
     ...monthlyOrdersFixture,
     {
       id: "ORD-1001",
       clientId: "c1",
-      storeId: "s1",
       status: "shipped",
       createdAt: "2026-06-02T12:00:00Z",
       currency: defaultCurrency,
@@ -144,7 +125,6 @@ export const workspaceFixture: Workspace = {
     {
       id: "ORD-1002",
       clientId: "c2",
-      storeId: "s1",
       status: "paid",
       createdAt: "2026-06-05T15:00:00Z",
       currency: defaultCurrency,
@@ -156,7 +136,6 @@ export const workspaceFixture: Workspace = {
     {
       id: "ORD-1003",
       clientId: "c3",
-      storeId: "s1",
       status: "pending",
       createdAt: "2026-06-08T09:00:00Z",
       currency: defaultCurrency,
@@ -165,7 +144,6 @@ export const workspaceFixture: Workspace = {
     {
       id: "ORD-1004",
       clientId: "c1",
-      storeId: "s1",
       status: "paid",
       createdAt: "2026-06-09T17:00:00Z",
       currency: defaultCurrency,
@@ -174,7 +152,6 @@ export const workspaceFixture: Workspace = {
     {
       id: "ORD-1005",
       clientId: "c4",
-      storeId: "s2",
       status: "cancelled",
       createdAt: "2026-06-10T10:00:00Z",
       currency: defaultCurrency,
@@ -183,7 +160,6 @@ export const workspaceFixture: Workspace = {
     {
       id: "ORD-1006",
       clientId: "c2",
-      storeId: "s1",
       status: "paid",
       createdAt: "2026-06-12T16:00:00Z",
       currency: defaultCurrency,
@@ -195,7 +171,6 @@ export const workspaceFixture: Workspace = {
     {
       id: "ORD-1007",
       clientId: "c3",
-      storeId: "s1",
       status: "pending",
       createdAt: "2026-06-14T11:00:00Z",
       currency: defaultCurrency,

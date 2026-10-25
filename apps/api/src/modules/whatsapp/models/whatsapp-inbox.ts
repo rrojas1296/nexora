@@ -15,10 +15,12 @@ export interface WhatsappThreadSummary {
   lastMessageAt: string;
   lastMessageBody: string;
   lastMessageType: string;
+  controlMode: "AI" | "HUMAN";
 }
 export interface WhatsappInboxMessage {
   id: string;
   direction: "INBOUND" | "OUTBOUND";
+  source: string;
   sendStatus: "PENDING" | "ACCEPTED" | "REJECTED" | "UNKNOWN" | null;
   type: string;
   body: string;
@@ -31,9 +33,18 @@ export interface InboxPage<T> {
 }
 export interface WhatsappReplyAvailability {
   allowed: boolean;
-  reason: "allowed" | "forbidden" | "notConnected" | "windowClosed";
+  reason: "allowed" | "forbidden" | "notConnected" | "windowClosed" | "aiActive";
   windowExpiresAt: string | null;
 }
 export type WhatsappMessagePage = InboxPage<WhatsappInboxMessage> & {
   reply: WhatsappReplyAvailability;
+  automation: {
+    mode: "AI" | "HUMAN";
+    version: number;
+    configured: boolean;
+    ready: boolean;
+    canManage: boolean;
+    inFlight: boolean;
+    lastJob: { status: string; reason: string | null } | null;
+  };
 };

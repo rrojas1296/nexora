@@ -71,12 +71,8 @@ function applyCommand(db: Workspace, command: WorkspaceCommand) {
       upsert(db.clients, { ...command.input, id: command.id ?? crypto.randomUUID() }, command.id);
       break;
     }
-    case "store.save":
-      upsert(db.stores, { ...command.input, id: command.id ?? crypto.randomUUID() }, command.id);
-      break;
     case "order.save": {
       findById(db.clients, command.input.clientId);
-      findById(db.stores, command.input.storeId);
       for (const item of command.input.items) findById(db.products, item.productId);
       upsert(
         db.orders,
@@ -124,7 +120,6 @@ export const workspaceService = {
       Object.assign(snapshot, {
         products: [],
         clients: [],
-        stores: [],
         orders: [],
         conversations: [],
       });

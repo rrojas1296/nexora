@@ -2,7 +2,7 @@
 
 import { Fragment, useContext, useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { SessionReconciliationContext } from "../hooks/session-reconciliation-context";
-import { useRouter } from "@/i18n/navigation";
+import { usePathname, useRouter } from "@/i18n/navigation";
 import { useSession } from "../hooks/use-session";
 import { SessionStatus } from "./session-status";
 
@@ -15,9 +15,14 @@ export function SessionGate({ children }: { children: ReactNode }) {
   const session = useSession();
   const reconciling = useContext(SessionReconciliationContext);
   const router = useRouter();
+  const pathname = usePathname();
+  const needsBusiness =
+    !!session.data && !session.data.activeBusinessId && pathname !== "/onboarding";
   useEffect(() => {
-    if (session.isSuccess && session.data === null && !session.isFetching) router.replace("/login");
-  }, [session.data, session.isSuccess, session.isFetching, router]);
+    if (!session.isSuccess || session.isFetching) return;
+    if (session.data === null) router.replace("/login");
+    else if (needsBusiness) router.replace("/onboarding");
+  }, [session.data, session.isSuccess, session.isFetching, needsBusiness, router]);
   // The browser query can resolve before this streamed boundary hydrates.
   // Match the server fallback first, regardless of the current query cache.
   if (!hydrated) return <SessionStatus />;
@@ -30,7 +35,7 @@ export function SessionGate({ children }: { children: ReactNode }) {
         }}
       />
     );
-  if (!session.data) return <SessionStatus />;
+  if (!session.data || needsBusiness) return <SessionStatus />;
   return (
     <>
       <div

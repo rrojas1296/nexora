@@ -217,7 +217,7 @@ export class ProductsController {
     response: productResponse,
     status: 201,
     description:
-      "Importes string con hasta dos decimales, moneda PEN. Categoría debe existir; imágenes internas deben pertenecer al negocio.",
+      "Importes string con hasta dos decimales, moneda del negocio activo, sin conversión de precios. Categoría debe existir; imágenes internas deben pertenecer al negocio.",
     errors: {
       400: "Categoría o imagen inválida.",
       409: "PRODUCT_SKU_EXISTS: SKU reservado, incluso si el producto fue eliminado.",

@@ -1,6 +1,15 @@
-import type { BusinessProfile } from "../models/business.js";
+import type {
+  BusinessProfile,
+  CreateBusinessInput,
+  UpdateBusinessInput,
+} from "../models/business.js";
 
 export interface BusinessRepository {
-  // Update only with an active OWNER/ADMIN membership and an active user.
-  updateName(businessId: string, userId: string, name: string): Promise<BusinessProfile | null>;
+  get(businessId: string, userId: string): Promise<BusinessProfile | null>;
+  create(userId: string, input: CreateBusinessInput): Promise<BusinessProfile | null>;
+  update(
+    businessId: string,
+    userId: string,
+    input: UpdateBusinessInput,
+  ): Promise<BusinessProfile | null>;
 }

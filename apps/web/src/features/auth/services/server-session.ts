@@ -24,8 +24,8 @@ export const readServerSession = cache(async () => {
     });
     if (response.status === 401) return "anonymous" as const;
     if (!response.ok) return "unavailable" as const;
-    sessionResponseSchema.parse(await response.json());
-    return "authenticated" as const;
+    const { data } = sessionResponseSchema.parse(await response.json());
+    return data.activeBusinessId ? ("authenticated" as const) : ("onboarding" as const);
   } catch {
     return "unavailable" as const;
   }

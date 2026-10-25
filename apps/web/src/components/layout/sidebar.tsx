@@ -1,19 +1,19 @@
 "use client";
 
 import { Suspense } from "react";
-import { ArrowUpRight, PanelLeftClose, PanelLeftOpen, Store, Unplug } from "lucide-react";
+import { ArrowUpRight, PanelLeftClose, PanelLeftOpen, Unplug } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useSidebarStore } from "@/stores/sidebar-store";
 import { cn } from "@/lib/utils/cn";
 import { Brand } from "./brand";
 import { SidebarNavigation } from "./sidebar-navigation";
+import { BusinessSelector } from "./business-selector";
 
 export function Sidebar() {
   const collapsed = useSidebarStore((state) => state.collapsed);
   const toggleCollapsed = useSidebarStore((state) => state.toggleCollapsed);
   const t = useTranslations("Shell");
-  const common = useTranslations("Common");
   const nav = useTranslations("Nav");
   return (
     <aside
@@ -44,23 +44,7 @@ export function Sidebar() {
           )}
         </button>
       </div>
-      <div
-        className={cn(
-          "mx-4 mb-6 flex items-center gap-2.5 border-b border-sidebar-border px-1 pb-5",
-          collapsed && "mx-3 justify-center",
-        )}
-        title={t("workspaceLabel")}
-      >
-        <Store className="size-4 shrink-0 text-sidebar-muted" aria-hidden="true" />
-        {!collapsed ? (
-          <div className="min-w-0">
-            <p className="truncate text-xs text-sidebar-foreground">{common("workspace")}</p>
-            <p className="mt-1 text-xs text-sidebar-muted">{t("plan")}</p>
-          </div>
-        ) : (
-          <span className="sr-only">{t("workspaceLabel")}</span>
-        )}
-      </div>
+      <BusinessSelector compact={collapsed} />
       <div className="min-h-0 flex-1 overflow-y-auto pb-5">
         <Suspense
           fallback={

@@ -5,6 +5,7 @@ import { normalizeApiError } from "@/lib/api/api-error";
 import { authService, withAuthenticatedSession } from "@/features/auth/services/auth-service";
 import {
   messageResponseSchema,
+  controlResponseSchema,
   sendAttemptResponseSchema,
   sendTextSchema,
   threadResponseSchema,
@@ -30,6 +31,18 @@ async function read<T>(
 }
 
 export const inboxService = {
+  setControl(scope: InboxScope, threadId: string, mode: "AI" | "HUMAN", version: number) {
+    return withAuthenticatedSession(async (session, headers) => {
+      if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)
+        throw new Error("SESSION_CHANGED");
+      const response = await apiClient.post(
+        `/businesses/${scope.businessId}/whatsapp/conversations/${threadId}/control`,
+        { mode, version },
+        { headers },
+      );
+      return controlResponseSchema.parse(response.data).data;
+    });
+  },
   sendText(scope: InboxScope, threadId: string, key: string, body: string) {
     const input = sendTextSchema.parse({ body });
     return withAuthenticatedSession(async (session, headers) => {

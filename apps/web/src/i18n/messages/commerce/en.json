@@ -1,17 +1,61 @@
 {
+  "Businesses": {
+    "title": "My businesses",
+    "intro": "Select a business or create a new one. Its configuration and real data stay separate from other businesses.",
+    "available": "Available to your account",
+    "create": "Create business",
+    "configuration": "Business configuration",
+    "name": "Business name",
+    "description": "Short description",
+    "timezone": "Time zone",
+    "timezoneHint": "IANA identifier, such as America/Lima or Europe/Madrid.",
+    "currency": "Currency",
+    "currencyHint": "New products use this currency. It cannot change once products exist, including archived products; prices are not converted.",
+    "defaultAgentName": "Sales assistant",
+    "active": "Active business",
+    "choose": "Select a business",
+    "open": "Open business",
+    "back": "Back to businesses",
+    "role": "Role: {role}",
+    "readOnly": "Your role allows reading. Only owners and administrators can save changes.",
+    "empty": "You do not have a business yet. Create your first one to continue.",
+    "switchConfirm": "Continue? Unsaved local drafts and demo changes will be discarded.",
+    "switchError": "Could not confirm the switch. Your session is being refreshed; check the active business before continuing.",
+    "creationNotice": "The business, your owner membership and a disabled agent are created atomically. Connect WhatsApp afterwards; this does not send messages or run AI.",
+    "invalid": "Check this field: name 1–120 characters, description up to 1000, valid time zone, agent name 2–100, and context up to 30000 characters.",
+    "saving": "Saving…",
+    "saveDraft": "Save draft",
+    "publish": "Save and publish context",
+    "saved": "Changes saved.",
+    "saveError": "Could not confirm the save. If another administrator changed the configuration, reload before editing again. No automatic retry was made.",
+    "activationError": "The business was created but activation was not confirmed. Use Open business or select it from the menu; do not create it again.",
+    "reload": "Reload configuration",
+    "reloadConfirm": "Reload the page and discard unsaved changes?",
+    "setupHint": "Each business keeps its own catalog, agent, context and WhatsApp connection. Customers, orders and reports remain in-memory demos, not persistent commercial data.",
+    "context": "Commercial context",
+    "contextHint": "Describe what you sell, whom you help, opening hours, delivery, payments, policies, FAQs and when to hand off to a person. Plain text only: links and HTML are not executed.",
+    "contextSafety": "Do not include passwords, tokens, payment secrets or unnecessary personal data. Text is stored in PostgreSQL without application-level encryption and sent to the AI provider when generating replies. Publishing alone does not enable automation.",
+    "useTemplate": "Use template",
+    "editText": "Hide preview",
+    "preview": "Preview",
+    "emptyContext": "No context written yet.",
+    "characters": "{count} / 30000 characters",
+    "publication": "Published version: {version}. Saving a draft does not change the published context. AI uses the published snapshot for new messages when the service and agent are enabled. Drafts are not sent to the model.",
+    "template": "ABOUT THE BUSINESS\nWhat we do, who we serve and our value proposition:\n\nPRODUCTS AND SERVICES\nCategories, availability and limits. Always consult the current catalog:\n\nHOURS AND CONTACT\nOpening hours, time zone and support channels:\n\nPAYMENTS AND DELIVERY\nAccepted methods, coverage, timelines and costs:\n\nPOLICIES\nExchanges, returns, warranties and restrictions:\n\nFREQUENT QUESTIONS\nVerified questions and answers:\n\nHUMAN HANDOFF\nWhen to stop assistance and request a person:\n\nRULES\nDo not invent prices, stock or promises. Ask or hand off when information is missing."
+  },
   "Demo": {
     "eyebrow": "Operations · Demo",
     "setup": "View initial setup",
     "descriptions": {
       "dashboard": "Your business at a glance: demo sales, orders and conversations.",
       "conversations": "Read live incoming messages from the number connected to WhatsApp, without earlier history or demo data.",
-      "agent": "Define your agent's personality and instructions. Local preview with no connected AI.",
+      "agent": "Configure the agent used by chat automation. The greeting preview remains local.",
       "products": "Organize the demo catalog: prices, availability and inventory.",
       "orders": "Review fictional orders and explore their states. No payments or shipments are processed.",
       "clients": "Meet your sample customers and review their order and conversation history.",
       "reports": "Explore demo results with metrics calculated from the orders.",
       "settings": "Personalize your demo workspace preferences.",
-      "stores": "Organize your sample stores and their operational preferences.",
+      "businesses": "Manage your real businesses and configure each business’s commercial context.",
       "help": "Quick guides to explore the demo and understand what is simulated."
     },
     "controls": "Demo controls",
@@ -69,7 +113,7 @@
       "address": "Enter an address between 5 and 200 characters.",
       "required": "Check this field and select a valid value.",
       "message": "Enter a message between 1 and 2000 characters.",
-      "instructions": "Use between 20 and 2000 characters.",
+      "instructions": "Use at most 2000 characters.",
       "greeting": "Use between 5 and 300 characters.",
       "imageUrl": "Enter a valid HTTP or HTTPS link of up to 2048 characters, or leave the field blank."
     },
@@ -171,7 +215,7 @@
   "Orders": {
     "create": "New order",
     "edit": "Edit order",
-    "formHint": "Select a customer, store and items. Amounts are stored in PEN and changes update demo metrics.",
+    "formHint": "Select a customer and items. Amounts are stored in PEN and changes update demo metrics.",
     "orderInfo": "Order information",
     "items": "Order items",
     "line": "Item {number}",
@@ -181,8 +225,8 @@
     "addItem": "Add item",
     "editorHint": "Simulation without payments, taxes, shipping or inventory adjustments. Editing preserves the original date and line prices until you change them. New orders use the current date and may fall outside the fixed reporting periods.",
     "needsResources": "Prepare your order resources",
-    "needsResourcesHint": "You need at least one customer, product and store before creating an order.",
-    "add": { "clients": "Create customer", "products": "Create product", "stores": "Create store" },
+    "needsResourcesHint": "You need at least one customer and product before creating an order.",
+    "add": { "clients": "Create customer", "products": "Create product" },
     "table": "Demo orders",
     "order": "Order",
     "client": "Customer",
@@ -261,7 +305,7 @@
   "Agent": {
     "validationBlocked": "The configuration has not been sent: correct the fields listed below, then press Save again.",
     "eyebrow": "Business configuration",
-    "workspaceDescription": "Configure your business agent. Changes are stored in the database; they do not connect WhatsApp or run AI.",
+    "workspaceDescription": "Configure your business agent. Enabling it allows replies to new messages when server AI is enabled, context is published and WhatsApp is connected.",
     "unconfigured": "No agent has been configured yet. Complete the form and save your first configuration.",
     "persistedHint": "Configuration saved for this business. Draft changes are not saved until you press Save.",
     "readOnly": "Only the owner or an administrator can save the agent configuration.",
@@ -284,7 +328,7 @@
     "enabled": "Agent enabled (configuration preference)",
     "preview": "Greeting preview",
     "previewHint": "This card reflects your local draft, not an AI response. Save to keep the configuration after a reload or when signing in again.",
-    "enabledHint": "Enabled preference in the draft. Saving does not run automations or reply to conversations: AI and WhatsApp integration is not available yet.",
+    "enabledHint": "Saving an enabled agent authorizes automatic replies to new texts in AI-mode threads when server automation is configured and context is published. Disabling stops future reservations; already started sends cannot be recalled.",
     "disabledHint": "Disabled preference in the draft. The greeting is still shown as a local preview.",
     "tones": { "friendly": "Friendly", "professional": "Professional", "concise": "Concise" }
   },
@@ -446,22 +490,22 @@
     "export": "Export table CSV",
     "summary": "Performance report",
     "revenue": "Revenue",
-    "revenueHint": "Simulated collected total for the selected period and store, excluding taxes and returns.",
+    "revenueHint": "Simulated collected total for the selected period, excluding taxes and returns.",
     "orders": "Orders",
     "paidShare": "Paid or shipped / total",
     "average": "Average sale value",
-    "method": "Revenue and average: paid and shipped orders only. The percentage uses all orders in the period and store; it is not a conversation conversion rate.",
+    "method": "Revenue and average: paid and shipped orders only. The percentage uses all orders in the period; it is not a conversation conversion rate.",
     "distribution": "01 · Sales distribution",
-    "byStore": "Revenue by store",
-    "storeHint": "Compare each store's contribution to the period. Demo amounts in PEN.",
-    "storeChartHint": "Horizontal revenue chart by store. Exact amounts are listed below.",
+    "byProduct": "Revenue by product",
+    "productHint": "The five highest-revenue products in the period. Demo amounts in PEN.",
+    "productChartHint": "Revenue chart by product. Exact amounts are listed below.",
     "operations": "02 · Order composition",
     "byStatus": "How orders are distributed",
-    "statusHint": "All statuses in the selected period and store. Pending and cancelled orders do not generate revenue.",
+    "statusHint": "All statuses in the selected period. Pending and cancelled orders do not generate revenue.",
     "statusChartHint": "Donut chart of order counts by status. Counts and percentages are listed below.",
     "detail": "03 · Sales breakdown",
     "performance": "What drives performance",
-    "performanceHint": "Sorted by revenue. Only paid or shipped sales from the same period and store; share is calculated against that revenue.",
+    "performanceHint": "Sorted by revenue. Only paid or shipped sales from the same period; share is calculated against that revenue.",
     "groupBy": "Group results",
     "products": "By product",
     "clients": "By customer",
@@ -469,8 +513,8 @@
     "client": "Customer",
     "units": "Units",
     "share": "Share",
-    "productTable": "Product performance for the selected period and store",
-    "clientTable": "Customer performance for the selected period and store",
+    "productTable": "Product performance for the selected period",
+    "clientTable": "Customer performance for the selected period",
     "noSales": "No paid or shipped sales match these filters.",
     "periodDays": "Period days",
     "cutoff": "Cutoff date · UTC"
@@ -488,15 +532,15 @@
     "articles": {
       "start": {
         "title": "How do I get started?",
-        "body": "You can explore every module without a real sign-in. Onboarding simulates five setup steps. That draft is independent of the sample business data: it does not create real stores or agents and does not replace the demo collections."
+        "body": "Register your account and create your first business in onboarding. The business, your membership and a disabled agent are saved. Afterwards configure its context and connect WhatsApp. Customers, orders and reports keep independent demo fixtures."
       },
       "messages": {
         "title": "Are messages sent to WhatsApp?",
-        "body": "Conversations shows live incoming messages received by the webhook for the connected number. It requires the inbox migration and Meta's messages subscription. The latest view refreshes every 10 seconds without importing earlier history. It is read-only: no replies or AI, earlier sends, or delivery receipts. Dates are displayed in UTC."
+        "body": "Conversations shows live incoming messages received by the webhook for the connected number. It requires the inbox migration and Meta's messages subscription. The latest view refreshes every 10 seconds without importing earlier history. OWNER/ADMIN can take control and reply with text within 24 hours, or return the thread to AI for new messages. AI requires a configured service, enabled agent and published context. Message origin and job state are shown, not earlier external sends or delivery receipts. Dates are displayed in UTC."
       },
       "agent": {
         "title": "How does the agent preview work?",
-        "body": "The preview shows the name, tone and greeting you are editing. Saving keeps the configuration in memory while you navigate; it does not call an AI model or automate conversations."
+        "body": "The preview shows the name, tone and greeting you are editing. Saving persists the configuration in PostgreSQL. With an enabled agent, published context and configured AI service, new texts can generate and send automatic replies; the preview does not call the model. Edit and publish the extensive commercial context in Businesses."
       },
       "catalog": {
         "title": "Can I edit the catalog?",
@@ -508,11 +552,11 @@
       },
       "privacy": {
         "title": "Where is the data stored?",
-        "body": "Business data, messages and the demo profile are kept in browser memory; they are not sent to the backend or third parties. Do not use real data. They are cleared on reload, sign-out or switching profiles. Only the theme persists locally; the sidebar resets to expanded on reload. There is no real multi-tenant isolation."
+        "body": "Accounts, businesses, context, catalog, agent and real messages are stored in PostgreSQL. Context and messages have no application-level encryption or automatic purge. Customers, orders and reports use in-memory fixtures. Local drafts are discarded on reload or business switch."
       },
-      "stores": {
-        "title": "Do currencies and time zones convert data?",
-        "body": "No. They are fictional preferences for each store. The catalog and all orders use PEN, and reports use UTC. Stores have no independent inventory or real connections. Changing a preference does not alter history."
+      "businesses": {
+        "title": "How do I manage several businesses?",
+        "body": "Use the selector below the logo to switch business or create another. Each business has its own configuration, catalog, agent and WhatsApp. New products use its currency; currency cannot change after products exist. No prices are converted and demo reports remain in PEN/UTC."
       },
       "reset": {
         "title": "How do I explore empty and error states?",

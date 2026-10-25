@@ -14,7 +14,7 @@
     "privacy": "Continuing takes you to Meta's official page in this tab. The code and token are processed exclusively on the backend. Connecting does not send messages.",
     "preparing": "Preparing the Meta connection…",
     "saving": "Verifying permissions and connecting the existing number. Do not close this page or repeat the operation.",
-    "success": "WhatsApp connected. New messages will appear in Conversations if the webhook is configured and the migration applied. AI replies are not enabled yet.",
+    "success": "WhatsApp connected. New messages will appear in Conversations when the webhook and migrations are ready. AI requires enabled automation, an active agent and published context.",
     "cancel": "Cancel",
     "disconnect": "Disconnect",
     "disconnectHint": "This removes the token stored in Nexora. It does not revoke access on Meta or stop operations already in progress. The number remains reserved for this business.",
@@ -33,6 +33,35 @@
     }
   },
   "WhatsappInbox": {
+    "aiOutbound": "AI agent",
+    "automation": {
+      "checking": "Checking conversation control…",
+      "ai": "AI mode",
+      "human": "Human control",
+      "takeover": "Take control",
+      "resume": "Return to AI",
+      "changing": "Updating…",
+      "humanHint": "AI is paused in this thread. You can reply manually if your role, connection and service window allow it.",
+      "aiHint": "AI replies to new text messages when automation, the agent and published context are enabled; it needs the same connected number and a 24-hour window. Take control to reply yourself.",
+      "takeoverConfirm": "Take control? Queued replies will be cancelled and a generated reply will be discarded. An already reserved send may still reach the customer.",
+      "resumeConfirm": "Return this conversation to AI? It will reply only to new messages, without retries or replying to history. Review any uncertain sends first.",
+      "notConfigured": "Automation is disabled on the server. Configure OpenAI and enable AI_AUTOREPLY_ENABLED after reviewing migrations, privacy and costs.",
+      "notReady": "Enable the agent and publish non-empty commercial context in Businesses to enable replies.",
+      "jobLabel": "Latest AI job:",
+      "rateLimit": "The business limit was reached. This message will not be retried automatically.",
+      "uncertain": "An already started send cannot be recalled. If the outcome remains uncertain, the thread switches to human control: review WhatsApp and do not blindly repeat the text.",
+      "error": "The change could not be confirmed (the thread may have received messages). The state was queried without repeating the operation; refresh before deciding what to do next.",
+      "jobs": {
+        "QUEUED": "Queued",
+        "GENERATING": "Generating reply",
+        "SENDING": "Sending to WhatsApp",
+        "ACCEPTED": "Accepted by Meta; delivery unconfirmed",
+        "FAILED": "Failed; no automatic retry",
+        "UNKNOWN": "Send unconfirmed; human review required",
+        "CANCELLED": "Cancelled after thread or configuration changed",
+        "SKIPPED": "Skipped; outdated, ineligible message or limit reached"
+      }
+    },
     "eyebrow": "WhatsApp · live data",
     "title": "Live WhatsApp conversations",
     "description": "Received messages and replies sent from this inbox. The latest view refreshes every 10 seconds while open; it does not import earlier history or sends made outside this screen.",
@@ -67,6 +96,7 @@
     "reconcileError": "The attempt could not be retrieved. Not finding it yet does not confirm that sending failed. Refresh the conversation before deciding what to do next.",
     "noBlindRetry": "No automatic retry was made. Do not repeat the same text with another key: the customer could receive it twice. Preparing another message discards this local tracking and clears the draft; check the history first.",
     "replyHints": {
+      "aiActive": "This conversation is in AI mode. Select Take control to reply manually.",
       "checking": "Checking whether you can reply. If this does not finish, refresh the conversation.",
       "allowed": "You can reply with text within 24 hours of the customer's last message. Accepted by Meta does not mean delivered or read.",
       "forbidden": "Only owners and administrators can send messages. Your role allows reading the conversation.",
@@ -86,6 +116,7 @@
       "UNKNOWN": "Whether Meta accepted the send could not be confirmed. Check the history and do not repeat the same message with another key."
     },
     "sendErrors": {
+      "aiActive": "The thread switched to AI mode. This send was not reserved; refresh and take control before replying.",
       "session": "Your session changed or expired. Sign in again and check the history before sending.",
       "forbidden": "You do not have permission to send messages for this business.",
       "windowClosed": "The 24-hour service window closed. The text was not sent; wait for another customer message or use an approved template through the API.",
@@ -118,7 +149,7 @@
     "clients": "Customers",
     "reports": "Reports",
     "settings": "Settings",
-    "stores": "Stores",
+    "businesses": "Businesses",
     "help": "Help center"
   },
   "Shell": {

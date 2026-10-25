@@ -34,7 +34,6 @@ export function OrderEditor({
     resolver: zodResolver(orderDraftSchema),
     defaultValues: {
       clientId: order?.clientId ?? workspace.clients[0]?.id ?? "",
-      storeId: order?.storeId ?? workspace.stores[0]?.id ?? "",
       status: order?.status ?? "pending",
       items: order?.items ?? [newItem],
     },
@@ -49,13 +48,13 @@ export function OrderEditor({
         : 0),
     0,
   );
-  if (!workspace.clients.length || !workspace.stores.length || !workspace.products.length)
+  if (!workspace.clients.length || !workspace.products.length)
     return (
       <div className="space-y-4">
         <h2 className="text-lg">{t("needsResources")}</h2>
         <p className="text-sm text-muted-foreground">{t("needsResourcesHint")}</p>
         <div className="flex flex-wrap gap-2">
-          {(["clients", "products", "stores"] as const).map((resource) => (
+          {(["clients", "products"] as const).map((resource) => (
             <Button asChild key={resource} variant="outline">
               <Link href={`/${resource}/new`}>{t(`add.${resource}`)}</Link>
             </Button>
@@ -105,18 +104,6 @@ export function OrderEditor({
               id="order-client"
               disabled={mutation.isPending}
               options={workspace.clients.map((row) => ({ value: row.id, label: row.name }))}
-            />
-          </div>
-          <div className="space-y-2">
-            <label htmlFor="order-store" className="block text-xs font-medium">
-              {t("store")}
-            </label>
-            <FormSelectField
-              control={form.control}
-              name="storeId"
-              id="order-store"
-              disabled={mutation.isPending}
-              options={workspace.stores.map((row) => ({ value: row.id, label: row.name }))}
             />
           </div>
           <div className="space-y-2">

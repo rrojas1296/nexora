@@ -15,6 +15,7 @@ model User {
   createdAt    DateTime     @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime     @updatedAt @db.Timestamptz(3)
   memberships  Membership[]
+  authSessions AuthSession[]
 
   @@map("Users")
 }
@@ -40,14 +41,15 @@ model Membership {
 model AuthSession {
   isDeleted     Boolean          @default(false)
   id            String           @id @default(uuid()) @db.Uuid
-  businessId    String           @db.Uuid
+  businessId    String?          @db.Uuid
   userId        String           @db.Uuid
   expiresAt     DateTime         @db.Timestamptz(3)
   idleExpiresAt DateTime         @db.Timestamptz(3)
   revokedAt     DateTime?        @db.Timestamptz(3)
   createdAt     DateTime         @default(now()) @db.Timestamptz(3)
   updatedAt     DateTime         @updatedAt @db.Timestamptz(3)
-  membership    Membership       @relation(fields: [businessId, userId], references: [businessId, userId], onDelete: Restrict)
+  membership    Membership?      @relation(fields: [businessId, userId], references: [businessId, userId], onDelete: Restrict)
+  user          User             @relation(fields: [userId], references: [id], onDelete: Restrict)
   refreshTokens RefreshSession[]
 
   @@unique([businessId, userId, id])
@@ -59,7 +61,7 @@ model AuthSession {
 model RefreshSession {
   isDeleted        Boolean     @default(false)
   id               String      @id @default(uuid()) @db.Uuid
-  businessId       String      @db.Uuid
+  businessId       String?     @db.Uuid
   userId           String      @db.Uuid
   familyId         String      @db.Uuid
   refreshTokenHash String      @unique
@@ -67,8 +69,8 @@ model RefreshSession {
   revokedAt        DateTime?   @db.Timestamptz(3)
   consumedAt       DateTime?   @db.Timestamptz(3)
   createdAt        DateTime    @default(now()) @db.Timestamptz(3)
-  membership       Membership  @relation(fields: [businessId, userId], references: [businessId, userId], onDelete: Restrict)
-  family           AuthSession @relation(fields: [businessId, userId, familyId], references: [businessId, userId, id], onDelete: Restrict)
+  membership       Membership? @relation(fields: [businessId, userId], references: [businessId, userId], onDelete: Restrict)
+  family           AuthSession @relation(fields: [familyId], references: [id], onDelete: Restrict)
 
   @@index([businessId, userId])
   @@index([businessId, familyId])

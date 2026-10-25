@@ -15,7 +15,7 @@ function url(scope: WhatsappScope) {
 }
 function assertScope(
   scope: WhatsappScope,
-  session: { user: { id: string }; activeBusinessId: string },
+  session: { user: { id: string }; activeBusinessId: string | null },
 ) {
   if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)
     throw new Error("SESSION_CHANGED");

@@ -12,9 +12,6 @@ import { QueryState } from "./query-state";
 const ClientEditor = dynamic(() =>
   import("@/features/clients/components/client-editor").then((module) => module.ClientEditor),
 );
-const StoreEditor = dynamic(() =>
-  import("@/features/stores/components/store-editor").then((module) => module.StoreEditor),
-);
 const OrderEditor = dynamic(() =>
   import("@/features/orders/components/order-editor").then((module) => module.OrderEditor),
 );
@@ -60,13 +57,6 @@ export function ResourceEditorScreen({
                 <ClientEditor
                   key={id ?? "new"}
                   client={workspace.clients.find((row) => row.id === id)}
-                  onClose={onClose}
-                />
-              ) : null}
-              {resource === "stores" ? (
-                <StoreEditor
-                  key={id ?? "new"}
-                  store={workspace.stores.find((row) => row.id === id)}
                   onClose={onClose}
                 />
               ) : null}

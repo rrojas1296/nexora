@@ -13,7 +13,7 @@ export default async function OnboardingPage() {
   const t = await getTranslations("Onboarding");
   return (
     <Suspense fallback={<SessionStatus />}>
-      <AuthenticatedContent>
+      <AuthenticatedContent allowWithoutBusiness>
         <div className="mx-auto min-h-dvh w-full max-w-357 bg-background">
           <header className="flex flex-wrap items-center justify-between gap-3 border-b px-5 py-5 sm:px-8">
             <Link

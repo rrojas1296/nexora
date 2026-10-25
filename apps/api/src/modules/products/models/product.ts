@@ -67,6 +67,7 @@ export interface ProductSummary {
   available: number;
   lowStock: number;
   inventoryValue: string;
+  currency: string;
 }
 
 export interface ProductList {

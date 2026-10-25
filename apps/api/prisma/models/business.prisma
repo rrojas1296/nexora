@@ -3,6 +3,14 @@ model Business {
   id                      String                         @id @default(uuid()) @db.Uuid
   slug                    String                         @unique
   name                    String
+  description             String                         @default("")
+  currency                String                         @default("PEN")
+  timezone                String                         @default("UTC")
+  contextDraft            String                         @default("")
+  contextPublished        String                         @default("")
+  contextVersion          Int                            @default(0)
+  revision                Int                            @default(0)
+  contextPublishedAt      DateTime?                      @db.Timestamptz(3)
   createdAt               DateTime                       @default(now()) @db.Timestamptz(3)
   updatedAt               DateTime                       @updatedAt @db.Timestamptz(3)
   memberships             Membership[]
@@ -19,6 +27,7 @@ model Business {
   whatsappAuthorizations  WhatsappAuthorizationAttempt[]
   whatsappConnection      WhatsappConnection?
   whatsappSendAttempts    WhatsappSendAttempt[]
+  whatsappAiReplyJobs     WhatsappAiReplyJob[]
   whatsappThreads         WhatsappThread[]
   whatsappInboundMessages WhatsappInboundMessage[]
 

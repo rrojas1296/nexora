@@ -55,7 +55,7 @@ export class MetaWhatsappAuthorizationProvider implements WhatsappAuthorizationP
 
   returnUrl(locale: "es" | "en", attemptId?: string) {
     const { redirectUri } = this.configuration();
-    const url = new URL(`/${locale}/settings`, new URL(redirectUri).origin);
+    const url = new URL(`/${locale}/businesses/configuration`, new URL(redirectUri).origin);
     if (attemptId) url.searchParams.set("whatsappAttempt", attemptId);
     else url.searchParams.set("whatsappResult", "failed");
     return url.toString();

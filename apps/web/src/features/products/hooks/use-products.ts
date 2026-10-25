@@ -15,7 +15,7 @@ import {
 export function useProductAccess() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const scope: ProductScope | null = session
+  const scope: ProductScope | null = session?.activeBusinessId
     ? { userId: session.user.id, businessId: session.activeBusinessId }
     : null;
   const role = session?.memberships.find(

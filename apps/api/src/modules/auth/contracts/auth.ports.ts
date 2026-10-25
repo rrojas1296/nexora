@@ -24,11 +24,7 @@ export type IssueTokens = (session: Session) => Promise<TokenPair>;
 export interface AuthRepository {
   findCredentials(email: string): Promise<CredentialsUser | null>;
   findCredentialsById(userId: string): Promise<CredentialsUser | null>;
-  changePassword(
-    claims: TokenClaims,
-    previousHash: string,
-    newHash: string,
-  ): Promise<void>;
+  changePassword(claims: TokenClaims, previousHash: string, newHash: string): Promise<void>;
   changePasswordWithCredentials(
     userId: string,
     previousHash: string,
@@ -45,11 +41,8 @@ export interface AuthRepository {
     passwordHash: string,
     issue: IssueTokens,
   ): Promise<AuthResult>;
+  switchBusiness(claims: TokenClaims, businessId: string, issue: IssueTokens): Promise<AuthResult>;
   current(claims: TokenClaims): Promise<Identity>;
-  rotate(
-    claims: TokenClaims,
-    hash: string,
-    issue: IssueTokens,
-  ): Promise<AuthResult>;
+  rotate(claims: TokenClaims, hash: string, issue: IssueTokens): Promise<AuthResult>;
   revoke(claims: TokenClaims, all: boolean): Promise<void>;
 }

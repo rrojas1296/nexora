@@ -6,11 +6,11 @@ import { defaultCurrency } from "@/lib/config/currency";
 import { orderStatuses } from "@/features/demo/schemas/workspace-schema";
 import type { Order, Workspace } from "@/features/demo/types/workspace";
 import { StatusBadge } from "@/features/demo/components/status-badge";
-import { getStoreRevenue } from "../lib/report-metrics";
+import { getReportRows } from "../lib/report-metrics";
 import { ChartPlaceholder } from "./chart-placeholder";
 
-const StoreRevenueChart = dynamic(
-  () => import("./store-revenue-chart").then((module) => module.StoreRevenueChart),
+const ProductRevenueChart = dynamic(
+  () => import("./product-revenue-chart").then((module) => module.ProductRevenueChart),
   { loading: ChartPlaceholder },
 );
 const OrderStatusChart = dynamic(
@@ -21,18 +21,14 @@ export function ReportCharts({
   workspace,
   orders,
   sales,
-  store,
 }: {
   workspace: Workspace;
   orders: readonly Order[];
   sales: readonly Order[];
-  store: string;
 }) {
   const t = useTranslations("Reports");
   const format = useFormatter();
-  const stores = getStoreRevenue(workspace, sales).filter(
-    (row) => store === "all" || row.id === store,
-  );
+  const products = getReportRows(workspace, sales, "products").slice(0, 5);
   const statuses = orderStatuses.map((status) => ({
     status,
     value: orders.filter((row) => row.status === status).length,
@@ -41,17 +37,17 @@ export function ReportCharts({
     <div className="grid gap-5 lg:grid-cols-2">
       <section className="min-w-0 rounded-3xl border bg-card p-6">
         <p className="text-xs text-muted-foreground">{t("distribution")}</p>
-        <h2 className="mt-2 text-xl">{t("byStore")}</h2>
-        <p className="mt-2 mb-5 text-xs leading-6 text-muted-foreground">{t("storeHint")}</p>
+        <h2 className="mt-2 text-xl">{t("byProduct")}</h2>
+        <p className="mt-2 mb-5 text-xs leading-6 text-muted-foreground">{t("productHint")}</p>
         {sales.length ? (
-          <StoreRevenueChart data={stores} />
+          <ProductRevenueChart data={products} />
         ) : (
           <p className="flex h-60 items-center justify-center text-center text-xs text-muted-foreground">
             {t("noSales")}
           </p>
         )}
         <dl className="mt-4 divide-y border-t">
-          {stores.map((row) => (
+          {products.map((row) => (
             <div key={row.id} className="flex justify-between gap-4 py-3 text-xs">
               <dt>{row.name}</dt>
               <dd className="tabular-nums">

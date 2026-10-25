@@ -7,6 +7,12 @@ import type {
 } from "../models/whatsapp-inbox.js";
 
 export interface WhatsappInboxRepository {
+  setControl(
+    actor: WhatsappActor,
+    threadId: string,
+    mode: "AI" | "HUMAN",
+    version: number,
+  ): Promise<{ mode: "AI" | "HUMAN"; version: number }>;
   recipient(
     actor: WhatsappActor,
     threadId: string,

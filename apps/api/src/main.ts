@@ -19,6 +19,13 @@ async function bootstrap() {
     limit: "1mb",
     inflate: false,
   });
+  app.useBodyParser("json", {
+    type: (request) =>
+      /^\/api\/v1\/businesses(?:\/[\da-f-]{36})?$/.test(request.url?.split("?")[0] ?? "") &&
+      /^application\/json(?:\s*;|$)/i.test(request.headers["content-type"] ?? ""),
+    limit: "128kb",
+    inflate: false,
+  });
   app.useBodyParser("json", { limit: "16kb" });
   app.useBodyParser("urlencoded", { extended: false, limit: "16kb" });
   app.use(cookieParser());

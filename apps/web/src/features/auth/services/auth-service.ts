@@ -82,10 +82,15 @@ export const authService = {
           name: values.name,
           email: values.email,
           password: values.password,
-          businessName: values.businessName,
         },
         { headers },
       );
+      clearRefreshMarker();
+      return sessionResponseSchema.parse(response.data).data;
+    }),
+  switchBusiness: (businessId: string) =>
+    withAuthenticatedSession(async (_session, headers) => {
+      const response = await apiClient.post("/auth/switch-business", { businessId }, { headers });
       clearRefreshMarker();
       return sessionResponseSchema.parse(response.data).data;
     }),

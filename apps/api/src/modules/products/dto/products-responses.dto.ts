@@ -33,5 +33,6 @@ export const productListResponse = z.object({
     available: z.number().int(),
     lowStock: z.number().int(),
     inventoryValue: z.string(),
+    currency: z.string(),
   }),
 });

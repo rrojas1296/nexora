@@ -15,7 +15,11 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
     getTranslations("Agent"),
     getTranslations("WhatsappInbox"),
   ]);
-  const persisted = module === "products" || module === "agent" || module === "conversations";
+  const persisted =
+    module === "products" ||
+    module === "agent" ||
+    module === "conversations" ||
+    module === "businesses";
   return (
     <PageEntrance key={module} className="w-full space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-4">

@@ -1,17 +1,61 @@
 {
+  "Businesses": {
+    "title": "Mis negocios",
+    "intro": "Selecciona un negocio o crea uno nuevo. Su configuración y datos reales permanecen separados de los demás.",
+    "available": "Disponible para tu cuenta",
+    "create": "Crear negocio",
+    "configuration": "Configuración del negocio",
+    "name": "Nombre del negocio",
+    "description": "Descripción breve",
+    "timezone": "Zona horaria",
+    "timezoneHint": "Identificador IANA, por ejemplo America/Lima o Europe/Madrid.",
+    "currency": "Moneda",
+    "currencyHint": "Los productos nuevos usan esta moneda. No puede cambiarse si ya existen productos, incluidos los archivados; no hay conversión de precios.",
+    "defaultAgentName": "Asistente de ventas",
+    "active": "Negocio activo",
+    "choose": "Selecciona un negocio",
+    "open": "Abrir negocio",
+    "back": "Volver a negocios",
+    "role": "Rol: {role}",
+    "readOnly": "Tu rol permite consultar. Solo propietarios y administradores pueden guardar cambios.",
+    "empty": "Todavía no tienes negocios. Crea el primero para continuar.",
+    "switchConfirm": "¿Continuar? Se descartarán los borradores locales y los cambios de demostración sin guardar.",
+    "switchError": "No se pudo confirmar el cambio. La sesión se está actualizando; comprueba el negocio activo antes de continuar.",
+    "creationNotice": "Se crearán el negocio, tu membresía como propietario y un agente deshabilitado en una sola operación. WhatsApp se conecta después; no se enviarán mensajes ni se ejecutará IA.",
+    "invalid": "Revisa el campo: nombre de 1 a 120 caracteres, descripción hasta 1000, zona horaria válida, nombre del agente de 2 a 100 y contexto hasta 30000 caracteres.",
+    "saving": "Guardando…",
+    "saveDraft": "Guardar borrador",
+    "publish": "Guardar y publicar contexto",
+    "saved": "Cambios guardados.",
+    "saveError": "No se pudo confirmar el guardado. Si otro administrador cambió la configuración, recarga antes de volver a editar. No se reintentó automáticamente.",
+    "activationError": "El negocio se creó, pero no se confirmó su activación. Usa Abrir negocio o selecciónalo en el menú; no vuelvas a crearlo.",
+    "reload": "Recargar configuración",
+    "reloadConfirm": "¿Recargar la página y descartar los cambios sin guardar?",
+    "setupHint": "Cada negocio mantiene su catálogo, agente, contexto y conexión WhatsApp. Clientes, pedidos y reportes continúan como demostración en memoria, no son datos comerciales persistentes.",
+    "context": "Contexto comercial",
+    "contextHint": "Describe qué vendes, a quién ayudas, horarios, entregas, pagos, políticas, preguntas frecuentes y cuándo derivar a una persona. Es texto sin formato: los enlaces y HTML no se ejecutan.",
+    "contextSafety": "No incluyas contraseñas, tokens, claves de pago ni datos personales innecesarios. El texto se guarda en PostgreSQL sin cifrado aplicativo y se envía al proveedor IA al generar respuestas. Publicar no activa por sí solo la automatización.",
+    "useTemplate": "Usar plantilla",
+    "editText": "Ocultar vista previa",
+    "preview": "Vista previa",
+    "emptyContext": "Todavía no hay contexto escrito.",
+    "characters": "{count} / 30000 caracteres",
+    "publication": "Versión publicada: {version}. Guardar borrador no modifica el contexto publicado. La IA usa la copia publicada para nuevos mensajes cuando el servicio y el agente están habilitados. El borrador no se envía al modelo.",
+    "template": "SOBRE EL NEGOCIO\nQué hacemos, a quién atendemos y propuesta de valor:\n\nPRODUCTOS Y SERVICIOS\nCategorías, disponibilidad y límites. Consultar siempre el catálogo vigente:\n\nHORARIOS Y CONTACTO\nHorarios, zona horaria y canales de atención:\n\nPAGOS Y ENTREGAS\nMétodos admitidos, cobertura, plazos y costes:\n\nPOLÍTICAS\nCambios, devoluciones, garantías y restricciones:\n\nPREGUNTAS FRECUENTES\nPreguntas y respuestas verificadas:\n\nDERIVACIÓN HUMANA\nCuándo detener la asistencia y solicitar una persona:\n\nREGLAS\nNo inventar precios, stock ni promesas. Si falta información, preguntar o derivar."
+  },
   "Demo": {
     "eyebrow": "Operación · Demo",
     "setup": "Ver configuración inicial",
     "descriptions": {
       "dashboard": "La actividad de tu negocio en una vista: ventas, pedidos y conversaciones de demostración.",
       "conversations": "Consulta mensajes entrantes reales del número conectado a WhatsApp, sin historial anterior ni datos de demostración.",
-      "agent": "Define la personalidad y las instrucciones de tu agente. Vista previa local, sin IA conectada.",
+      "agent": "Configura el agente que usa la automatización del chat. La vista previa del saludo sigue siendo local.",
       "products": "Organiza el catálogo de demostración: precios, disponibilidad e inventario.",
       "orders": "Consulta pedidos ficticios y explora sus estados. No se procesan pagos ni envíos.",
       "clients": "Conoce a tus clientes de ejemplo y su historial de pedidos y conversaciones.",
       "reports": "Explora los resultados de la demo con métricas calculadas a partir de los pedidos.",
       "settings": "Personaliza las preferencias de tu espacio de demostración.",
-      "stores": "Organiza tus tiendas de ejemplo y sus preferencias operativas.",
+      "businesses": "Gestiona tus negocios reales y configura el contexto comercial de cada uno.",
       "help": "Guías rápidas para explorar la demo y entender qué está simulado."
     },
     "controls": "Controles de demostración",
@@ -73,7 +117,7 @@
       "address": "Escribe una dirección de entre 5 y 200 caracteres.",
       "required": "Revisa este campo y selecciona un valor válido.",
       "message": "Escribe un mensaje de entre 1 y 2000 caracteres.",
-      "instructions": "Usa entre 20 y 2000 caracteres.",
+      "instructions": "Usa un máximo de 2000 caracteres.",
       "greeting": "Usa entre 5 y 300 caracteres.",
       "imageUrl": "Ingresa un enlace HTTP o HTTPS válido de hasta 2048 caracteres, o deja el campo vacío."
     },
@@ -175,7 +219,7 @@
   "Orders": {
     "create": "Nuevo pedido",
     "edit": "Editar pedido",
-    "formHint": "Selecciona cliente, tienda y artículos. Los importes se guardan en PEN y los cambios actualizan las métricas demo.",
+    "formHint": "Selecciona cliente y artículos. Los importes se guardan en PEN y los cambios actualizan las métricas demo.",
     "orderInfo": "Información del pedido",
     "items": "Artículos del pedido",
     "line": "Artículo {number}",
@@ -185,8 +229,8 @@
     "addItem": "Añadir artículo",
     "editorHint": "Simulación sin pagos, impuestos, envíos ni ajustes de inventario. Editar un pedido conserva su fecha original y los precios de cada línea hasta que los cambies. Los pedidos nuevos usan la fecha actual y pueden quedar fuera de los periodos fijos de reportes.",
     "needsResources": "Prepara los recursos del pedido",
-    "needsResourcesHint": "Necesitas al menos un cliente, un producto y una tienda antes de crear un pedido.",
-    "add": { "clients": "Crear cliente", "products": "Crear producto", "stores": "Crear tienda" },
+    "needsResourcesHint": "Necesitas al menos un cliente y un producto antes de crear un pedido.",
+    "add": { "clients": "Crear cliente", "products": "Crear producto" },
     "table": "Pedidos de demostración",
     "order": "Pedido",
     "client": "Cliente",
@@ -265,7 +309,7 @@
   "Agent": {
     "validationBlocked": "No se ha enviado la configuración: corrige los campos indicados y vuelve a pulsar Guardar.",
     "eyebrow": "Configuración del negocio",
-    "workspaceDescription": "Configura el agente de tu negocio. Los cambios se guardan en la base de datos; no conectan WhatsApp ni ejecutan IA.",
+    "workspaceDescription": "Configura el agente de tu negocio. Habilitarlo permite responder nuevos mensajes si el servidor IA está activo, hay contexto publicado y WhatsApp está conectado.",
     "unconfigured": "Todavía no hay un agente configurado. Completa el formulario y guarda tu primera configuración.",
     "persistedHint": "Configuración guardada para este negocio. Los cambios del borrador no se guardan hasta pulsar Guardar.",
     "readOnly": "Solo el propietario o un administrador pueden guardar la configuración del agente.",
@@ -288,7 +332,7 @@
     "enabled": "Agente habilitado (preferencia de configuración)",
     "preview": "Vista previa del saludo",
     "previewHint": "Esta tarjeta refleja tu borrador local, no una respuesta de IA. Guarda para conservar la configuración al recargar o volver a entrar.",
-    "enabledHint": "Preferencia habilitada en el borrador. Guardarla no ejecuta automatizaciones ni responde conversaciones: la integración de IA y WhatsApp aún no está disponible.",
+    "enabledHint": "Guardar con el agente habilitado autoriza respuestas automáticas a nuevos textos en hilos en modo IA, si el servidor está configurado y existe contexto publicado. Deshabilitarlo detiene futuras reservas; un envío ya iniciado no puede retirarse.",
     "disabledHint": "Preferencia deshabilitada en el borrador. El saludo sigue visible como vista previa local.",
     "tones": { "friendly": "Cercano", "professional": "Profesional", "concise": "Conciso" }
   },
@@ -450,22 +494,22 @@
     "export": "Exportar tabla CSV",
     "summary": "Informe de resultados",
     "revenue": "Ingresos",
-    "revenueHint": "Total cobrado simulado del periodo y tienda seleccionados, sin impuestos ni devoluciones.",
+    "revenueHint": "Total cobrado simulado del periodo seleccionado, sin impuestos ni devoluciones.",
     "orders": "Pedidos",
     "paidShare": "Pagados o enviados / total",
     "average": "Ticket de venta promedio",
-    "method": "Ingresos y ticket: solo pedidos pagados y enviados. El porcentaje usa todos los pedidos del periodo y tienda; no es una tasa de conversión de conversaciones.",
+    "method": "Ingresos y ticket: solo pedidos pagados y enviados. El porcentaje usa todos los pedidos del periodo; no es una tasa de conversión de conversaciones.",
     "distribution": "01 · Distribución comercial",
-    "byStore": "Ingresos por tienda",
-    "storeHint": "Compara la contribución de cada tienda al periodo. Importes demo en PEN.",
-    "storeChartHint": "Gráfico horizontal de ingresos por tienda. Los importes exactos se muestran debajo.",
+    "byProduct": "Ingresos por producto",
+    "productHint": "Los cinco productos con más ingresos del periodo. Importes de demostración en PEN.",
+    "productChartHint": "Gráfico de ingresos por producto. Los importes exactos se muestran debajo.",
     "operations": "02 · Composición operativa",
     "byStatus": "Cómo se distribuyen los pedidos",
-    "statusHint": "Todos los estados del periodo y tienda seleccionados. Pendientes y cancelados no generan ingresos.",
+    "statusHint": "Todos los estados del periodo seleccionado. Pendientes y cancelados no generan ingresos.",
     "statusChartHint": "Gráfico circular del número de pedidos por estado. Los recuentos y porcentajes se muestran debajo.",
     "detail": "03 · Desglose de ventas",
     "performance": "Qué impulsa los resultados",
-    "performanceHint": "Ordenado por ingresos. Solo ventas pagadas o enviadas del mismo periodo y tienda; la participación se calcula sobre esos ingresos.",
+    "performanceHint": "Ordenado por ingresos. Solo ventas pagadas o enviadas del mismo periodo; la participación se calcula sobre esos ingresos.",
     "groupBy": "Agrupar resultados",
     "products": "Por producto",
     "clients": "Por cliente",
@@ -473,8 +517,8 @@
     "client": "Cliente",
     "units": "Unidades",
     "share": "Participación",
-    "productTable": "Rendimiento por producto del periodo y tienda seleccionados",
-    "clientTable": "Rendimiento por cliente del periodo y tienda seleccionados",
+    "productTable": "Rendimiento por producto del periodo seleccionado",
+    "clientTable": "Rendimiento por cliente del periodo seleccionado",
     "noSales": "No hay ventas pagadas o enviadas para estos filtros.",
     "periodDays": "Días del periodo",
     "cutoff": "Fecha de corte · UTC"
@@ -492,15 +536,15 @@
     "articles": {
       "start": {
         "title": "¿Cómo empiezo?",
-        "body": "Puedes explorar todos los módulos sin iniciar sesión real. El onboarding simula cinco pasos de configuración. Ese borrador es independiente de los datos comerciales de ejemplo: no crea tiendas ni agentes reales y no reemplaza las colecciones demo."
+        "body": "Registra tu cuenta y crea tu primer negocio en el onboarding. Se guardan el negocio, tu membresía y un agente deshabilitado. Después puedes configurar su contexto y conectar WhatsApp. Clientes, pedidos y reportes conservan datos de demostración independientes."
       },
       "messages": {
         "title": "¿Los mensajes se envían a WhatsApp?",
-        "body": "Conversaciones muestra mensajes entrantes reales recibidos por el webhook del número conectado. Necesita la migración de inbox y la suscripción messages de Meta. La vista reciente se actualiza cada 10 segundos, sin importar historial anterior. Es de solo lectura: no envía respuestas ni ejecuta IA, no muestra envíos anteriores ni estados de entrega. Las fechas se presentan en UTC."
+        "body": "Conversaciones muestra mensajes entrantes reales recibidos por el webhook del número conectado. Necesita la migración de inbox y la suscripción messages de Meta. La vista reciente se actualiza cada 10 segundos, sin importar historial anterior. OWNER/ADMIN pueden tomar el control y responder con texto dentro de 24 horas, o devolver el hilo a IA para nuevos mensajes. La IA necesita servicio configurado, agente habilitado y contexto publicado. Muestra origen y estado del trabajo, no envíos externos anteriores ni confirmaciones de entrega. Las fechas se presentan en UTC."
       },
       "agent": {
         "title": "¿Cómo funciona la vista previa del agente?",
-        "body": "La vista previa muestra el nombre, tono y saludo que estás editando. Guardar conserva la configuración en memoria mientras navegas; no llama a un modelo de IA ni automatiza conversaciones."
+        "body": "La vista previa muestra el nombre, tono y saludo que estás editando. Guardar persiste la configuración en PostgreSQL. Con agente habilitado, contexto publicado y servicio IA configurado, los nuevos textos pueden generar y enviar respuestas automáticas; la vista previa no llama al modelo. El contexto comercial extenso se edita y publica desde Negocios."
       },
       "catalog": {
         "title": "¿Puedo editar el catálogo?",
@@ -512,11 +556,11 @@
       },
       "privacy": {
         "title": "¿Dónde se guardan los datos?",
-        "body": "Los datos comerciales, los mensajes y el perfil demo se mantienen en memoria del navegador; no se envían al backend ni a terceros. No uses datos reales. Se eliminan al recargar, salir o cambiar de perfil. Solo el tema se conserva localmente; el sidebar vuelve expandido al recargar. No hay aislamiento multi-tenant real."
+        "body": "Cuenta, negocios, contexto, catálogo, agente y mensajes reales se guardan en PostgreSQL. El contexto y los mensajes no tienen cifrado aplicativo ni purga automática. Clientes, pedidos y reportes usan fixtures en memoria. Los borradores locales se descartan al recargar o cambiar de negocio."
       },
-      "stores": {
-        "title": "¿Las monedas y zonas horarias convierten los datos?",
-        "body": "No. Son preferencias ficticias de cada tienda. El catálogo y todos los pedidos usan PEN, y los reportes usan UTC. Las tiendas no tienen inventario independiente ni conexiones reales. Cambiar una preferencia no modifica el historial."
+      "businesses": {
+        "title": "¿Cómo gestiono varios negocios?",
+        "body": "Usa el selector debajo del logo para cambiar de negocio o crear otro. Cada negocio tiene configuración, catálogo, agente y WhatsApp propios. Los productos nuevos usan su moneda; no puede cambiarse si ya hay productos. No hay conversión de precios y los reportes demo siguen en PEN/UTC."
       },
       "reset": {
         "title": "¿Cómo exploro los estados vacío y error?",

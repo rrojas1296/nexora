@@ -14,7 +14,7 @@ export interface Membership {
 
 export interface Identity {
   user: { id: string; name: string; email: string };
-  activeBusinessId: string;
+  activeBusinessId: string | null;
   memberships: Membership[];
 }
 
@@ -27,7 +27,7 @@ export interface CredentialsUser {
 export interface Session {
   id: string;
   userId: string;
-  businessId: string;
+  businessId: string | null;
   expiresAt: Date;
   idleExpiresAt: Date;
 }
@@ -35,7 +35,7 @@ export interface Session {
 export interface TokenClaims {
   sub: string;
   sid: string;
-  businessId: string;
+  businessId: string | null;
   jti: string;
 }
 
@@ -58,7 +58,6 @@ export interface RegisterInput {
   name: string;
   email: string;
   password: string;
-  businessName: string;
 }
 
 export interface ChangePasswordInput {

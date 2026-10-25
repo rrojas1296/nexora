@@ -1,0 +1,35 @@
+enum WhatsappAiJobStatus {
+  QUEUED
+  GENERATING
+  SENDING
+  ACCEPTED
+  FAILED
+  UNKNOWN
+  CANCELLED
+  SKIPPED
+}
+
+model WhatsappAiReplyJob {
+  id               String              @id @default(uuid()) @db.Uuid
+  businessId       String              @db.Uuid
+  threadId         String              @db.Uuid
+  triggerMessageId String              @unique @db.Uuid
+  threadVersion    Int
+  status           WhatsappAiJobStatus  @default(QUEUED)
+  reason           String?
+  provider         String?
+  model            String?
+  contextVersion   Int?
+  startedAt        DateTime?           @db.Timestamptz(3)
+  createdAt        DateTime            @default(now()) @db.Timestamptz(3)
+  updatedAt        DateTime            @updatedAt @db.Timestamptz(3)
+  isDeleted        Boolean             @default(false)
+  business         Business            @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  thread           WhatsappThread      @relation(fields: [businessId, threadId], references: [businessId, id], onDelete: Restrict)
+  triggerMessage   WhatsappInboundMessage @relation(fields: [businessId, threadId, triggerMessageId], references: [businessId, threadId, id], onDelete: Restrict)
+
+  @@index([status, isDeleted, createdAt])
+  @@index([businessId, threadId, createdAt])
+  @@index([businessId, startedAt])
+  @@map("WhatsappAiReplyJobs")
+}

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
+import { ConversationAutomation } from "./conversation-automation";
 import { ConversationComposer } from "./conversation-composer";
 import { useInboxMessages } from "../hooks/use-inbox";
 import type { InboxScope, InboxThread } from "../schemas/inbox-schema";
@@ -41,6 +42,12 @@ export function ConversationPanel({
           {t("businessNumber", { id: conversation.phoneNumberId })}
         </p>
       </div>
+      <ConversationAutomation
+        scope={scope}
+        threadId={conversation.id}
+        automation={query.isError ? undefined : query.data?.automation}
+        refreshing={query.isFetching}
+      />
       <div className="flex flex-wrap justify-between gap-2 border-b p-4">
         <Button
           variant="outline"
@@ -113,7 +120,11 @@ export function ConversationPanel({
             )}
           >
             <p className="mb-1 text-xs font-medium">
-              {message.direction === "OUTBOUND" ? t("outbound") : t("inbound")}
+              {message.direction === "OUTBOUND"
+                ? message.source === "AI"
+                  ? t("aiOutbound")
+                  : t("outbound")
+                : t("inbound")}
             </p>
             {message.type !== "text" ? (
               <p className="mb-1 text-xs text-muted-foreground">

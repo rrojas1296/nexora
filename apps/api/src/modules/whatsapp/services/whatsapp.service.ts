@@ -2,6 +2,8 @@ import {
   WhatsappError,
   type WhatsappActor,
   type WhatsappConnectionInput,
+  type WhatsappCredentials,
+  type WhatsappSendAttempt,
   type WhatsappConversationSend,
   type WhatsappMessage,
 } from "../models/whatsapp.js";
@@ -68,12 +70,27 @@ export class WhatsappService {
         message.text.body !== conversation.body)
     )
       throw new WhatsappError("WHATSAPP_IDEMPOTENCY_CONFLICT");
-    const { attempt, credentials } = await this.repository.reserveSend(
+    const reservation = await this.repository.reserveSend(
       actor,
       key,
       this.hasher.hash(message),
       conversation,
     );
+    return this.dispatchReserved(businessId, message, reservation);
+  }
+
+  // Used by the authenticated sender and the durable automation worker, only after reservation.
+  async dispatchReserved(
+    businessId: string,
+    message: WhatsappMessage,
+    {
+      attempt,
+      credentials,
+    }: {
+      attempt: WhatsappSendAttempt;
+      credentials: WhatsappCredentials | null;
+    },
+  ) {
     if (!credentials) return attempt;
     let accessToken: string;
     try {

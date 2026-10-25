@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { currencies, defaultCurrency } from "@/lib/config/currency";
+import { defaultCurrency } from "@/lib/config/currency";
 import { productInputSchema } from "@/features/products/schemas/product-schema";
 
 export { productInputSchema } from "@/features/products/schemas/product-schema";
@@ -43,16 +43,6 @@ export const clientInputSchema = z.object({
   marketingConsent: z.boolean(),
 });
 export const clientSchema = clientInputSchema.extend({ id });
-export const storeInputSchema = z.object({
-  name,
-  address: z.string().trim().min(5, "address").max(200, "address"),
-  currency: z.enum(currencies, { error: "required" }),
-  timezone: z.enum(["America/Mexico_City", "America/Bogota", "America/New_York", "Europe/Madrid"], {
-    error: "required",
-  }),
-  active: z.boolean(),
-});
-export const storeSchema = storeInputSchema.extend({ id });
 export const orderItemInputSchema = z.object({
   productId: id,
   name,
@@ -61,7 +51,6 @@ export const orderItemInputSchema = z.object({
 });
 export const orderInputSchema = z.object({
   clientId: id,
-  storeId: id,
   status: z.enum(orderStatuses),
   createdAt: z.iso.datetime(),
   currency: z.literal(defaultCurrency),
@@ -100,7 +89,6 @@ export const settingsSchema = z.object({
 export const workspaceSchema = z.object({
   products: z.array(productSchema),
   clients: z.array(clientSchema),
-  stores: z.array(storeSchema),
   orders: z.array(orderSchema),
   conversations: z.array(conversationSchema),
   agent: agentSchema,

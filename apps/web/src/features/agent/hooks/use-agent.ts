@@ -9,7 +9,7 @@ import { agentService } from "../services/agent-service";
 export function useAgentAccess() {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
-  const scope: AgentScope | null = session
+  const scope: AgentScope | null = session?.activeBusinessId
     ? { userId: session.user.id, businessId: session.activeBusinessId }
     : null;
   const role = session?.memberships.find(

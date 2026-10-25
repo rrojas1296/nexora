@@ -30,7 +30,6 @@ export const monthlyOrdersFixture: Order[] = annualVolumes.flatMap(
         return {
           id: `ORD-DEMO-${year}-${monthLabel}-${String(index + 1).padStart(2, "0")}`,
           clientId: index % 2 === 0 ? "c1" : "c2",
-          storeId: "s1",
           status: index % 3 === 0 ? "paid" : "shipped",
           createdAt: `${year}-${monthLabel}-${day}T12:00:00Z`,
           currency: defaultCurrency,

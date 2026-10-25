@@ -7,6 +7,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Brand } from "./brand";
 import { SidebarNavigation } from "./sidebar-navigation";
+import { BusinessSelector } from "./business-selector";
 
 export function MobileNavigation() {
   const [open, setOpen] = useState(false);
@@ -32,6 +33,7 @@ export function MobileNavigation() {
               <X className="size-4" aria-hidden="true" />
             </Dialog.Close>
           </div>
+          <BusinessSelector onNavigate={() => setOpen(false)} />
           <div className="overflow-y-auto py-5">
             <SidebarNavigation onNavigate={() => setOpen(false)} />
           </div>

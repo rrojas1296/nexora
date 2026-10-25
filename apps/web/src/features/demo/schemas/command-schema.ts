@@ -2,7 +2,6 @@ import { z } from "zod";
 import {
   productInputSchema,
   clientInputSchema,
-  storeInputSchema,
   agentSchema,
   settingsSchema,
   messageInputSchema,
@@ -16,7 +15,6 @@ export const commandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("product.save"), id: id.optional(), input: productInputSchema }),
   z.object({ type: z.literal("product.delete"), id }),
   z.object({ type: z.literal("client.save"), id: id.optional(), input: clientInputSchema }),
-  z.object({ type: z.literal("store.save"), id: id.optional(), input: storeInputSchema }),
   z.object({ type: z.literal("order.status"), id, status: z.enum(orderStatuses) }),
   z.object({ type: z.literal("order.save"), id: id.optional(), input: orderInputSchema }),
   z.object({

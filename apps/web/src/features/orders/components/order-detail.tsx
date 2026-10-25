@@ -30,12 +30,6 @@ export function OrderDetail({
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">{t("store")}</dt>
-          <dd className="mt-2">
-            {workspace.stores.find((store) => store.id === order.storeId)?.name ?? "—"}
-          </dd>
-        </div>
-        <div>
           <dt className="text-muted-foreground">{t("date")}</dt>
           <dd className="mt-2">
             {format.dateTime(new Date(order.createdAt), { dateStyle: "medium", timeZone: "UTC" })}

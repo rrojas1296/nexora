@@ -5,6 +5,7 @@ import type {
 } from "../models/whatsapp-inbox.js";
 import type { WhatsappInboxRepository } from "../repositories/whatsapp-inbox.repository.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
+import { findAutomationAgent } from "./prisma-whatsapp-ai-agent.js";
 
 function summary(thread: WhatsappThread) {
   return {
@@ -15,11 +16,15 @@ function summary(thread: WhatsappThread) {
     lastMessageAt: thread.lastMessageAt.toISOString(),
     lastMessageBody: thread.lastMessageBody,
     lastMessageType: thread.lastMessageType,
+    controlMode: thread.controlMode,
   };
 }
 
 export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
-  constructor(private readonly client: PrismaClient) {}
+  constructor(
+    private readonly client: PrismaClient,
+    private readonly automationEnabled = false,
+  ) {}
 
   private async authorize(tx: Prisma.TransactionClient, actor: WhatsappActor) {
     const [membership] = await tx.$queryRaw<{ businessId: string; role: string }[]>`
@@ -108,8 +113,9 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
       update: {},
     });
     if (thread.isDeleted) return;
-    await tx.whatsappInboundMessage.create({
+    const inbound = await tx.whatsappInboundMessage.create({
       data: {
+        source: "CUSTOMER",
         businessId,
         threadId: thread.id,
         providerMessageId: message.providerMessageId,
@@ -118,6 +124,26 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
         sentAt: message.sentAt,
       },
     });
+    const updated = await tx.whatsappThread.update({
+      where: { businessId_id: { businessId, id: thread.id } },
+      data: { controlVersion: { increment: 1 } },
+    });
+    const agent =
+      this.automationEnabled &&
+      updated.controlMode === "AI" &&
+      message.type === "text" &&
+      message.body.trim()
+        ? await findAutomationAgent(tx, businessId)
+        : null;
+    if (agent)
+      await tx.whatsappAiReplyJob.create({
+        data: {
+          businessId,
+          threadId: thread.id,
+          triggerMessageId: inbound.id,
+          threadVersion: updated.controlVersion,
+        },
+      });
     if (message.sentAt >= thread.lastMessageAt) {
       await tx.whatsappThread.update({
         where: { businessId_id: { businessId, id: thread.id } },
@@ -131,6 +157,39 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
         },
       });
     }
+  }
+
+  setControl(actor: WhatsappActor, threadId: string, mode: "AI" | "HUMAN", version: number) {
+    return this.client.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Businesses" WHERE "id" = ${actor.businessId}::uuid FOR NO KEY UPDATE`;
+      const membership = await this.authorize(tx, actor);
+      if (!["OWNER", "ADMIN"].includes(membership.role))
+        throw new WhatsappError("WHATSAPP_FORBIDDEN");
+      const thread = await tx.whatsappThread.findFirst({
+        where: { businessId: actor.businessId, id: threadId, isDeleted: false },
+      });
+      if (!thread) throw new WhatsappError("WHATSAPP_CONVERSATION_NOT_FOUND");
+      if (thread.controlVersion !== version) throw new WhatsappError("WHATSAPP_CONTROL_CONFLICT");
+      if (
+        mode === "AI" &&
+        (!this.automationEnabled || !(await findAutomationAgent(tx, actor.businessId)))
+      )
+        throw new WhatsappError("WHATSAPP_NOT_CONFIGURED");
+      await tx.whatsappThread.update({
+        where: { businessId_id: { businessId: actor.businessId, id: threadId } },
+        data: { controlMode: mode, controlVersion: { increment: 1 } },
+      });
+      await tx.whatsappAiReplyJob.updateMany({
+        where: {
+          businessId: actor.businessId,
+          threadId,
+          isDeleted: false,
+          status: { in: ["QUEUED", "GENERATING"] },
+        },
+        data: { status: "CANCELLED", reason: "CONTROL_CHANGED" },
+      });
+      return { mode, version: version + 1 };
+    });
   }
 
   threads(actor: WhatsappActor, cursor?: string) {
@@ -178,6 +237,7 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
     threadId: string,
     phoneNumberId: string,
     role: string,
+    mode: "AI" | "HUMAN",
   ): Promise<WhatsappReplyAvailability> {
     const now = new Date();
     const [incoming, connection] = await Promise.all([
@@ -210,7 +270,9 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
           ? "notConnected"
           : !expires || expires <= now
             ? "windowClosed"
-            : "allowed";
+            : mode === "AI"
+              ? "aiActive"
+              : "allowed";
     return {
       allowed: reason === "allowed",
       reason,
@@ -223,7 +285,7 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
       const membership = await this.authorize(tx, actor);
       const thread = await tx.whatsappThread.findFirst({
         where: { id: threadId, businessId: actor.businessId, isDeleted: false },
-        select: { id: true, phoneNumberId: true },
+        select: { id: true, phoneNumberId: true, controlMode: true, controlVersion: true },
       });
       if (!thread) throw new WhatsappError("WHATSAPP_CONVERSATION_NOT_FOUND");
       const where = { businessId: actor.businessId, threadId, isDeleted: false };
@@ -246,6 +308,7 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
         items: records.slice(0, 50).map((message) => ({
           id: message.id,
           direction: message.direction,
+          source: message.source,
           sendStatus:
             message.sendAttempt && !message.sendAttempt.isDeleted
               ? message.sendAttempt.status
@@ -256,12 +319,29 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
           receivedAt: message.receivedAt.toISOString(),
         })),
         nextCursor: records.length > 50 ? records[49]!.id : null,
+        automation: {
+          mode: thread.controlMode,
+          version: thread.controlVersion,
+          configured: this.automationEnabled,
+          canManage: membership.role === "OWNER" || membership.role === "ADMIN",
+          ready: this.automationEnabled && !!(await findAutomationAgent(tx, actor.businessId)),
+          lastJob: await tx.whatsappAiReplyJob.findFirst({
+            where: { businessId: actor.businessId, threadId, isDeleted: false },
+            orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+            select: { status: true, reason: true },
+          }),
+          inFlight: !!(await tx.whatsappAiReplyJob.findFirst({
+            where: { businessId: actor.businessId, threadId, status: "SENDING", isDeleted: false },
+            select: { id: true },
+          })),
+        },
         reply: await this.replyAvailability(
           tx,
           actor,
           threadId,
           thread.phoneNumberId,
           membership.role,
+          thread.controlMode,
         ),
       };
     });

@@ -14,7 +14,7 @@ const articles = [
   "catalog",
   "orders",
   "privacy",
-  "stores",
+  "businesses",
   "reset",
 ] as const;
 export function HelpScreen() {

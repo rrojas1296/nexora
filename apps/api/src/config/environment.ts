@@ -53,6 +53,14 @@ export const environmentSchema = z
     AUTH_SESSION_TTL_SECONDS: z.coerce.number().int().min(3600).max(7776000).default(2592000),
     AUTH_CSRF_TTL_SECONDS: z.coerce.number().int().min(60).max(86400).default(3600),
     BCRYPT_ROUNDS: z.coerce.number().int().min(10).max(15).default(12),
+    AI_AUTOREPLY_ENABLED: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((value) => value === "true"),
+    AI_PROVIDER: z.enum(["openai"]).default("openai"),
+    AI_DAILY_REPLY_LIMIT: z.coerce.number().int().min(1).max(10000).default(200),
+    OPENAI_API_KEY: z.string().trim().min(1).max(512).optional(),
+    OPENAI_MODEL: z.string().trim().min(1).max(100).optional(),
     WHATSAPP_WEBHOOK_VERIFY_TOKEN: z.string().trim().min(1).max(256).optional(),
     WHATSAPP_APP_SECRET: z.string().trim().min(1).max(256).optional(),
     WHATSAPP_LOGIN_CONFIG_ID: z
@@ -95,6 +103,23 @@ export const environmentSchema = z
       .optional(),
   })
   .superRefine((environment, context) => {
+    if (environment.AI_AUTOREPLY_ENABLED) {
+      for (const key of [
+        "OPENAI_API_KEY",
+        "OPENAI_MODEL",
+        "WHATSAPP_GRAPH_API_VERSION",
+        "WHATSAPP_CREDENTIALS_KEY",
+        "WHATSAPP_APP_SECRET",
+        "WHATSAPP_WEBHOOK_VERIFY_TOKEN",
+      ] as const) {
+        if (!environment[key])
+          context.addIssue({
+            code: "custom",
+            path: [key],
+            message: "Required when AI automatic replies are enabled",
+          });
+      }
+    }
     if (
       new Set([
         environment.AUTH_ACCESS_SECRET,

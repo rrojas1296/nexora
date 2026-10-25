@@ -69,21 +69,7 @@ export class PrismaAuthRepository implements AuthRepository {
         const user = await tx.user.create({
           data: { name: input.name, email: input.email, passwordHash },
         });
-        const prefix =
-          input.businessName
-            .normalize("NFKD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-|-$/g, "")
-            .slice(0, 60) || "business";
-        const business = await tx.business.create({
-          data: { name: input.businessName, slug: `${prefix}-${randomUUID()}` },
-        });
-        await tx.membership.create({
-          data: { userId: user.id, businessId: business.id, role: "OWNER" },
-        });
-        return this.createSession(tx, user.id, business.id, issue);
+        return this.createSession(tx, user.id, undefined, issue);
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002")
@@ -126,12 +112,16 @@ export class PrismaAuthRepository implements AuthRepository {
         revokedAt: null,
         expiresAt: { gt: now },
         idleExpiresAt: { gt: now },
-        membership: {
-          active: true,
-          isDeleted: false,
-          user: { active: true, isDeleted: false },
-          business: { isDeleted: false },
-        },
+        user: { active: true, isDeleted: false },
+        ...(claims.businessId
+          ? {
+              membership: {
+                active: true,
+                isDeleted: false,
+                business: { isDeleted: false },
+              },
+            }
+          : {}),
       },
       select: { id: true },
     });
@@ -167,16 +157,18 @@ export class PrismaAuthRepository implements AuthRepository {
         await this.revokeFamily(tx, claims, now);
         return null; // Commit revocation even though the request is rejected outside the transaction.
       }
-      const membership = await tx.membership.findFirst({
-        where: {
-          userId: claims.sub,
-          businessId: claims.businessId,
-          active: true,
-          isDeleted: false,
-          user: { active: true, isDeleted: false },
-          business: { isDeleted: false },
-        },
-      });
+      const membership = claims.businessId
+        ? await tx.membership.findFirst({
+            where: {
+              userId: claims.sub,
+              businessId: claims.businessId,
+              active: true,
+              isDeleted: false,
+              user: { active: true, isDeleted: false },
+              business: { isDeleted: false },
+            },
+          })
+        : await tx.user.findFirst({ where: { id: claims.sub, active: true, isDeleted: false } });
       if (!membership || token.expiresAt <= now) {
         await this.revokeFamily(tx, claims, now);
         return null;
@@ -207,6 +199,17 @@ export class PrismaAuthRepository implements AuthRepository {
     });
     if (!result) throw new AuthError("unauthorized");
     return result;
+  }
+
+  switchBusiness(claims: TokenClaims, businessId: string, issue: IssueTokens) {
+    return this.client.$transaction(async (tx) => {
+      await this.lockUser(tx, claims.sub);
+      await this.lockFamily(tx, claims);
+      await this.requireSession(tx, claims);
+      const result = await this.createSession(tx, claims.sub, businessId, issue);
+      await this.revokeFamily(tx, claims, new Date());
+      return result;
+    });
   }
 
   async revoke(claims: TokenClaims, all: boolean): Promise<void> {
@@ -240,14 +243,14 @@ export class PrismaAuthRepository implements AuthRepository {
       select: { businessId: true },
     });
     const selected = memberships[0];
-    if (!selected) throw new AuthError("unauthorized");
+    if (businessId && !selected) throw new AuthError("forbidden");
     const now = Date.now();
     const expiresAt = new Date(now + this.settings.sessionTtl * 1000);
     const session = await tx.authSession.create({
       data: {
         id: randomUUID(),
         userId,
-        businessId: selected.businessId,
+        businessId: selected?.businessId ?? null,
         expiresAt,
         idleExpiresAt: new Date(
           Math.min(expiresAt.getTime(), now + this.settings.refreshTtl * 1000),
@@ -256,10 +259,18 @@ export class PrismaAuthRepository implements AuthRepository {
     });
     const tokens = await issue(session);
     await this.storeRefresh(tx, session, tokens);
-    return { identity: await this.identity(tx, userId, selected.businessId), session, tokens };
+    return {
+      identity: await this.identity(tx, userId, selected?.businessId ?? null),
+      session,
+      tokens,
+    };
   }
 
-  private async identity(tx: Transaction, userId: string, businessId: string): Promise<Identity> {
+  private async identity(
+    tx: Transaction,
+    userId: string,
+    businessId: string | null,
+  ): Promise<Identity> {
     const user = await tx.user.findFirst({
       where: { id: userId, active: true, isDeleted: false },
       select: {
@@ -277,7 +288,11 @@ export class PrismaAuthRepository implements AuthRepository {
         },
       },
     });
-    if (!user || !user.memberships.some((membership) => membership.businessId === businessId))
+    if (
+      !user ||
+      (businessId !== null &&
+        !user.memberships.some((membership) => membership.businessId === businessId))
+    )
       throw new AuthError("unauthorized");
     const { memberships, ...profile } = user;
     return { user: profile, activeBusinessId: businessId, memberships };
@@ -314,7 +329,7 @@ export class PrismaAuthRepository implements AuthRepository {
   }
 
   private lockFamily(tx: Transaction, claims: TokenClaims) {
-    return tx.$queryRaw`SELECT "id" FROM "AuthSessions" WHERE "id" = ${claims.sid}::uuid AND "userId" = ${claims.sub}::uuid AND "businessId" = ${claims.businessId}::uuid FOR UPDATE`;
+    return tx.$queryRaw`SELECT "id" FROM "AuthSessions" WHERE "id" = ${claims.sid}::uuid AND "userId" = ${claims.sub}::uuid AND "businessId" IS NOT DISTINCT FROM ${claims.businessId}::uuid FOR UPDATE`;
   }
 
   private async revokeFamily(tx: Transaction, claims: TokenClaims, now: Date) {

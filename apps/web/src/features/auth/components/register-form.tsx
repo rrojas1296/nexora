@@ -28,7 +28,7 @@ export function RegisterForm() {
     formState: { errors, isSubmitting },
   } = useForm<RegisterValues>({
     resolver: zodResolver(schemas.register),
-    defaultValues: { name: "", businessName: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { name: "", email: "", password: "", confirmPassword: "" },
   });
   const onSubmit = handleSubmit(async (values) => {
     try {
@@ -58,13 +58,6 @@ export function RegisterForm() {
           maxLength={100}
           {...register("name")}
           error={errors.name?.message}
-        />
-        <InputField
-          label={t("businessName")}
-          autoComplete="organization"
-          maxLength={120}
-          {...register("businessName")}
-          error={errors.businessName?.message}
         />
         <InputField
           label={t("email")}

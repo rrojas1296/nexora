@@ -2,11 +2,17 @@
 
 ## Estado
 
-Prisma 7.10.1 + PostgreSQL, con generador `prisma-client` ESM y adaptador `@prisma/adapter-pg`. La migración `20261020160000_initial_business_auth` está versionada y **aplicada a la base configurada en `apps/api/.env`**, tras confirmar que no tenía tablas en public. Crea las tablas comerciales y de autenticación, sin reset ni seeds. `migrate status` confirmó actualización y el diff contra el esquema no detectó diferencias. El backend persiste cuentas/sesiones al invocar auth; no se crearon usuarios durante esta etapa. El módulo business permite actualizar el nombre del negocio activo; productos tiene CRUD persistente y agente tiene lectura/guardado de configuración general autorizados por negocio activo; los demás módulos comerciales siguen sin lógica persistente y usan fixtures en memoria. Ver [products.md](./products.md) y [agents.md](./agents.md).
+Prisma 7.10.1 + PostgreSQL, con generador `prisma-client` ESM y adaptador `@prisma/adapter-pg`. La migración `20261020160000_initial_business_auth` está versionada y **aplicada a la base configurada en `apps/api/.env`**, tras confirmar que no tenía tablas en public. Crea las tablas comerciales y de autenticación, sin reset ni seeds. `migrate status` confirmó actualización y el diff contra el esquema no detectó diferencias. El backend persiste cuentas/sesiones al invocar auth; no se crearon usuarios durante esta etapa. El módulo business crea negocios con membresía OWNER/agente deshabilitado y persiste metadatos/contexto comercial (migración pendiente indicada abajo); productos tiene CRUD persistente y agente tiene lectura/guardado de configuración general autorizados por negocio activo; los demás módulos comerciales siguen sin lógica persistente y usan fixtures en memoria. Ver [products.md](./products.md) y [agents.md](./agents.md).
 
 La migración posterior `20261020170000_plural_tables_soft_delete` también está **aplicada a la base configurada**, tras autorización explícita del usuario. `migrate status` confirmó las dos migraciones al día y `migrate diff --from-config-datasource --to-schema prisma --exit-code` devolvió `No difference detected.` Se renombraron las tablas y añadieron las columnas sin reset, seeds ni borrado de datos. El esquema y el cliente actuales requieren estos cambios: otra base que solo tenga la migración inicial debe recibir el deploy revisado antes de usar esta API.
 
 `prisma.config.ts` carga el `.env` propio de la API mediante dotenv. La URL se declara allí, no en el bloque datasource del esquema (Prisma 7). Para validate/generate sin base disponible se omite la sección datasource si no existe `DATABASE_URL`; los comandos de migración necesitan una URL configurada. No hay una URL de producción de fallback.
+
+## Migración pendiente — Múltiples negocios y contexto
+
+`20261020240000_multiple_businesses_context` añade a `Businesses` descripción, moneda PEN por defecto, zona horaria UTC por defecto, borrador/publicado de contexto, versión, fecha de publicación y revisión optimista. Hace nullable `AuthSessions.businessId` y `RefreshSessions.businessId`: una cuenta puede autenticarse antes de crear su primer negocio. Conserva FK de membresía/índices, añade FK directa de sesión a usuario y sustituye la FK compuesta refresh→familia por `familyId`→`AuthSessions.id`; el repositorio verifica usuario/negocio/familia al consumir tokens. No hay tablas nuevas, seeds, conversiones de tiendas, eliminación de agentes/mensajes ni movimiento de datos entre negocios.
+
+Está **pendiente de aplicación explícita**, junto con las migraciones anteriores requeridas; no se conectó a DB. La API nueva necesita el esquema ampliado antes de desplegar. `Store`/`Stores` y sus FK se conservan como datos legacy aunque se retiran módulo/UI/mock Tiendas; su eliminación física requerirá inventario/migración independiente. Ver [businesses.md](./businesses.md).
 
 ## Migración pendiente — Imágenes y categorías
 
@@ -36,6 +42,12 @@ La reserva del intento, cuerpo saliente y actualización de resumen son atómico
 
 El token de autorización se elimina al terminar/fallar/cancelar y la limpieza diferida elimina los vencidos del mismo ámbito usuario/sesión/Business al acceder; no existe job de retención ni borrado puntual sin tráfico. Diseñar limpieza programada antes de producción. El intento queda como metadato sin código/token, y no permite reintentar operaciones externas automáticamente.
 
+## Migración pendiente — Respuesta IA y control del hilo
+
+`20261020250000_whatsapp_ai_replies` añade `WhatsappThreadControlMode` (`AI`/`HUMAN`), modo AI por defecto y versión optimista a `WhatsappThreads`; añade origen `CUSTOMER`/`HUMAN`/`AI` a `WhatsappInboundMessages` y clasifica el histórico según dirección, sin borrarlo. Crea `WhatsappAiReplyJob` → `WhatsappAiReplyJobs` con `isDeleted`, estado/motivo, versiones, proveedor/modelo, tiempos, FK compuestas Business/hilo/entrante e índices para cola/hilo. La unicidad `(businessId, triggerMessageId)` incluye borrados. No crea jobs del histórico ni migra tablas reservadas `Messages`/`Conversations`.
+
+**Creada, no aplicada por el asistente.** Requiere migraciones anteriores, incluida la de contexto. Revisar SQL, backup/destino y todas las pendientes; aplicar explícitamente antes de API/frontend nuevos. No hay migraciones/conexiones DB automáticas en instalación/build/start. El worker recupera solo estados de jobs IA vencidos, sin repetir generación ni envío; no recupera intentos manuales ni confirma entrega. Contenido/contexto se transmiten a OpenAI si se habilita la integración. Ver [ai.md](./ai.md) para operación, privacidad, estados y activación deshabilitada por defecto.
+
 ## Organización del esquema
 
 `apps/api/prisma.config.ts` apunta a la carpeta `prisma`: Prisma 7 carga recursivamente sus archivos `.prisma` como un único esquema lógico, sin imports ni flags experimentales. `prisma/schema.prisma` conserva únicamente generator/datasource; la ruta relativa del cliente generado no cambia. Las migraciones continúan en `prisma/migrations`.
@@ -56,7 +68,8 @@ apps/api/prisma/
     messages.prisma             Message, MessageDirection y MessageStatus
     agents.prisma               Agent y AgentTone
     whatsapp.prisma             WhatsappConnection, WhatsappSendAttempt y WhatsappAuthorizationAttempt
-    whatsapp-inbox.prisma       WhatsappThread, WhatsappInboundMessage y WhatsappInboxDirection (inbox real, ambas direcciones)
+    whatsapp-inbox.prisma       WhatsappThread, WhatsappInboundMessage, dirección y control del hilo
+    whatsapp-ai.prisma          WhatsappAiReplyJob y estados de automatización
 ```
 
 Los enums viven junto al dominio que los utiliza. Las relaciones entre archivos no requieren declaraciones adicionales. La separación original en archivos solo reorganizó el esquema, sin cambiar tablas ni requerir una migración. La posterior pluralización y el campo de borrado lógico sí requieren la migración descrita abajo. Los comandos existentes `db:validate`, `db:generate` y de migraciones siguen leyendo la configuración común. Mantener los futuros modelos en el archivo de su dominio o añadir otro archivo bajo `models/`, sin duplicar generadores o datasource.
@@ -70,7 +83,7 @@ Los enums viven junto al dominio que los utiliza. Las relaciones entre archivos 
 | `Membership`     | Pertenencia usuario–tenant, rol OWNER/ADMIN/AGENT/VIEWER y estado activo. PK compuesta `(businessId, userId)`.                                                     |
 | `AuthSession`    | Familia estable por usuario/negocio: expiración absoluta, inactividad y revocación; vinculada a Membership.                                                        |
 | `RefreshSession` | Hash SHA-256 del refresh, familia, expiración, consumo y revocación. FK compuesta a AuthSession y Membership del mismo negocio/usuario. No guarda tokens en claro. |
-| `Store`          | Tienda, dirección, moneda y zona horaria preferidas, estado.                                                                                                       |
+| `Store`          | Tienda legacy conservada por compatibilidad física; sin UI/módulo operativo.                                                                                       |
 | `Product`        | Catálogo tenant, SKU, descripción/categoría/marca/proveedor/código de barras, importes, stock, umbral y peso.                                                      |
 | `Client`         | Contacto, empresa/identificación fiscal, segmento, dirección/país/idioma, estado, notas y consentimiento.                                                          |
 | `Order`          | Referencia tenant, cliente/tienda del mismo tenant, estado, moneda y fechas.                                                                                       |

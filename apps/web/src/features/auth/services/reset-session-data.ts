@@ -2,7 +2,6 @@
 
 import type { QueryClient } from "@tanstack/react-query";
 import { resetDemoData } from "@/features/demo/lib/reset-demo-data";
-import { useOnboardingStore } from "@/features/onboarding/stores/onboarding-store";
 
 export function resetSessionData(queryClient: QueryClient) {
   const filters = {
@@ -11,5 +10,4 @@ export function resetSessionData(queryClient: QueryClient) {
   void queryClient.cancelQueries(filters);
   queryClient.removeQueries(filters);
   resetDemoData();
-  useOnboardingStore.getState().reset();
 }

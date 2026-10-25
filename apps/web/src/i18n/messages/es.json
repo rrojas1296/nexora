@@ -14,7 +14,7 @@
     "privacy": "Continuar te lleva a la página oficial de Meta en esta pestaña. El código y el token se procesan exclusivamente en el backend. Conectar no envía mensajes.",
     "preparing": "Preparando la conexión con Meta…",
     "saving": "Verificando permisos y conectando el número existente. No cierres esta página ni repitas la operación.",
-    "success": "WhatsApp conectado. Los nuevos mensajes aparecerán en Conversaciones si el webhook está configurado y la migración aplicada. Las respuestas AI todavía no están activadas.",
+    "success": "WhatsApp conectado. Los nuevos mensajes aparecerán en Conversaciones si el webhook y las migraciones están listos. La IA requiere automatización habilitada, agente activo y contexto publicado.",
     "cancel": "Cancelar",
     "disconnect": "Desconectar",
     "disconnectHint": "Se eliminará el token guardado en Nexora. Esto no revoca el permiso en Meta ni detiene operaciones ya iniciadas. El número permanece reservado a este negocio.",
@@ -33,6 +33,35 @@
     }
   },
   "WhatsappInbox": {
+    "aiOutbound": "Agente IA",
+    "automation": {
+      "checking": "Consultando control de la conversación…",
+      "ai": "Modo IA",
+      "human": "Control humano",
+      "takeover": "Tomar control",
+      "resume": "Devolver a IA",
+      "changing": "Actualizando…",
+      "humanHint": "La IA está pausada en este hilo. Puedes responder manualmente si tu rol, la conexión y la ventana de atención lo permiten.",
+      "aiHint": "La IA responde a nuevos mensajes de texto si están activos el servicio, el agente y el contexto publicado; necesita el mismo número conectado y ventana de 24 horas. Toma el control para responder tú.",
+      "takeoverConfirm": "¿Tomar el control? Se cancelará la cola y se descartará la respuesta en generación. Un envío ya reservado puede llegar todavía al cliente.",
+      "resumeConfirm": "¿Devolver esta conversación a la IA? Responderá solo a nuevos mensajes, sin reintentar ni responder al historial. Revisa antes cualquier envío sin confirmar.",
+      "notConfigured": "La automatización está desactivada en el servidor. Configura OpenAI y activa AI_AUTOREPLY_ENABLED después de revisar migraciones, privacidad y costes.",
+      "notReady": "Habilita el agente y publica un contexto comercial no vacío en Negocios para activar las respuestas.",
+      "jobLabel": "Último trabajo IA:",
+      "rateLimit": "Se alcanzó el límite por negocio. No se reintentará este mensaje automáticamente.",
+      "uncertain": "Un envío ya iniciado no puede retirarse. Si el resultado queda sin confirmar, el hilo pasa a control humano: revisa WhatsApp y no repitas el texto a ciegas.",
+      "error": "No se pudo confirmar el cambio (puede que el hilo haya recibido mensajes). Se consultó el estado sin repetir la operación; actualiza la vista antes de decidir otra acción.",
+      "jobs": {
+        "QUEUED": "En cola",
+        "GENERATING": "Generando respuesta",
+        "SENDING": "Enviando a WhatsApp",
+        "ACCEPTED": "Aceptado por Meta; entrega sin confirmar",
+        "FAILED": "Falló; sin reintento automático",
+        "UNKNOWN": "Envío sin confirmar; requiere revisión humana",
+        "CANCELLED": "Cancelado por cambio del hilo o configuración",
+        "SKIPPED": "Omitido; mensaje obsoleto, no elegible o límite alcanzado"
+      }
+    },
     "eyebrow": "WhatsApp · datos reales",
     "title": "Conversaciones reales de WhatsApp",
     "description": "Mensajes recibidos y respuestas enviadas desde esta bandeja. La vista reciente se actualiza cada 10 segundos mientras está abierta; no importa historial anterior ni envíos hechos fuera de esta pantalla.",
@@ -67,6 +96,7 @@
     "reconcileError": "No se pudo recuperar el intento. Que no aparezca todavía no confirma que el envío haya fallado. Actualiza la conversación antes de decidir otra acción.",
     "noBlindRetry": "No se reenvió automáticamente. No repitas el mismo texto con otra clave: el cliente podría recibirlo dos veces. Preparar otro mensaje descarta este seguimiento local y vacía el borrador; revisa antes el historial.",
     "replyHints": {
+      "aiActive": "Esta conversación está en modo IA. Pulsa Tomar control para poder responder manualmente.",
       "checking": "Verificando si puedes responder. Si no termina, actualiza la conversación.",
       "allowed": "Puedes responder con texto durante las 24 horas posteriores al último mensaje del cliente. Aceptado por Meta no significa entregado ni leído.",
       "forbidden": "Solo propietarios y administradores pueden enviar mensajes. Tu rol permite consultar la conversación.",
@@ -86,6 +116,7 @@
       "UNKNOWN": "No se pudo confirmar si Meta aceptó el envío. Revisa el historial y no repitas el mismo mensaje con otra clave."
     },
     "sendErrors": {
+      "aiActive": "El hilo cambió a modo IA. No se reservó este envío; actualiza la vista y toma el control antes de escribir.",
       "session": "Tu sesión cambió o caducó. Inicia sesión de nuevo y revisa el historial antes de enviar.",
       "forbidden": "No tienes permiso para enviar mensajes en este negocio.",
       "windowClosed": "La ventana de atención de 24 horas se cerró. No se envió el texto; espera un nuevo mensaje del cliente o usa una plantilla aprobada mediante la API.",
@@ -118,7 +149,7 @@
     "clients": "Clientes",
     "reports": "Reportes",
     "settings": "Configuración",
-    "stores": "Tiendas",
+    "businesses": "Negocios",
     "help": "Centro de ayuda"
   },
   "Shell": {

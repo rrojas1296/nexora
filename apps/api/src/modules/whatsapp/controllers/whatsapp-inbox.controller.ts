@@ -21,6 +21,8 @@ import { WhatsappInboxService } from "../services/whatsapp-inbox.service.js";
 import { WhatsappExceptionFilter } from "../filters/whatsapp-exception.filter.js";
 import {
   inboxQuerySchema,
+  inboxControlSchema,
+  inboxControlResponseSchema,
   inboxSendTextSchema,
   messagePageSchema,
   threadPageSchema,
@@ -57,6 +59,42 @@ export class WhatsappInboxController {
     };
   }
 
+  @Post(":threadId/control")
+  @Throttle({ default: { limit: 20, ttl: 60_000 } })
+  @HttpCode(200)
+  @Header("Cache-Control", "private, no-store")
+  @ApiRoute({
+    summary: "Tomar control humano o devolver conversación a IA (OWNER/ADMIN)",
+    csrf: true,
+    params: ["businessId", "threadId"],
+    body: inboxControlSchema,
+    response: envelope(inboxControlResponseSchema),
+    description:
+      "Requiere version del hilo leído. Cancela trabajos en cola/generación, no envíos ya reservados. Devolver a IA solo afecta nuevos entrantes: no reenvía historial ni reintenta fallos. AI requiere automatización configurada, agente activo y contexto publicado.",
+    errors: {
+      404: "WHATSAPP_CONVERSATION_NOT_FOUND.",
+      409: "WHATSAPP_CONTROL_CONFLICT: actualizar hilo antes de reintentar.",
+      503: "WHATSAPP_NOT_CONFIGURED.",
+    },
+  })
+  async control(
+    @Req() request: AuthRequest,
+    @Param("businessId") businessId: string,
+    @Param("threadId") threadId: string,
+    @Body() body: unknown,
+  ) {
+    const input = parse(inboxControlSchema, body);
+    return {
+      data: await this.inbox.setControl(
+        getAuthenticatedActor(request),
+        parse(whatsappIdSchema, businessId),
+        parse(whatsappIdSchema, threadId),
+        input.mode,
+        input.version,
+      ),
+    };
+  }
+
   @Post(":threadId/messages")
   @HttpCode(200)
   @Header("Cache-Control", "private, no-store")
@@ -75,10 +113,10 @@ export class WhatsappInboxController {
     body: inboxSendTextSchema,
     response: attemptResponse,
     description:
-      "Texto de 1–4096 caracteres; destinatario obtenido del hilo autorizado, no del cliente. Requiere conexión activa del mismo número y último entrante de menos de 24h. Reserva intento y saliente en la misma transacción antes de llamar a Meta, sin retries. ACCEPTED indica aceptación de Meta, no entrega. Repetir la misma clave/body devuelve el intento sin enviar de nuevo. Sin plantillas ni adjuntos en este endpoint.",
+      "Texto de 1–4096 caracteres; destinatario obtenido del hilo autorizado, no del cliente. Requiere modo HUMAN, conexión activa del mismo número y último entrante de menos de 24h. Reserva intento y saliente en la misma transacción antes de llamar a Meta, sin retries. ACCEPTED indica aceptación de Meta, no entrega. Repetir la misma clave/body devuelve el intento sin enviar de nuevo. Sin plantillas ni adjuntos en este endpoint.",
     errors: {
       404: "WHATSAPP_CONVERSATION_NOT_FOUND.",
-      409: "WHATSAPP_NOT_CONNECTED, WHATSAPP_REPLY_WINDOW_CLOSED o WHATSAPP_IDEMPOTENCY_CONFLICT.",
+      409: "WHATSAPP_NOT_CONNECTED, WHATSAPP_REPLY_WINDOW_CLOSED, WHATSAPP_AI_ACTIVE o WHATSAPP_IDEMPOTENCY_CONFLICT.",
       503: "WHATSAPP_NOT_CONFIGURED.",
     },
   })
@@ -134,7 +172,7 @@ export class WhatsappInboxController {
     query: inboxQuerySchema,
     response: envelope(messagePageSchema),
     description:
-      "Membresía activa de cualquier rol. Hasta 50 mensajes por página, más recientes primero; cursor UUID opcional. Incluye dirección, estado local del intento saliente y disponibilidad para responder (rol, conexión del mismo número y ventana de 24h). ACCEPTED no significa entregado/leído. Sin importación histórica ni estados de entrega.",
+      "Membresía activa de cualquier rol. Hasta 50 mensajes por página, más recientes primero; cursor UUID opcional. Incluye dirección, origen CUSTOMER/HUMAN/AI, modo/version de control, configuración/disponibilidad de automatización, último trabajo y envíos en curso, estado local del intento saliente y disponibilidad para responder (rol, conexión del mismo número y ventana de 24h). ACCEPTED no significa entregado/leído. Sin importación histórica ni estados de entrega.",
     errors: { 404: "WHATSAPP_CONVERSATION_NOT_FOUND." },
   })
   async messages(

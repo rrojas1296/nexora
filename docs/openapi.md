@@ -14,19 +14,19 @@ Swagger se habilita por defecto fuera de producción. `SWAGGER_ENABLED=true` o `
 
 ## Cobertura actual
 
-Las 29 operaciones existentes tienen resumen, contratos de respuesta, errores, parámetros y cuerpos donde corresponde:
+Las operaciones existentes tienen resumen, contratos de respuesta, errores, parámetros y cuerpos donde corresponde:
 
-| Grupo         | Operaciones                                                                                                       |
-| ------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Inicio        | GET `/` autenticado, sin prefijo                                                                                  |
-| Autenticación | GET csrf/me; POST register/login/refresh/logout/logout-all/change-password/change-password-with-credentials       |
-| Negocio       | PATCH `/businesses/:businessId`                                                                                   |
-| Productos     | GET/POST colección; GET/PATCH/DELETE detalle; GET/POST categorías; POST upload multipart; GET imagen privada WebP |
-| Agente        | GET/PUT configuración general                                                                                     |
-| WhatsApp      | GET/PUT/DELETE conexión; POST mensajes; GET intento                                                               |
-| Webhook Meta  | GET verificación; POST eventos firmados                                                                           |
+| Grupo         | Operaciones                                                                                                                 |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Inicio        | GET `/` autenticado, sin prefijo                                                                                            |
+| Autenticación | GET csrf/me; POST register/login/refresh/logout/logout-all/change-password/change-password-with-credentials/switch-business |
+| Negocio       | POST `/businesses`; GET/PATCH `/businesses/:businessId`                                                                     |
+| Productos     | GET/POST colección; GET/PATCH/DELETE detalle; GET/POST categorías; POST upload multipart; GET imagen privada WebP           |
+| Agente        | GET/PUT configuración general                                                                                               |
+| WhatsApp      | GET/PUT/DELETE conexión; POST mensajes; GET intento                                                                         |
+| Webhook Meta  | GET verificación; POST eventos firmados                                                                                     |
 
-Salvo la raíz, los paths se publican bajo `/api/v1`. No se documentan como existentes endpoints planificados de pedidos, clientes, tiendas, inbox o IA. Los ejemplos y esquemas no cambian la validación real ni habilitan funcionalidades pendientes de migración/configuración.
+Salvo la raíz, los paths se publican bajo `/api/v1`. También se documentan autorización WhatsApp por redirección, endpoints legacy de signup e inbox real (GET hilos/mensajes, POST respuesta y GET intento por clave). No se documentan como existentes endpoints planificados de pedidos, clientes o IA; Tiendas ha sido sustituido por Negocios. Los ejemplos y esquemas no cambian la validación real ni habilitan funcionalidades pendientes de migración/configuración.
 
 Los bodies reutilizan los schemas Zod de validación mediante `z.toJSONSchema` para OpenAPI 3.0, sin duplicar clases DTO ni usar el plugin del compilador. Refinamientos semánticos (política Unicode/bytes de contraseña, pertenencia al negocio, categoría existente, patch no vacío, etc.) siguen en los parsers/servicios y se explican en las descripciones: JSON Schema no representa todos esos controles. Los campos de contraseña y access token se marcan writeOnly/password, sin secretos reales en ejemplos.
 
@@ -38,7 +38,7 @@ Los bodies reutilizan los schemas Zod de validación mediante `z.toJSONSchema` p
 2. Ejecutar GET `/api/v1/auth/csrf`: se crea el contexto preautenticado con cookie HttpOnly. Copiar `data.csrfToken` de la respuesta.
 3. Ejecutar POST `/api/v1/auth/login` (o registro) con credenciales propias y el valor anterior en `X-CSRF-Token`. Se establecen cookies de sesión, no tokens en JSON.
 4. Solicitar **otro GET csrf** tras autenticar: el bootstrap anterior queda invalidado. Copiar el token nuevo en los endpoints de mutación que se quieran ejecutar. Las lecturas solo requieren cookies de sesión.
-5. Usar `activeBusinessId` del perfil/login o GET me como parámetro de negocio. Ser miembro no autoriza todas las escrituras: aplicar los roles documentados.
+5. Registro recibe solo nombre/email/contraseña y deja `activeBusinessId: null`. Crear negocio con POST `/businesses` y activarlo con POST `/auth/switch-business` (rota cookies); volver a obtener CSRF. Usar el nuevo `activeBusinessId` del perfil/GET me como parámetro. Ser miembro no autoriza todas las escrituras: aplicar los roles documentados. Una sesión sin negocio solo autoriza cuenta y listado/creación, no productos, agente ni WhatsApp.
 6. Refresh usa la cookie refresh, conserva CSRF ligado a sesión y rota credenciales de uso único. No reintentar una renovación incierta. Después de logout/cambio de contraseña, obtener otro bootstrap antes de iniciar sesión de nuevo.
 
 El UI envía credenciales con `withCredentials: true`, no persiste Authorization entre recargas y desactiva el validador remoto de Swagger. No automatiza login, extracción de tokens, renovaciones ni reintenta mutaciones.
@@ -57,9 +57,10 @@ No se añaden orígenes automáticamente ni se relajan cookies/CSRF. En producci
 
 - Upload: `multipart/form-data`, único campo `image` JPG/PNG/WebP de hasta 2 MiB. Swagger permite seleccionar archivo; el GET devuelve binario `image/webp`.
 - WhatsApp: registrar `phoneNumberId` y access token de **Meta** con PUT connection; token cifrado en DB. POST messages requiere UUID en `Idempotency-Key`, además de sesión/CSRF. Reutilizar la misma clave/body para recuperar un intento, no generar otra para forzar un envío incierto. ACCEPTED no confirma entrega.
-- Webhook: GET requiere los tres query params `hub.*`. POST exige `X-Hub-Signature-256` calculado sobre los bytes exactos del JSON: editar o reformatear el body invalida la firma. Es público únicamente con esa validación; el webhook todavía descarta eventos.
+- Control IA de Conversaciones: POST `/businesses/:businessId/whatsapp/conversations/:threadId/control`, body estricto `{mode: "AI" | "HUMAN", version: entero >= 0}`, OWNER/ADMIN/CSRF, devuelve modo/versión. Conflicto de versión 409; AI no configurada 503. La lectura paginada de mensajes añade origen y `automation` (modo/versión, permisos, preparación, envío en curso y último estado del job); no hay endpoint público para generar prompts. El envío manual requiere `HUMAN` para una reserva nueva (409 `WHATSAPP_AI_ACTIVE` si no). Devolver a IA habilita solo próximos entrantes; puede producir llamadas facturables a OpenAI/Meta si el servidor, agente y contexto están listos. Ver [ai.md](./ai.md).
+- Webhook: GET requiere los tres query params `hub.*`. POST exige `X-Hub-Signature-256` calculado sobre los bytes exactos del JSON: editar o reformatear el body invalida la firma. Es público únicamente con esa validación; el webhook guarda entrantes deduplicados de conexiones activas y descarta estados/otros eventos.
 
-Detalles: [authentication.md](./authentication.md), [products.md](./products.md), [agents.md](./agents.md) y [whatsapp.md](./whatsapp.md).
+Detalles: [authentication.md](./authentication.md), [businesses.md](./businesses.md), [products.md](./products.md), [agents.md](./agents.md) y [whatsapp.md](./whatsapp.md).
 
 ## Dependencias y límites de verificación
 

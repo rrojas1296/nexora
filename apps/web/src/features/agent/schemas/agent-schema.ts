@@ -4,7 +4,7 @@ export const tones = ["friendly", "professional", "concise"] as const;
 export const agentInputSchema = z.object({
   name: z.string().trim().min(2, "name").max(100, "name"),
   tone: z.enum(tones, { error: "required" }),
-  instructions: z.string().trim().min(20, "instructions").max(2000, "instructions"),
+  instructions: z.string().trim().max(2000, "instructions"),
   greeting: z.string().trim().min(5, "greeting").max(300, "greeting"),
   enabled: z.boolean(),
 });

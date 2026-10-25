@@ -166,6 +166,7 @@ export class PrismaWhatsappRepository implements WhatsappRepository {
           throw new WhatsappError("WHATSAPP_IDEMPOTENCY_CONFLICT");
         return { attempt: attempt(existing), credentials: null };
       }
+      if (thread && thread.controlMode !== "HUMAN") throw new WhatsappError("WHATSAPP_AI_ACTIVE");
       const credentials = await tx.whatsappConnection.findFirst({
         where: { businessId: actor.businessId, isDeleted: false },
       });
@@ -210,7 +211,12 @@ export class PrismaWhatsappRepository implements WhatsappRepository {
             isDeleted: false,
             lastMessageAt: { lte: now },
           },
-          data: { lastMessageAt: now, lastMessageBody: conversation.body, lastMessageType: "text" },
+          data: {
+            lastMessageAt: now,
+            lastMessageBody: conversation.body,
+            lastMessageType: "text",
+            controlVersion: { increment: 1 },
+          },
         });
       }
       return {

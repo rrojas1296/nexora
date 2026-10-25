@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const sessionSchema = z.object({
   user: z.object({ id: z.uuid(), name: z.string(), email: z.email() }),
-  activeBusinessId: z.uuid(),
+  activeBusinessId: z.uuid().nullable(),
   memberships: z.array(
     z.object({
       businessId: z.uuid(),

@@ -19,7 +19,6 @@ export const registerSchema = z
     name: z.string().trim().min(1).max(100),
     email,
     password: newPassword,
-    businessName: z.string().trim().min(1).max(120),
   })
   .strict();
 
@@ -30,6 +29,8 @@ export const loginSchema = z
     businessId: z.uuid().optional(),
   })
   .strict();
+
+export const switchBusinessSchema = z.object({ businessId: z.uuid() }).strict();
 
 export const changePasswordSchema = z
   .object({

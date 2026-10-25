@@ -2,7 +2,6 @@
 
 import { ArrowUpRight } from "lucide-react";
 import { useFormatter, useTranslations } from "next-intl";
-import { defaultCurrency } from "@/lib/config/currency";
 import type { ProductSummary } from "../schemas/product-schema";
 
 export function ProductKpis({ summary }: { summary?: ProductSummary }) {
@@ -24,7 +23,7 @@ export function ProductKpis({ summary }: { summary?: ProductSummary }) {
                 ? format.number(
                     summary[key],
                     key === "inventoryValue"
-                      ? { style: "currency", currency: defaultCurrency }
+                      ? { style: "currency", currency: summary.currency }
                       : undefined,
                   )
                 : "—"}

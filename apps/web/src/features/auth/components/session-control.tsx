@@ -48,7 +48,7 @@ export function SessionControl() {
         aria-busy={busy}
       >
         <Link
-          href="/onboarding"
+          href="/businesses"
           title={t("account")}
           className="flex items-center gap-2 rounded text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >

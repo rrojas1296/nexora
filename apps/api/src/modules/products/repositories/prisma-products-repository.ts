@@ -144,7 +144,8 @@ export class PrismaProductsRepository implements ProductsRepository {
       SELECT COUNT(*)::int AS "catalog",
         COUNT(*) FILTER (WHERE "active")::int AS "available",
         COUNT(*) FILTER (WHERE "active" AND "stock" <= "lowStockThreshold")::int AS "lowStock",
-        COALESCE(SUM("price" * "stock"), 0)::numeric(38,2)::text AS "inventoryValue"
+        COALESCE(SUM("price" * "stock"), 0)::numeric(38,2)::text AS "inventoryValue",
+        (SELECT "currency" FROM "Businesses" WHERE "id" = ${actor.businessId}::uuid) AS "currency"
       FROM "Products" WHERE "businessId" = ${actor.businessId}::uuid AND NOT "isDeleted"
     `;
   }
@@ -219,6 +220,10 @@ export class PrismaProductsRepository implements ProductsRepository {
     return this.write(actor, async (tx) => {
       await this.validateCategory(tx, actor, input.category);
       await this.validateImage(tx, actor, input.imageUrl);
+      const business = await tx.business.findUniqueOrThrow({
+        where: { id: actor.businessId },
+        select: { currency: true },
+      });
       return serialize(
         await tx.product.create({
           data: {
@@ -227,7 +232,7 @@ export class PrismaProductsRepository implements ProductsRepository {
             sku: input.sku,
             price: input.price,
             businessId: actor.businessId,
-            currency: "PEN",
+            currency: business.currency,
           },
         }),
       );

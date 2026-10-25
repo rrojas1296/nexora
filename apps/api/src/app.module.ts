@@ -5,7 +5,6 @@ import { DatabaseModule } from "./database/database.module.js";
 import { AuthModule } from "./modules/auth/auth.module.js";
 import { UsersModule } from "./modules/users/users.module.js";
 import { BusinessModule } from "./modules/business/business.module.js";
-import { StoresModule } from "./modules/stores/stores.module.js";
 import { ProductsModule } from "./modules/products/products.module.js";
 import { OrdersModule } from "./modules/orders/orders.module.js";
 import { ClientsModule } from "./modules/clients/clients.module.js";
@@ -27,7 +26,6 @@ import { AppService } from "./app.service.js";
     AuthModule,
     UsersModule,
     BusinessModule,
-    StoresModule,
     ProductsModule,
     OrdersModule,
     ClientsModule,

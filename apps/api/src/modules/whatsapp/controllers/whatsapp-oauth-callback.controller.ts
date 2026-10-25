@@ -29,7 +29,7 @@ export class WhatsappOauthCallbackController {
     status: 303,
     query: authorizationCallbackSchema,
     description:
-      "Autentica manualmente la cookie access para poder redirigir errores a una URL limpia. Exige state de un uso ligado a esa misma sesión/usuario/negocio y OWNER/ADMIN; nunca autentica usando solo state. Canjea código en servidor y redirige a Configuración. No retorna código/token. Configurar este callback HTTPS exacto en Meta y excluir query strings de logs de proxy/CDN.",
+      "Autentica manualmente la cookie access para poder redirigir errores a una URL limpia. Exige state de un uso ligado a esa misma sesión/usuario/negocio y OWNER/ADMIN; nunca autentica usando solo state. Canjea código en servidor y redirige a la configuración del negocio (/{locale}/businesses/configuration). No retorna código/token. Configurar este callback HTTPS exacto en Meta y excluir query strings de logs de proxy/CDN.",
   })
   async callback(@Req() request: AuthRequest, @Res() response: Response, @Query() query: unknown) {
     response.setHeader("Cache-Control", "no-store");
@@ -40,7 +40,7 @@ export class WhatsappOauthCallbackController {
       return;
     }
     const fallback = new URL(
-      "/es/settings?whatsappResult=failed",
+      "/es/businesses/configuration?whatsappResult=failed",
       new URL(configured).origin,
     ).toString();
     let destination = fallback;
@@ -49,6 +49,7 @@ export class WhatsappOauthCallbackController {
       const token = this.cookies.read(request, "access");
       if (parsed.success && token) {
         const { claims } = await this.auth.authenticate(token);
+        if (!claims.businessId) throw new Error("BUSINESS_REQUIRED");
         destination = await this.authorization.callback(
           { userId: claims.sub, sessionId: claims.sid, businessId: claims.businessId },
           parsed.data,

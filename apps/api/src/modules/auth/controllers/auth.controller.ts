@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Post,
-  Req,
-  Res,
-} from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
 import { csrfResponse, identityResponse } from "../dto/auth-responses.dto.js";
@@ -21,6 +13,7 @@ import {
   loginSchema,
   parseDto,
   registerSchema,
+  switchBusinessSchema,
 } from "../dto/auth.dto.js";
 import type { AuthRequest } from "../http/auth.request.js";
 import { CsrfProtection } from "../http/csrf.protection.js";
@@ -45,10 +38,7 @@ export class AuthController {
       "Conservar cookies. Volver a solicitar después de login/registro. No devuelve JWT.",
   })
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
-  async bootstrap(
-    @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async bootstrap(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     return {
       data: { csrfToken: await this.csrf.bootstrap(request, response) },
     };
@@ -57,7 +47,7 @@ export class AuthController {
   @Public()
   @Post("register")
   @ApiRoute({
-    summary: "Registrar usuario y negocio",
+    summary: "Registrar cuenta sin negocio (primer negocio en onboarding)",
     auth: "none",
     csrf: true,
     body: registerSchema,
@@ -68,10 +58,7 @@ export class AuthController {
       "Contraseña nueva: al menos 8 caracteres Unicode, una letra y un número; máximo 72 bytes UTF-8. Crea sesión en cookies HttpOnly.",
   })
   @Throttle({ default: { limit: 5, ttl: 60_000 } })
-  async register(
-    @Body() body: unknown,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async register(@Body() body: unknown, @Res({ passthrough: true }) response: Response) {
     const result = await this.auth.register(parseDto(registerSchema, body));
     this.cookies.setTokens(response, result.tokens, true);
     return { data: result.identity };
@@ -91,11 +78,30 @@ export class AuthController {
   })
   @HttpCode(200)
   @Throttle({ default: { limit: 10, ttl: 60_000 } })
-  async login(
+  async login(@Body() body: unknown, @Res({ passthrough: true }) response: Response) {
+    const result = await this.auth.login(parseDto(loginSchema, body));
+    this.cookies.setTokens(response, result.tokens, true);
+    return { data: result.identity };
+  }
+
+  @Post("switch-business")
+  @HttpCode(200)
+  @ApiRoute({
+    summary: "Cambiar negocio activo y rotar sesión",
+    csrf: true,
+    body: switchBusinessSchema,
+    response: identityResponse,
+    description:
+      "Requiere membresía activa. Revoca la sesión anterior y sus refresh tokens. Sin reintentos automáticos.",
+  })
+  async switchBusiness(
     @Body() body: unknown,
+    @Req() request: AuthRequest,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const result = await this.auth.login(parseDto(loginSchema, body));
+    if (!request.auth) throw new AuthError("unauthorized");
+    const input = parseDto(switchBusinessSchema, body);
+    const result = await this.auth.switchBusiness(request.auth.claims, input.businessId);
     this.cookies.setTokens(response, result.tokens, true);
     return { data: result.identity };
   }
@@ -117,15 +123,11 @@ export class AuthController {
     auth: "refresh",
     csrf: true,
     status: 204,
-    description:
-      "Rotación de uso único. No reintentar automáticamente ante respuesta incierta.",
+    description: "Rotación de uso único. No reintentar automáticamente ante respuesta incierta.",
   })
   @HttpCode(204)
   @Throttle({ default: { limit: 30, ttl: 60_000 } })
-  async refresh(
-    @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async refresh(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     const token = this.cookies.read(request, "refresh");
     if (!token) throw new AuthError("unauthorized");
     const result = await this.auth.refresh(token);
@@ -144,10 +146,7 @@ export class AuthController {
       "Usa cookies access/refresh si existen, revoca la sesión y elimina cookies locales. Admite contexto preautenticado.",
   })
   @HttpCode(204)
-  async logout(
-    @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async logout(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     await this.auth.logout(this.cookies.read(request, "refresh"), "refresh");
     await this.auth.logout(this.cookies.read(request, "access"), "access");
     this.cookies.clear(response);
@@ -174,10 +173,7 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     if (!request.auth) throw new AuthError("unauthorized");
-    await this.auth.changePassword(
-      request.auth.claims,
-      parseDto(changePasswordSchema, body),
-    );
+    await this.auth.changePassword(request.auth.claims, parseDto(changePasswordSchema, body));
     this.cookies.clear(response);
   }
 
@@ -199,9 +195,7 @@ export class AuthController {
     @Body() body: unknown,
     @Res({ passthrough: true }) response: Response,
   ) {
-    await this.auth.changePasswordWithCredentials(
-      parseDto(credentialsChangePasswordSchema, body),
-    );
+    await this.auth.changePasswordWithCredentials(parseDto(credentialsChangePasswordSchema, body));
     this.cookies.clear(response);
   }
 
@@ -212,10 +206,7 @@ export class AuthController {
     status: 204,
   })
   @HttpCode(204)
-  async logoutAll(
-    @Req() request: AuthRequest,
-    @Res({ passthrough: true }) response: Response,
-  ) {
+  async logoutAll(@Req() request: AuthRequest, @Res({ passthrough: true }) response: Response) {
     if (!request.auth) throw new AuthError("unauthorized");
     await this.auth.logoutAll(request.auth.claims);
     this.cookies.clear(response);

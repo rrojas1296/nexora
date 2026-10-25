@@ -43,7 +43,7 @@ export function AgentFields({
           options={tones.map((value) => ({ value, label: t(`tones.${value}`) }))}
         />
       </div>
-      {(["instructions", "greeting"] as const).map((name) => (
+      {(["greeting"] as const).map((name) => (
         <Controller
           key={name}
           control={form.control}
@@ -57,7 +57,7 @@ export function AgentFields({
                 {...field}
                 id={`agent-${name}`}
                 rows={4}
-                maxLength={name === "instructions" ? 2000 : 300}
+                maxLength={300}
                 className={fieldClassName}
                 aria-invalid={!!fieldState.error}
                 aria-describedby={fieldState.error ? `agent-${name}-error` : undefined}

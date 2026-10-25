@@ -44,7 +44,7 @@ export class JoseAuthTokens implements AuthTokens {
         algorithms: ["HS256"],
         issuer: this.settings.issuer,
         audience: this.settings.audience,
-        requiredClaims: ["exp", "iat", "sub", "jti", "sid", "businessId", "purpose"],
+        requiredClaims: ["exp", "iat", "sub", "jti", "sid", "purpose"],
       });
       if (protectedHeader.typ !== "JWT" || payload.purpose !== purpose)
         throw new AuthError("unauthorized");
@@ -54,7 +54,12 @@ export class JoseAuthTokens implements AuthTokens {
         businessId: payload.businessId,
         jti: payload.jti,
       };
-      for (const value of Object.values(claims)) {
+      if (
+        claims.businessId !== null &&
+        (typeof claims.businessId !== "string" || !uuid.test(claims.businessId))
+      )
+        throw new AuthError("unauthorized");
+      for (const value of [claims.sub, claims.sid, claims.jti]) {
         if (typeof value !== "string" || !uuid.test(value)) throw new AuthError("unauthorized");
       }
       return claims as TokenClaims;

@@ -13,6 +13,17 @@ export class WhatsappInboxService {
     return this.repository.receive(messages);
   }
 
+  setControl(
+    actor: WhatsappActor,
+    businessId: string,
+    threadId: string,
+    mode: "AI" | "HUMAN",
+    version: number,
+  ) {
+    this.assertBusiness(actor, businessId);
+    return this.repository.setControl(actor, threadId, mode, version);
+  }
+
   threads(actor: WhatsappActor, businessId: string, cursor?: string) {
     this.assertBusiness(actor, businessId);
     return this.repository.threads(actor, cursor);

@@ -5,7 +5,7 @@ const id = z.uuid();
 export const identityResponse = envelope(
   z.object({
     user: z.object({ id, name: z.string(), email: z.email() }),
-    activeBusinessId: id,
+    activeBusinessId: id.nullable(),
     memberships: z.array(
       z.object({
         businessId: id,

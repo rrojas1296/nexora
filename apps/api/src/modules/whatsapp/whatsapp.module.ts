@@ -25,6 +25,13 @@ import { WhatsappWebhookController } from "./controllers/whatsapp-webhook.contro
 import { WhatsappInboxService } from "./services/whatsapp-inbox.service.js";
 import { PrismaWhatsappInboxRepository } from "./repositories/prisma-whatsapp-inbox-repository.js";
 import { WhatsappInboxController } from "./controllers/whatsapp-inbox.controller.js";
+import type { AiTextGenerator } from "./contracts/ai-text-generator.js";
+import { OpenAiTextGenerator } from "./providers/openai-text-generator.js";
+import { PrismaWhatsappAiStore } from "./repositories/prisma-whatsapp-ai-store.js";
+import { WhatsappAiService } from "./services/whatsapp-ai.service.js";
+import { WhatsappAiWorker } from "./providers/whatsapp-ai-worker.js";
+
+const AI_TEXT_GENERATOR = Symbol("AiTextGenerator");
 
 @Module({
   imports: [DatabaseModule, AuthModule],
@@ -40,14 +47,61 @@ import { WhatsappInboxController } from "./controllers/whatsapp-inbox.controller
     WhatsappSignatureGuard,
     Sha256WhatsappMessageHasher,
     {
+      provide: AI_TEXT_GENERATOR,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService<Environment, true>): AiTextGenerator => {
+        const providers: Record<Environment["AI_PROVIDER"], () => AiTextGenerator> = {
+          openai: () =>
+            new OpenAiTextGenerator(
+              config.get("OPENAI_MODEL", { infer: true }) ?? "",
+              config.get("OPENAI_API_KEY", { infer: true }),
+            ),
+        };
+        return providers[config.get("AI_PROVIDER", { infer: true })]();
+      },
+    },
+    {
+      provide: PrismaWhatsappAiStore,
+      inject: [PrismaService, Sha256WhatsappMessageHasher, ConfigService],
+      useFactory: (
+        prisma: PrismaService,
+        hasher: Sha256WhatsappMessageHasher,
+        config: ConfigService<Environment, true>,
+      ) =>
+        new PrismaWhatsappAiStore(
+          prisma.client,
+          hasher,
+          config.get("AI_DAILY_REPLY_LIMIT", { infer: true }),
+        ),
+    },
+    {
+      provide: WhatsappAiService,
+      inject: [PrismaWhatsappAiStore, AI_TEXT_GENERATOR, WhatsappService],
+      useFactory: (
+        store: PrismaWhatsappAiStore,
+        generator: AiTextGenerator,
+        sender: WhatsappService,
+      ) => new WhatsappAiService(store, generator, sender),
+    },
+    {
+      provide: WhatsappAiWorker,
+      inject: [WhatsappAiService, ConfigService],
+      useFactory: (service: WhatsappAiService, config: ConfigService<Environment, true>) =>
+        new WhatsappAiWorker(service, config.get("AI_AUTOREPLY_ENABLED", { infer: true })),
+    },
+    {
       provide: PrismaWhatsappRepository,
       inject: [PrismaService],
       useFactory: (prisma: PrismaService) => new PrismaWhatsappRepository(prisma.client),
     },
     {
       provide: PrismaWhatsappInboxRepository,
-      inject: [PrismaService],
-      useFactory: (prisma: PrismaService) => new PrismaWhatsappInboxRepository(prisma.client),
+      inject: [PrismaService, ConfigService],
+      useFactory: (prisma: PrismaService, config: ConfigService<Environment, true>) =>
+        new PrismaWhatsappInboxRepository(
+          prisma.client,
+          config.get("AI_AUTOREPLY_ENABLED", { infer: true }),
+        ),
     },
     {
       provide: PrismaWhatsappAuthorizationStore,

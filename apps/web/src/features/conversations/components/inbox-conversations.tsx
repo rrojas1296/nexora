@@ -78,6 +78,9 @@ export function InboxConversations({ scope }: { scope: InboxScope }) {
                     <span className="mt-1 block text-xs text-muted-foreground" dir="ltr">
                       +{conversation.contactWaId}
                     </span>
+                    <span className="mt-2 inline-flex rounded-full border px-2 py-1 text-xs text-muted-foreground">
+                      {t(conversation.controlMode === "AI" ? "automation.ai" : "automation.human")}
+                    </span>
                     <p className="mt-3 line-clamp-2 break-words text-xs leading-5 text-muted-foreground">
                       {conversation.lastMessageBody ||
                         t("attachment", { type: conversation.lastMessageType })}
