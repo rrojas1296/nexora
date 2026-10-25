@@ -84,7 +84,6 @@ export class WhatsappWebhookController {
   @HttpCode(200)
   @Header("Content-Type", "text/plain; charset=utf-8")
   async receive(@Body() body: unknown): Promise<string> {
-    console.log({ body });
     await this.inbox.receive(decodeWhatsappNotification(body));
     return "EVENT_RECEIVED";
   }
