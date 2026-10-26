@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InputField } from "@/components/ui/input-field";
+import { useDebounce } from "@/lib/hooks/use-debounce";
 import { cn } from "@/lib/utils/cn";
 import { useInboxThreads } from "../hooks/use-inbox";
 import type { InboxScope } from "../schemas/inbox-schema";
@@ -12,9 +14,19 @@ import { ConversationPanel } from "./conversation-panel";
 export function InboxConversations({ scope }: { scope: InboxScope }) {
   const t = useTranslations("WhatsappInbox");
   const format = useFormatter();
-  const [cursors, setCursors] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search.trim(), 400);
+  const [pagination, setPagination] = useState<{ search: string; cursors: string[] }>({
+    search: "",
+    cursors: [],
+  });
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const query = useInboxThreads(scope, cursors.at(-1));
+  if (pagination.search !== debouncedSearch) {
+    setPagination({ search: debouncedSearch, cursors: [] });
+    setSelectedId(null);
+  }
+  const cursors = pagination.search === debouncedSearch ? pagination.cursors : [];
+  const query = useInboxThreads(scope, cursors.at(-1), debouncedSearch);
   const conversations = query.isError ? [] : (query.data?.items ?? []);
   const selected = conversations.find((thread) => thread.id === selectedId) ?? conversations[0];
   const nextCursor = query.data?.nextCursor;
@@ -43,16 +55,36 @@ export function InboxConversations({ scope }: { scope: InboxScope }) {
           {t("refresh")}
         </Button>
       </div>
-      {query.isPending ? <p className="text-sm text-muted-foreground">{t("loading")}</p> : null}
+      <div className="flex flex-wrap items-end gap-3 rounded-3xl border bg-card p-5">
+        <div className="min-w-0 flex-1 basis-64">
+          <InputField
+            type="search"
+            label={t("searchLabel")}
+            placeholder={t("searchPlaceholder")}
+            value={search}
+            maxLength={120}
+            autoComplete="off"
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+        {search ? (
+          <Button variant="outline" size="sm" onClick={() => setSearch("")}>
+            {t("clearSearch")}
+          </Button>
+        ) : null}
+      </div>
+      {query.isPending ? (
+        <output className="block text-sm text-muted-foreground">{t("loading")}</output>
+      ) : null}
       {query.isError ? (
         <p role="alert" className="text-sm text-destructive">
           {t("error")}
         </p>
       ) : null}
       {!query.isPending && !query.isError && !conversations.length ? (
-        <p className="rounded-3xl border bg-card p-6 text-sm leading-7 text-muted-foreground">
-          {t("empty")}
-        </p>
+        <output className="block rounded-3xl border bg-card p-6 text-sm leading-7 text-muted-foreground">
+          {debouncedSearch ? t("noSearchResults") : t("empty")}
+        </output>
       ) : null}
       {conversations.length ? (
         <div className="grid items-start gap-5 xl:grid-cols-5">
@@ -105,7 +137,12 @@ export function InboxConversations({ scope }: { scope: InboxScope }) {
                 variant="outline"
                 size="sm"
                 disabled={!cursors.length || query.isFetching}
-                onClick={() => setCursors((items) => items.slice(0, -1))}
+                onClick={() =>
+                  setPagination((current) => ({
+                    ...current,
+                    cursors: current.cursors.slice(0, -1),
+                  }))
+                }
               >
                 {t("newer")}
               </Button>
@@ -114,7 +151,11 @@ export function InboxConversations({ scope }: { scope: InboxScope }) {
                 size="sm"
                 disabled={!nextCursor || query.isFetching}
                 onClick={() => {
-                  if (nextCursor) setCursors((items) => [...items, nextCursor]);
+                  if (nextCursor)
+                    setPagination((current) => ({
+                      ...current,
+                      cursors: [...current.cursors, nextCursor],
+                    }));
                 }}
               >
                 {t("older")}
@@ -132,7 +173,11 @@ export function InboxConversations({ scope }: { scope: InboxScope }) {
         </div>
       ) : null}
       {cursors.length && !conversations.length ? (
-        <Button variant="outline" size="sm" onClick={() => setCursors([])}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setPagination((current) => ({ ...current, cursors: [] }))}
+        >
           {t("latest")}
         </Button>
       ) : null}

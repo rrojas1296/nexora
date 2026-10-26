@@ -71,7 +71,7 @@ export const inboxService = {
         ).data,
     );
   },
-  threads(scope: InboxScope, cursor: string | undefined, signal: AbortSignal) {
+  threads(scope: InboxScope, cursor: string | undefined, signal: AbortSignal, search?: string) {
     return read(
       scope,
       signal,
@@ -79,7 +79,7 @@ export const inboxService = {
         threadResponseSchema.parse(
           (
             await apiClient.get(`/businesses/${scope.businessId}/whatsapp/conversations`, {
-              params: { cursor },
+              params: { cursor, search: search || undefined },
               signal,
             })
           ).data,

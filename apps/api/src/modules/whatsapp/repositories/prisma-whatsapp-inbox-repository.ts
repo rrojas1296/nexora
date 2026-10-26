@@ -192,14 +192,28 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
     });
   }
 
-  threads(actor: WhatsappActor, cursor?: string) {
+  threads(actor: WhatsappActor, cursor?: string, search?: string) {
     return this.client.$transaction(async (tx) => {
       await this.authorize(tx, actor);
-      const where = { businessId: actor.businessId, isDeleted: false };
+      const term = search?.trim();
+      const phone = term && /^[+\d\s().-]+$/.test(term) ? term.replace(/\D/g, "") : "";
+      const escapedTerm = term?.replace(/[\\%_]/g, "\\$&");
+      const where: Prisma.WhatsappThreadWhereInput = {
+        businessId: actor.businessId,
+        isDeleted: false,
+        ...(term
+          ? {
+              OR: [
+                { contactName: { contains: escapedTerm, mode: "insensitive" } },
+                { contactWaId: { contains: phone || escapedTerm } },
+              ],
+            }
+          : {}),
+      };
       if (
         cursor &&
         !(await tx.whatsappThread.findFirst({
-          where: { ...where, id: cursor },
+          where: { businessId: actor.businessId, isDeleted: false, id: cursor },
           select: { id: true },
         }))
       )

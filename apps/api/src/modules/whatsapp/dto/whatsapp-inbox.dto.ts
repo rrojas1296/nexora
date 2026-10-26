@@ -38,6 +38,9 @@ export const inboxReplySchema = z.object({
   windowExpiresAt: z.iso.datetime().nullable(),
 });
 export const inboxQuerySchema = z.strictObject({ cursor: z.uuid().optional() });
+export const inboxThreadsQuerySchema = inboxQuerySchema.extend({
+  search: z.string().trim().max(120).optional(),
+});
 export const threadSchema = z.object({
   id: z.uuid(),
   phoneNumberId: z.string(),

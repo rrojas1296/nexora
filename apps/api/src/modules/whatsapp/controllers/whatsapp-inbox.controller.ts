@@ -21,6 +21,7 @@ import { WhatsappInboxService } from "../services/whatsapp-inbox.service.js";
 import { WhatsappExceptionFilter } from "../filters/whatsapp-exception.filter.js";
 import {
   inboxQuerySchema,
+  inboxThreadsQuerySchema,
   inboxControlSchema,
   inboxControlResponseSchema,
   inboxSendTextSchema,
@@ -40,21 +41,23 @@ export class WhatsappInboxController {
   @ApiRoute({
     summary: "Listar conversaciones del negocio activo",
     params: ["businessId"],
-    query: inboxQuerySchema,
+    query: inboxThreadsQuerySchema,
     response: envelope(threadPageSchema),
     description:
-      "Membresía activa de cualquier rol. Hasta 20 conversaciones por página, ordenadas por último mensaje descendente. Cursor UUID opcional; sin búsqueda ni KPIs de fixtures.",
+      "Membresía activa de cualquier rol. Hasta 20 conversaciones por página, ordenadas por último mensaje descendente. Cursor UUID opcional y search de hasta 120 caracteres: coincidencia parcial por nombre (sin distinguir mayúsculas) o número WhatsApp. Admite separadores habituales en teléfonos. Sin KPIs de fixtures.",
   })
   async threads(
     @Req() request: AuthRequest,
     @Param("businessId") businessId: string,
     @Query() query: unknown,
   ) {
+    const filters = parse(inboxThreadsQuerySchema, query);
     return {
       data: await this.inbox.threads(
         getAuthenticatedActor(request),
         parse(whatsappIdSchema, businessId),
-        parse(inboxQuerySchema, query).cursor,
+        filters.cursor,
+        filters.search,
       ),
     };
   }

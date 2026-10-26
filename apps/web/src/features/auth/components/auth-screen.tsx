@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { LocaleSelect } from "@/components/layout/locale-select";
 import { ThemeSelect } from "@/components/layout/theme-select";
 import { Link } from "@/i18n/navigation";
+import { cn } from "@/lib/utils/cn";
 import { ChangePasswordForm } from "./change-password-form";
 import { LoginForm } from "./login-form";
 import { RegisterForm } from "./register-form";
@@ -25,11 +26,24 @@ export async function AuthScreen({ mode }: { mode: "login" | "register" | "chang
   }[mode];
   const common = await getTranslations("Common");
   return (
-    <div className="mx-auto grid min-h-dvh w-full max-w-357 lg:grid-cols-2">
-      <aside className="hidden flex-col justify-between bg-sidebar p-10 text-sidebar-foreground lg:flex xl:p-14">
+    <div
+      className={cn(
+        "grid min-h-dvh w-full lg:grid-cols-2",
+        mode === "change-password" && "mx-auto max-w-357",
+      )}
+    >
+      <aside
+        className={cn(
+          "hidden flex-col justify-between bg-sidebar p-10 text-sidebar-foreground lg:flex xl:p-14",
+          mode !== "change-password" && "items-center",
+        )}
+      >
         <Link
           href="/dashboard"
-          className="flex w-fit items-center gap-2.5 rounded-lg text-lg text-white outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          className={cn(
+            "flex items-center gap-2.5 rounded-lg text-lg text-white outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+            mode === "change-password" ? "w-fit" : "w-full max-w-md",
+          )}
         >
           <MessageCircleMore
             className="size-7 text-sidebar-primary"
@@ -38,7 +52,7 @@ export async function AuthScreen({ mode }: { mode: "login" | "register" | "chang
           />
           {common("brand")}
         </Link>
-        <div className="py-12">
+        <div className={cn("py-12", mode !== "change-password" && "w-full max-w-md")}>
           <div className="mb-8 flex size-16 items-center justify-center rounded-2xl border border-sidebar-border bg-sidebar-accent">
             <Bot className="size-7 text-sidebar-ring" strokeWidth={1.3} aria-hidden="true" />
           </div>
@@ -49,7 +63,12 @@ export async function AuthScreen({ mode }: { mode: "login" | "register" | "chang
             {t("introDescription")}
           </p>
         </div>
-        <p className="flex items-center gap-2 text-xs text-sidebar-muted">
+        <p
+          className={cn(
+            "flex items-center gap-2 text-xs text-sidebar-muted",
+            mode !== "change-password" && "w-full max-w-md",
+          )}
+        >
           <span className="size-1.5 rounded-full bg-sidebar-primary" aria-hidden="true" />
           {common("demo")}
         </p>

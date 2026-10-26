@@ -360,6 +360,17 @@ Los seis pasos están completados: frontend funcional con mocks y revisiones vis
 - Contenido personal en PostgreSQL sin cifrado aplicativo ni purga/retención automática; no se registra en logs. Antes de producción: acordar privacidad/retención/borrado, backups/cifrado operativo, dimensionar webhook/rate limits y realizar verificaciones runtime autorizadas.
 - Verificación de esta etapa limitada a Prisma validate/generate y formato/lint/tipos/build. Sin tests de ningún tipo, navegador/smoke, llamadas HTTP/Meta, conexiones DB ni migraciones ejecutadas por el asistente.
 
+## Ajuste posterior — Login y registro a ancho completo
+
+- Se elimina `max-w-357` del contenedor exterior solo en login y registro. Ambos paneles ocupan todo el ancho disponible; el formulario mantiene su ancho de lectura `max-w-md` y el comportamiento responsive. Los bloques del panel izquierdo se centran horizontalmente con `max-w-md` solo en login y registro, manteniendo logo, icono y textos alineados a la izquierda.
+- Onboarding, cambio de contraseña público y contenido del workspace conservan sus límites existentes. Verificación mediante formato, lint, tipos y build; sin tests ni navegador.
+
+## Ampliación posterior — Buscador en Conversaciones reales
+
+- Búsqueda remota opcional `search` (hasta 120 caracteres) por nombre parcial sin distinguir mayúsculas o número WhatsApp, con normalización de separadores telefónicos. Filtra todo el inbox autorizado antes de paginar, conservando membresía activa y borrado lógico; sin migraciones ni búsqueda de mensajes/clientes mock.
+- Campo accesible es/en, debounce de 400 ms, limpieza de búsqueda y estado sin coincidencias. Reinicia cursores/selección al cambiar el término e incluye el filtro en la clave React Query; conserva polling reciente y aislamiento por usuario/Business.
+- Verificación mediante lint, formato, tipos y build; sin tests, navegador ni llamadas a servicios externos.
+
 ## Ampliación posterior — Respuestas de texto desde Conversaciones
 
 - Compositor real con React Hook Form/Zod y traducciones es/en: texto de 1–4096 caracteres, envío explícito, sin adjuntos/plantillas. Se preservan temas y estilos Tailwind; salientes a la derecha, entrantes a la izquierda, con estados locales de intento diferenciados de entrega/lectura.

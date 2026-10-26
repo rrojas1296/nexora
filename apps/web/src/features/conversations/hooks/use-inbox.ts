@@ -11,11 +11,11 @@ const options = {
   refetchIntervalInBackground: false,
 } as const;
 
-export function useInboxThreads(scope: InboxScope, cursor?: string) {
+export function useInboxThreads(scope: InboxScope, cursor?: string, search = "") {
   return useQuery({
     ...options,
-    queryKey: ["whatsapp-inbox", scope.userId, scope.businessId, "threads", cursor],
-    queryFn: ({ signal }) => inboxService.threads(scope, cursor, signal),
+    queryKey: ["whatsapp-inbox", scope.userId, scope.businessId, "threads", cursor, search],
+    queryFn: ({ signal }) => inboxService.threads(scope, cursor, signal, search),
     refetchInterval: (query) => (cursor || query.state.status === "error" ? false : 10_000),
   });
 }

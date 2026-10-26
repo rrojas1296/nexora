@@ -24,9 +24,9 @@ export class WhatsappInboxService {
     return this.repository.setControl(actor, threadId, mode, version);
   }
 
-  threads(actor: WhatsappActor, businessId: string, cursor?: string) {
+  threads(actor: WhatsappActor, businessId: string, cursor?: string, search?: string) {
     this.assertBusiness(actor, businessId);
-    return this.repository.threads(actor, cursor);
+    return this.repository.threads(actor, cursor, search);
   }
 
   messages(actor: WhatsappActor, businessId: string, threadId: string, cursor?: string) {
