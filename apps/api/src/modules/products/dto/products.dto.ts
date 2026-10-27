@@ -10,9 +10,16 @@ const money = z
 const inventory = z.number().int().min(0).max(1000000);
 export const categoryInputSchema = z.strictObject({ name });
 export const productIdSchema = z.uuid();
-export const productInputSchema = z.strictObject({
+const reference = z
+  .string()
+  .trim()
+  .max(30)
+  .refine((value) => value.length === 0 || value.length >= 2)
+  .nullable()
+  .transform((value) => (value === "" ? null : value));
+const productFieldsSchema = z.strictObject({
   name,
-  sku: z.string().trim().min(2).max(30),
+  sku: reference,
   description: z.string().trim().max(2000),
   category: name,
   imageUrl: z.union([
@@ -31,7 +38,13 @@ export const productInputSchema = z.strictObject({
   weight: inventory,
   active: z.boolean(),
 });
-export const productPatchSchema = productInputSchema
+export const productInputSchema = productFieldsSchema.extend({
+  sku: reference.default(null),
+  brand: shortText.default(""),
+  supplier: shortText.default(""),
+  barcode: productFieldsSchema.shape.barcode.default(""),
+});
+export const productPatchSchema = productFieldsSchema
   .partial()
   .refine((input) => Object.keys(input).length > 0);
 export const productListSchema = z.strictObject({

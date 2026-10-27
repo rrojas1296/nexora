@@ -9,6 +9,10 @@ const timestamps = { createdAt: timestamp, updatedAt: timestamp };
 // Stored decimals are serialized strings; output is not restricted to input precision formatting.
 const product = productInputSchema.extend({
   id,
+  sku: z.string().nullable(),
+  brand: z.string(),
+  supplier: z.string(),
+  barcode: z.string(),
   currency: z.string(),
   ...timestamps,
   price: z.string(),

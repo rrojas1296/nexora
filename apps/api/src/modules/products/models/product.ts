@@ -32,7 +32,7 @@ export interface ProductActor {
 
 export interface ProductInput {
   name: string;
-  sku: string;
+  sku: string | null;
   description: string;
   category: string;
   imageUrl: string;

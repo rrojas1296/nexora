@@ -4,6 +4,8 @@ import type { AiReplyFallbackReason, AiReplyWork } from "../contracts/whatsapp-a
 import type { WhatsappAiStore } from "../contracts/whatsapp-ai-store.js";
 import type { WhatsappService } from "./whatsapp.service.js";
 
+const maxToolCalls = 8;
+
 export class WhatsappAiService {
   constructor(
     private readonly store: WhatsappAiStore,
@@ -15,16 +17,19 @@ export class WhatsappAiService {
   private async generate(work: AiReplyWork): Promise<string> {
     const deadline = Date.now() + 85_000;
     const exchanges: AiToolExchange[] = [];
-    for (let turn = 0; turn < 8; turn++) {
+    // Customer linking, order lookup, catalog and draft preparation can require
+    // several distinct tools. Reserve one last turn for an answer without tools.
+    for (let turn = 0; turn <= maxToolCalls; turn++) {
       if (Date.now() >= deadline) throw new AiGenerationError("UNAVAILABLE");
       const result = await this.generator.generate(
         work.input,
-        this.tools.definitions,
+        turn < maxToolCalls ? this.tools.definitions : [],
         exchanges,
         deadline - Date.now(),
       );
       if (result.type === "message") return result.text;
-      if (turn === 4 || result.calls.length !== 1) throw new AiGenerationError("INVALID_RESPONSE");
+      if (turn === maxToolCalls || result.calls.length !== 1)
+        throw new AiGenerationError("INVALID_RESPONSE");
       const call = result.calls[0]!;
       if (exchanges.some((exchange) => exchange.call.id === call.id))
         throw new AiGenerationError("INVALID_RESPONSE");

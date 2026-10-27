@@ -24,23 +24,25 @@ export function ProductEditor({ product, onClose }: { product?: Product; onClose
   const categories = useCategories();
   const form = useForm<ProductInput>({
     resolver: zodResolver(productInputSchema),
-    defaultValues: product ?? {
-      name: "",
-      sku: "",
-      description: "",
-      category: "",
-      imageUrl: "",
-      brand: "",
-      supplier: "",
-      barcode: "",
-      price: 0,
-      cost: 0,
-      compareAtPrice: 0,
-      stock: 0,
-      weight: 0,
-      lowStockThreshold: 5,
-      active: true,
-    },
+    defaultValues: product
+      ? { ...product, sku: product.sku ?? "" }
+      : {
+          name: "",
+          sku: "",
+          description: "",
+          category: "",
+          imageUrl: "",
+          brand: "",
+          supplier: "",
+          barcode: "",
+          price: 0,
+          cost: 0,
+          compareAtPrice: 0,
+          stock: 0,
+          weight: 0,
+          lowStockThreshold: 5,
+          active: true,
+        },
   });
   return (
     <div className="space-y-6">
@@ -83,7 +85,7 @@ export function ProductEditor({ product, onClose }: { product?: Product; onClose
         onCancel={onClose}
         fields={[
           { name: "name", label: t("name"), section: t("identity") },
-          { name: "sku", label: t("sku"), maxLength: 30 },
+          { name: "sku", label: t("sku"), hint: t("optional"), maxLength: 30 },
           {
             name: "category",
             label: t("category"),
@@ -95,9 +97,9 @@ export function ProductEditor({ product, onClose }: { product?: Product; onClose
                 label: category.name,
               })) ?? [],
           },
-          { name: "brand", label: t("brand") },
-          { name: "barcode", label: t("barcode"), maxLength: 50 },
-          { name: "supplier", label: t("supplier") },
+          { name: "brand", label: t("brand"), hint: t("optional"), maxLength: 100 },
+          { name: "barcode", label: t("barcode"), hint: t("optional"), maxLength: 50 },
+          { name: "supplier", label: t("supplier"), hint: t("optional"), maxLength: 100 },
           { name: "description", label: t("description"), kind: "textarea" },
           {
             name: "price",

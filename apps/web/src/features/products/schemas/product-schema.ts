@@ -11,7 +11,11 @@ const inventory = z.number({ error: "stock" }).int("stock").min(0, "stock").max(
 
 export const productInputSchema = z.object({
   name,
-  sku: z.string().trim().min(2, "sku").max(30, "sku"),
+  sku: z
+    .string()
+    .trim()
+    .max(30, "sku")
+    .refine((value) => value.length === 0 || value.length >= 2, "sku"),
   description: z.string().trim().max(2000, "text"),
   category: name,
   imageUrl: z.union([
@@ -38,6 +42,7 @@ const decimal = z
   .transform(Number);
 export const productSchema = productInputSchema.extend({
   id: z.uuid(),
+  sku: z.string().nullable(),
   price: decimal,
   cost: decimal,
   compareAtPrice: decimal,

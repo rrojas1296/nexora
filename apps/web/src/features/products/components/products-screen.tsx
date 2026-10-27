@@ -67,6 +67,11 @@ export function ProductsScreen() {
           <Link href="/products/categories">{t("manageCategories")}</Link>
         </Button>
         {access.canWrite ? (
+          <Button asChild variant="outline">
+            <Link href="/products/import">{t("import.title")}</Link>
+          </Button>
+        ) : null}
+        {access.canWrite ? (
           <Button asChild>
             <Link href="/products/new">
               <Plus className="size-4" aria-hidden="true" />
@@ -104,7 +109,7 @@ export function ProductsScreen() {
                 </div>
               ),
             },
-            { key: "sku", label: t("sku"), render: (product) => product.sku },
+            { key: "sku", label: t("sku"), render: (product) => product.sku ?? "—" },
             {
               key: "price",
               label: t("price"),

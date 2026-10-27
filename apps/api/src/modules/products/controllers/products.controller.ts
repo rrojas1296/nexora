@@ -217,7 +217,7 @@ export class ProductsController {
     response: productResponse,
     status: 201,
     description:
-      "Importes string con hasta dos decimales, moneda del negocio activo, sin conversión de precios. Categoría debe existir; imágenes internas deben pertenecer al negocio.",
+      "Importes string con hasta dos decimales, moneda del negocio activo, sin conversión de precios. Categoría debe existir; imágenes internas deben pertenecer al negocio. SKU opcional (omitido, null o vacío se guarda null); marca, proveedor y código de barras opcionales (omitidos se guardan vacíos). SKU no vacío conserva unicidad por negocio.",
     errors: {
       400: "Categoría o imagen inválida.",
       409: "PRODUCT_SKU_EXISTS: SKU reservado, incluso si el producto fue eliminado.",
@@ -244,7 +244,8 @@ export class ProductsController {
     params: ["businessId", "id"],
     body: productPatchSchema,
     response: productResponse,
-    description: "Body parcial no vacío. No cambia la moneda.",
+    description:
+      "Body parcial no vacío. No cambia la moneda. Omitir campos conserva sus valores; SKU null o vacío elimina la referencia; marca, proveedor y código de barras se limpian con string vacío.",
     errors: { 404: "PRODUCT_NOT_FOUND.", 409: "PRODUCT_SKU_EXISTS." },
   })
   async update(
