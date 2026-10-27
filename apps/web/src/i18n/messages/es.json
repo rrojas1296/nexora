@@ -1,4 +1,62 @@
 {
+  "ConversationCommerce": {
+    "title": "Pedidos de esta conversación",
+    "hint": "Pedidos reales separados del módulo Pedidos de demostración. La IA prepara el borrador; la confirmación requiere una aceptación explícita del cliente.",
+    "previous": "Anteriores",
+    "next": "Siguientes",
+    "refresh": "Actualizar",
+    "loading": "Consultando pedidos…",
+    "error": "No se pudieron consultar los pedidos.",
+    "empty": "Sin pedidos en esta conversación.",
+    "subtotal": "Subtotal de productos",
+    "perUnit": "por unidad",
+    "noStockReservation": "No reserva ni descuenta stock. No incluye tarifa de delivery.",
+    "payment": "Pago",
+    "delivery": "Entrega",
+    "deliveryMode": "Delivery",
+    "pickup": "Recojo",
+    "quotePending": "Tarifa de delivery pendiente de cotización humana. No hay total final de entrega.",
+    "proofs": "Comprobantes",
+    "proofNumber": "Comprobante {number}",
+    "proofHint": "Un archivo recibido no acredita un pago. Descarga y verifica el abono fuera de la aplicación antes de validar. Los archivos no tienen análisis antivirus.",
+    "validate": "Validar pago",
+    "reject": "Rechazar",
+    "validateConfirm": "¿Verificaste el abono por un medio independiente? Validar este comprobante no confirma el pedido ni autoriza el despacho.",
+    "rejectConfirm": "¿Rechazar este comprobante? No cancela el pedido.",
+    "saving": "Guardando revisión…",
+    "reviewSaved": "Revisión guardada.",
+    "reviewError": "No se pudo confirmar la revisión. Actualiza los pedidos antes de volver a decidir; el archivo debe estar disponible y las versiones vigentes.",
+    "download": "Descargar adjunto privado",
+    "downloading": "Descargando…",
+    "downloadError": "El archivo aún no está disponible o no tienes acceso. Actualiza e inténtalo más tarde.",
+    "location": "Ubicación recibida",
+    "locationHint": "Ubicación proporcionada por el cliente; no se ha verificado la dirección ni cotizado el delivery.",
+    "media": {
+      "NONE": "Adjunto no descargable.",
+      "PENDING": "Adjunto pendiente de descarga.",
+      "DOWNLOADING": "Procesando adjunto…",
+      "READY": "Archivo privado disponible (sin análisis antivirus).",
+      "FAILED": "No se pudo descargar el adjunto o su formato/tamaño no es compatible."
+    },
+    "orders": {
+      "DRAFT": "Borrador",
+      "PENDING": "Confirmado · pendiente",
+      "PAID": "Pagado",
+      "SHIPPED": "Enviado",
+      "CANCELLED": "Cancelado"
+    },
+    "payments": {
+      "PENDING": "Pendiente",
+      "IN_REVIEW": "Pendiente de revisión humana",
+      "VALIDATED": "Validado por una persona",
+      "REJECTED": "Comprobante rechazado"
+    },
+    "proofStatuses": {
+      "RECEIVED": "Recibido · sin validar",
+      "VALIDATED": "Validado por una persona",
+      "REJECTED": "Rechazado"
+    }
+  },
   "WhatsappConnection": {
     "title": "WhatsApp del negocio",
     "description": "Autoriza con Facebook en esta misma pestaña y conecta un número de WhatsApp Business ya configurado. No necesitas copiar tokens.",

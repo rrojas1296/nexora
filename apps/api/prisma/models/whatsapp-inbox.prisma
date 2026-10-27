@@ -4,12 +4,15 @@ model WhatsappThread {
   phoneNumberId   String
   contactWaId     String
   contactName     String
+  clientId        String?                  @db.Uuid
+  client          Client?                  @relation(fields: [businessId, clientId], references: [businessId, id], onDelete: Restrict)
   lastMessageAt   DateTime                 @db.Timestamptz(3)
   lastMessageBody String                   @db.Text
   lastMessageType String
   controlMode     WhatsappControlMode      @default(AI)
   controlVersion  Int                      @default(0)
   aiJobs          WhatsappAiReplyJob[]
+  orders          Order[]
   isDeleted       Boolean                  @default(false)
   createdAt       DateTime                 @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime                 @updatedAt @db.Timestamptz(3)
@@ -19,6 +22,7 @@ model WhatsappThread {
   @@unique([businessId, id])
   @@unique([businessId, phoneNumberId, contactWaId])
   @@index([businessId, isDeleted, lastMessageAt, id])
+  @@index([businessId, clientId])
   @@map("WhatsappThreads")
 }
 
@@ -44,6 +48,16 @@ model WhatsappInboundMessage {
   sendAttemptId     String?                @db.Uuid
   sendAttempt       WhatsappSendAttempt?   @relation(fields: [businessId, sendAttemptId], references: [businessId, id], onDelete: Restrict)
   type              String
+  mediaId           String?
+  mediaMimeType     String?
+  mediaData         Bytes?
+  mediaStatus       String                 @default("NONE")
+  mediaStartedAt    DateTime?              @db.Timestamptz(3)
+  locationLatitude  Float?
+  locationLongitude Float?
+  locationName      String?
+  locationAddress   String?
+  paymentProofs     PaymentProof[]
   body              String                 @db.Text
   sentAt            DateTime               @db.Timestamptz(3)
   receivedAt        DateTime               @default(now()) @db.Timestamptz(3)
@@ -54,6 +68,7 @@ model WhatsappInboundMessage {
   @@unique([businessId, threadId, id])
   @@unique([businessId, providerMessageId])
   @@unique([businessId, sendAttemptId])
+  @@index([mediaStatus, receivedAt])
   @@index([businessId, threadId, isDeleted, sentAt, id], map: "WhatsappInboundMessages_thread_timeline_idx")
   @@index([businessId, threadId, direction, isDeleted, sentAt], map: "WhatsappInboundMessages_reply_window_idx")
   @@map("WhatsappInboundMessages")

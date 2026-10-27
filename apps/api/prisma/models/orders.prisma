@@ -1,4 +1,5 @@
 enum OrderStatus {
+  DRAFT
   PENDING
   PAID
   SHIPPED
@@ -6,25 +7,40 @@ enum OrderStatus {
 }
 
 model Order {
-  isDeleted  Boolean     @default(false)
-  id         String      @id @default(uuid()) @db.Uuid
-  businessId String      @db.Uuid
-  reference  String
-  clientId   String      @db.Uuid
-  storeId    String      @db.Uuid
-  status     OrderStatus @default(PENDING)
-  currency   String      @default("PEN") @db.Char(3)
-  placedAt   DateTime    @default(now()) @db.Timestamptz(3)
-  createdAt  DateTime    @default(now()) @db.Timestamptz(3)
-  updatedAt  DateTime    @updatedAt @db.Timestamptz(3)
-  business   Business    @relation(fields: [businessId], references: [id], onDelete: Restrict)
-  client     Client      @relation(fields: [businessId, clientId], references: [businessId, id], onDelete: Restrict)
-  store      Store       @relation(fields: [businessId, storeId], references: [businessId, id], onDelete: Restrict)
-  items      OrderItem[]
+  isDeleted           Boolean         @default(false)
+  id                  String          @id @default(uuid()) @db.Uuid
+  businessId          String          @db.Uuid
+  reference           String
+  clientId            String?         @db.Uuid
+  storeId             String?         @db.Uuid
+  threadId            String?         @db.Uuid
+  thread              WhatsappThread? @relation(fields: [businessId, threadId], references: [businessId, id], onDelete: Restrict)
+  version             Int             @default(0)
+  creationHash        String?
+  deliveryMode        String          @default("PICKUP")
+  deliveryAddress     String          @default("") @db.Text
+  deliveryReference   String          @default("") @db.Text
+  deliveryLatitude    Float?
+  deliveryLongitude   Float?
+  deliveryQuoteStatus String          @default("NOT_REQUIRED")
+  paymentStatus       String          @default("PENDING")
+  confirmationToken   String?
+  confirmationJobId   String?         @db.Uuid
+  proofs              PaymentProof[]
+  status              OrderStatus     @default(PENDING)
+  currency            String          @default("PEN") @db.Char(3)
+  placedAt            DateTime        @default(now()) @db.Timestamptz(3)
+  createdAt           DateTime        @default(now()) @db.Timestamptz(3)
+  updatedAt           DateTime        @updatedAt @db.Timestamptz(3)
+  business            Business        @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  client              Client?         @relation(fields: [businessId, clientId], references: [businessId, id], onDelete: Restrict)
+  store               Store?          @relation(fields: [businessId, storeId], references: [businessId, id], onDelete: Restrict)
+  items               OrderItem[]
 
   @@unique([businessId, id])
   @@unique([businessId, reference])
   @@index([businessId, placedAt])
+  @@index([businessId, threadId, createdAt, id])
   @@index([businessId, status])
   @@index([businessId, clientId])
   @@index([businessId, storeId])

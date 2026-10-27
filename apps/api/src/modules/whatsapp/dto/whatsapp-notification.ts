@@ -13,6 +13,17 @@ export const notificationSchema = z.object({
     }),
   ),
 });
+const mediaSchema = z.object({
+  id: z.string().regex(/^\d{1,128}$/),
+  mime_type: z.string().max(128).optional(),
+  caption: z.string().max(65_536).optional(),
+});
+const locationSchema = z.object({
+  latitude: z.number().finite().min(-90).max(90),
+  longitude: z.number().finite().min(-180).max(180),
+  name: z.string().max(512).optional(),
+  address: z.string().max(2048).optional(),
+});
 const waId = z.string().regex(/^\d{5,20}$/);
 const valueSchema = z.object({
   metadata: z.object({ phone_number_id: z.string().regex(/^\d{1,32}$/) }),
@@ -28,9 +39,10 @@ const valueSchema = z.object({
         timestamp: z.string().regex(/^\d{1,10}$/),
         type: z.string().min(1).max(100),
         text: z.object({ body: z.string().max(65_536) }).optional(),
-        image: z.object({ caption: z.string().max(65_536).optional() }).optional(),
+        image: mediaSchema.optional(),
+        location: locationSchema.optional(),
         video: z.object({ caption: z.string().max(65_536).optional() }).optional(),
-        document: z.object({ caption: z.string().max(65_536).optional() }).optional(),
+        document: mediaSchema.optional(),
       }),
     )
     .max(100),
@@ -57,6 +69,19 @@ export function decodeWhatsappNotification(body: unknown): IncomingWhatsappMessa
           contactName: names.get(message.from) || message.from,
           providerMessageId: message.id,
           type: message.type,
+          mediaId:
+            message.type === "image"
+              ? message.image?.id
+              : message.type === "document"
+                ? message.document?.id
+                : undefined,
+          mediaMimeType:
+            message.type === "image"
+              ? message.image?.mime_type
+              : message.type === "document"
+                ? message.document?.mime_type
+                : undefined,
+          location: message.type === "location" ? message.location : undefined,
           sentAt: new Date(Number(message.timestamp) * 1000),
           body:
             message.type === "text"

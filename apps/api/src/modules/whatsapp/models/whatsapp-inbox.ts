@@ -6,6 +6,9 @@ export interface IncomingWhatsappMessage {
   type: string;
   body: string;
   sentAt: Date;
+  mediaId?: string;
+  mediaMimeType?: string;
+  location?: { latitude: number; longitude: number; name?: string; address?: string };
 }
 export interface WhatsappThreadSummary {
   id: string;
@@ -26,6 +29,13 @@ export interface WhatsappInboxMessage {
   body: string;
   sentAt: string;
   receivedAt: string;
+  mediaStatus: string;
+  location: {
+    latitude: number;
+    longitude: number;
+    name: string | null;
+    address: string | null;
+  } | null;
 }
 export interface InboxPage<T> {
   items: T[];

@@ -1,54 +1,49 @@
 "use client";
-
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Link } from "@/i18n/navigation";
-import { ResourceKpis } from "@/features/demo/components/resource-kpis";
 import { useFormatter, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { SelectField } from "@/components/ui/select-field";
-import { useWorkspace } from "@/features/demo/hooks/use-workspace";
-import { usePagedRows } from "@/features/demo/hooks/use-paged-rows";
-import { orderStatuses } from "@/features/demo/schemas/workspace-schema";
-import { orderTotal } from "@/features/demo/lib/metrics";
-import { QueryState } from "@/features/demo/components/query-state";
+import { useOrders, useCommerceAccess } from "@/features/commerce/hooks/use-commerce";
+import { CommerceKpis } from "@/features/commerce/components/commerce-kpis";
+import { CommerceQueryState as QueryState } from "@/features/commerce/components/commerce-query-state";
 import { DataTable } from "@/features/demo/components/data-table";
 import { ListToolbar } from "@/features/demo/components/list-toolbar";
 import { Pagination } from "@/features/demo/components/pagination";
-import { StatusBadge } from "@/features/demo/components/status-badge";
+import { orderStatuses } from "../schemas/order-schema";
 import { OrderDetail } from "./order-detail";
-
 export function OrdersScreen() {
   const t = useTranslations("Orders");
   const common = useTranslations("Demo");
+  const c = useTranslations("Commerce");
   const format = useFormatter();
-  const query = useWorkspace();
+  const { canWrite } = useCommerceAccess();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [status, setStatus] = useState("all");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const clients = new Map(query.data?.clients.map((client) => [client.id, client.name]));
-  const orders = (query.data?.orders ?? [])
-    .filter(
-      (order) =>
-        `${order.id} ${clients.get(order.clientId) ?? ""}`
-          .toLowerCase()
-          .includes(search.toLowerCase()) &&
-        (status === "all" || order.status === status),
-    )
-    .toSorted((a, b) => b.createdAt.localeCompare(a.createdAt));
-  const paging = usePagedRows(orders);
-  const selected = query.data?.orders.find((order) => order.id === selectedId);
+  const query = useOrders({ search, page, pageSize: 10, ...(status === "all" ? {} : { status }) });
+  const orders = query.data?.data ?? [];
+  const summary = query.isError ? undefined : query.data?.summary;
+  const selected = orders.find((order) => order.id === selectedId);
   return (
     <div className="space-y-5">
-      <ResourceKpis resource="orders" workspace={query.isError ? undefined : query.data} />
-      <p className="text-xs leading-6 text-muted-foreground">{t("hint")}</p>
+      <CommerceKpis
+        metrics={[
+          { label: "totalOrders", value: summary?.total },
+          { label: "draftOrders", value: summary?.draft },
+          { label: "pendingOrders", value: summary?.pending },
+        ]}
+      />
+      <p className="text-xs leading-6 text-muted-foreground">{c("liveOrders")}</p>
       <ListToolbar
         search={search}
         onSearch={(value) => {
           setSearch(value);
-          paging.setPage(1);
+          setPage(1);
         }}
-        count={orders.length}
+        count={query.data?.pagination.total ?? 0}
       >
         <label className="space-y-2 text-xs">
           <span className="block">{common("statusLabel")}</span>
@@ -56,20 +51,22 @@ export function OrdersScreen() {
             value={status}
             onValueChange={(value) => {
               setStatus(value);
-              paging.setPage(1);
+              setPage(1);
             }}
             options={[
               { value: "all", label: common("all") },
-              ...orderStatuses.map((value) => ({ value, label: common(`status.${value}`) })),
+              ...orderStatuses.map((value) => ({ value, label: c(`statuses.${value}`) })),
             ]}
           />
         </label>
-        <Button asChild>
-          <Link href="/orders/new">
-            <Plus className="size-4" aria-hidden="true" />
-            {t("create")}
-          </Link>
-        </Button>
+        {canWrite ? (
+          <Button asChild>
+            <Link href="/orders/new">
+              <Plus className="size-4" aria-hidden="true" />
+              {t("create")}
+            </Link>
+          </Button>
+        ) : null}
       </ListToolbar>
       <QueryState
         pending={query.isPending}
@@ -81,68 +78,72 @@ export function OrdersScreen() {
       >
         <DataTable
           caption={t("table")}
-          rows={paging.rows}
+          rows={orders}
           columns={[
             {
-              key: "id",
+              key: "reference",
               label: t("order"),
               render: (order) => (
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-auto whitespace-normal break-all text-left"
                   onClick={() => setSelectedId(order.id)}
-                  aria-label={`${t("detail")}: ${order.id}`}
+                  aria-label={`${t("detail")}: ${order.reference}`}
                 >
-                  {order.id}
+                  {order.reference}
                 </Button>
               ),
             },
-            {
-              key: "client",
-              label: t("client"),
-              render: (order) => clients.get(order.clientId) ?? "—",
-            },
+            { key: "client", label: t("client"), render: (order) => order.clientName ?? "—" },
             {
               key: "date",
               label: t("date"),
               render: (order) =>
-                format.dateTime(new Date(order.createdAt), {
-                  dateStyle: "medium",
-                  timeZone: "UTC",
-                }),
+                format.dateTime(new Date(order.placedAt), { dateStyle: "medium", timeZone: "UTC" }),
             },
             {
               key: "total",
-              label: t("total"),
+              label: c("subtotal"),
               render: (order) =>
-                format.number(orderTotal(order), { style: "currency", currency: order.currency }),
+                format.number(Number(order.subtotal), {
+                  style: "currency",
+                  currency: order.currency,
+                }),
             },
             {
               key: "status",
               label: common("statusLabel"),
-              render: (order) => <StatusBadge status={order.status} />,
+              render: (order) => (
+                <span className="rounded-full border px-3 py-1 text-xs">
+                  {c(`statuses.${order.status}`)}
+                </span>
+              ),
             },
             {
               key: "actions",
               label: common("actions"),
-              render: (order) => (
-                <Button asChild variant="ghost" size="sm">
-                  <Link
-                    href={`/orders/${order.id}/edit`}
-                    aria-label={`${common("edit")}: ${order.id}`}
-                  >
-                    {common("edit")}
-                  </Link>
-                </Button>
-              ),
+              render: (order) =>
+                canWrite ? (
+                  <Button asChild variant="ghost" size="sm">
+                    <Link
+                      href={`/orders/${order.id}/edit`}
+                      aria-label={`${common("edit")}: ${order.reference}`}
+                    >
+                      {common("edit")}
+                    </Link>
+                  </Button>
+                ) : (
+                  "—"
+                ),
             },
           ]}
         />
-        <Pagination page={paging.page} pages={paging.pages} onPage={paging.setPage} />
       </QueryState>
-      {selected && query.data ? (
-        <OrderDetail order={selected} workspace={query.data} onClose={() => setSelectedId(null)} />
+      {query.data && !query.isError ? (
+        <Pagination page={page} pages={query.data.pagination.pages} onPage={setPage} />
       ) : null}
+      {selected ? <OrderDetail order={selected} onClose={() => setSelectedId(null)} /> : null}
     </div>
   );
 }

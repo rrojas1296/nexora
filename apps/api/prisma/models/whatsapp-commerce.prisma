@@ -1,0 +1,34 @@
+model PaymentProof {
+  id         String                 @id @default(uuid()) @db.Uuid
+  businessId String                 @db.Uuid
+  orderId    String                 @db.Uuid
+  messageId  String                 @db.Uuid
+  threadId   String                 @db.Uuid
+  status     String                 @default("RECEIVED")
+  revision   Int                    @default(0)
+  reviewedBy String?                @db.Uuid
+  reviewedAt DateTime?              @db.Timestamptz(3)
+  isDeleted  Boolean                @default(false)
+  createdAt  DateTime               @default(now()) @db.Timestamptz(3)
+  order      Order                  @relation(fields: [businessId, orderId], references: [businessId, id], onDelete: Restrict)
+  message    WhatsappInboundMessage @relation(fields: [businessId, threadId, messageId], references: [businessId, threadId, id], onDelete: Restrict)
+
+  @@unique([businessId, messageId])
+  @@index([businessId, orderId])
+  @@map("PaymentProofs")
+}
+
+model WhatsappToolExecution {
+  id         String             @id @default(uuid()) @db.Uuid
+  businessId String             @db.Uuid
+  jobId      String             @db.Uuid
+  callId     String
+  name       String
+  result     Json
+  isDeleted  Boolean            @default(false)
+  createdAt  DateTime           @default(now()) @db.Timestamptz(3)
+  job        WhatsappAiReplyJob @relation(fields: [businessId, jobId], references: [businessId, id], onDelete: Restrict)
+
+  @@unique([businessId, jobId, callId])
+  @@map("WhatsappToolExecutions")
+}

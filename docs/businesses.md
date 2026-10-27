@@ -24,7 +24,7 @@ El contexto comercial pertenece al negocio. El módulo Agente conserva nombre, t
 
 No introducir secretos, tokens, contraseñas ni datos personales innecesarios. El texto se almacena en PostgreSQL sin cifrado aplicativo y la copia publicada se transmite a OpenAI al generar respuestas; no se ejecutan HTML ni enlaces. Revisar consentimiento y políticas de retención del proveedor antes de habilitarlo. No hay documentos, embeddings, RAG ni cargas de archivos para contexto.
 
-Los productos nuevos toman la moneda del Business y sus KPIs la incluyen. No hay conversión de precios: cambiar la moneda se rechaza si el negocio ya tiene productos, incluidos los borrados lógicamente. Los negocios preexistentes conservan PEN. Clientes, pedidos, dashboard y reportes continúan con fixtures independientes en PEN, no con datos comerciales persistentes. Los reportes comparan productos, no tiendas.
+Los productos nuevos toman la moneda del Business y sus KPIs la incluyen. No hay conversión de precios: cambiar la moneda se rechaza si el negocio ya tiene productos, incluidos los borrados lógicamente. Los negocios preexistentes conservan PEN. Clientes y pedidos usan API persistente del Business activo; los pedidos toman moneda/precios del catálogo y conservan snapshots. Dashboard y reportes continúan con fixtures independientes en PEN. Ver [clients-orders.md](./clients-orders.md). Los reportes comparan productos, no tiendas.
 
 ## API
 

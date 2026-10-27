@@ -1,47 +1,54 @@
 "use client";
-
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { useWorkspace } from "@/features/demo/hooks/use-workspace";
-import { usePagedRows } from "@/features/demo/hooks/use-paged-rows";
-import { QueryState } from "@/features/demo/components/query-state";
+import { useClients, useCommerceAccess } from "@/features/commerce/hooks/use-commerce";
+import { CommerceKpis } from "@/features/commerce/components/commerce-kpis";
+import { CommerceQueryState as QueryState } from "@/features/commerce/components/commerce-query-state";
 import { DataTable } from "@/features/demo/components/data-table";
 import { ListToolbar } from "@/features/demo/components/list-toolbar";
 import { Pagination } from "@/features/demo/components/pagination";
 import { Link } from "@/i18n/navigation";
-import { ResourceKpis } from "@/features/demo/components/resource-kpis";
 import { ClientDetail } from "./client-detail";
-
 export function ClientsScreen() {
   const t = useTranslations("Clients");
   const common = useTranslations("Demo");
-  const query = useWorkspace();
+  const c = useTranslations("Commerce");
+  const { canWrite } = useCommerceAccess();
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const clients = (query.data?.clients ?? []).filter((client) =>
-    `${client.name} ${client.email} ${client.phone}`.toLowerCase().includes(search.toLowerCase()),
-  );
-  const paging = usePagedRows(clients);
-  const selected = query.data?.clients.find((client) => client.id === selectedId);
+  const query = useClients({ search, page, pageSize: 10 });
+  const summary = query.isError ? undefined : query.data?.summary;
+  const clients = query.data?.data ?? [];
+  const selected = clients.find((client) => client.id === selectedId);
   return (
     <div className="space-y-5">
-      <ResourceKpis resource="clients" workspace={query.isError ? undefined : query.data} />
+      <CommerceKpis
+        metrics={[
+          { label: "totalClients", value: summary?.total },
+          { label: "activeClients", value: summary?.active },
+          { label: "vipClients", value: summary?.vip },
+        ]}
+      />
+      <p className="text-xs leading-6 text-muted-foreground">{c("liveClients")}</p>
       <ListToolbar
         search={search}
         onSearch={(value) => {
           setSearch(value);
-          paging.setPage(1);
+          setPage(1);
         }}
-        count={clients.length}
+        count={query.data?.pagination.total ?? 0}
       >
-        <Button asChild>
-          <Link href="/clients/new">
-            <Plus className="size-4" aria-hidden="true" />
-            {t("create")}
-          </Link>
-        </Button>
+        {canWrite ? (
+          <Button asChild>
+            <Link href="/clients/new">
+              <Plus className="size-4" aria-hidden="true" />
+              {t("create")}
+            </Link>
+          </Button>
+        ) : null}
       </ListToolbar>
       <QueryState
         pending={query.isPending}
@@ -53,17 +60,12 @@ export function ClientsScreen() {
       >
         <DataTable
           caption={t("table")}
-          rows={paging.rows}
+          rows={clients}
           columns={[
             { key: "name", label: t("name"), render: (client) => client.name },
-            { key: "email", label: t("email"), render: (client) => client.email },
+            { key: "email", label: t("email"), render: (client) => client.email || "—" },
             { key: "phone", label: t("phone"), render: (client) => client.phone },
-            {
-              key: "orders",
-              label: t("orders"),
-              render: (client) =>
-                query.data?.orders.filter((order) => order.clientId === client.id).length ?? 0,
-            },
+            { key: "orders", label: t("orders"), render: (client) => client.ordersCount },
             {
               key: "actions",
               label: common("actions"),
@@ -72,32 +74,32 @@ export function ClientsScreen() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    aria-label={`${t("history")}: ${client.name}`}
                     onClick={() => setSelectedId(client.id)}
+                    aria-label={`${t("history")}: ${client.name}`}
                   >
                     {t("history")}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`${t("edit")}: ${client.name}`}
-                    asChild
-                  >
-                    <Link href={`/clients/${client.id}/edit`}>{common("edit")}</Link>
-                  </Button>
+                  {canWrite ? (
+                    <Button asChild variant="ghost" size="sm">
+                      <Link
+                        href={`/clients/${client.id}/edit`}
+                        aria-label={`${t("edit")}: ${client.name}`}
+                      >
+                        {common("edit")}
+                      </Link>
+                    </Button>
+                  ) : null}
                 </div>
               ),
             },
           ]}
         />
-        <Pagination page={paging.page} pages={paging.pages} onPage={paging.setPage} />
       </QueryState>
-      {selected && query.data ? (
-        <ClientDetail
-          client={selected}
-          workspace={query.data}
-          onClose={() => setSelectedId(null)}
-        />
+      {query.data && !query.isError ? (
+        <Pagination page={page} pages={query.data.pagination.pages} onPage={setPage} />
+      ) : null}
+      {selected ? (
+        <ClientDetail key={selected.id} client={selected} onClose={() => setSelectedId(null)} />
       ) : null}
     </div>
   );

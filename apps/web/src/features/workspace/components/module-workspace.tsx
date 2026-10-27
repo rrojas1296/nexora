@@ -5,18 +5,22 @@ import { DemoToolbar } from "@/features/demo/components/demo-toolbar";
 import { DemoContent } from "@/features/demo/components/demo-content";
 import { ModuleContent } from "./module-content";
 import { SetupCard } from "./setup-card";
+import { CommerceScope } from "@/features/commerce/components/commerce-scope";
 
 export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
-  const [nav, t, dashboard, products, agent, inbox] = await Promise.all([
+  const [nav, t, dashboard, products, agent, inbox, commerce] = await Promise.all([
     getTranslations("Nav"),
     getTranslations("Demo"),
     getTranslations("Dashboard"),
     getTranslations("Products"),
     getTranslations("Agent"),
     getTranslations("WhatsappInbox"),
+    getTranslations("Commerce"),
   ]);
   const persisted =
     module === "products" ||
+    module === "clients" ||
+    module === "orders" ||
     module === "agent" ||
     module === "conversations" ||
     module === "businesses";
@@ -25,13 +29,15 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="mb-3 text-xs tracking-widest text-muted-foreground uppercase">
-            {module === "products"
-              ? products("eyebrow")
-              : module === "agent"
-                ? agent("eyebrow")
-                : module === "conversations"
-                  ? inbox("eyebrow")
-                  : t("eyebrow")}
+            {module === "clients" || module === "orders"
+              ? commerce("eyebrow")
+              : module === "products"
+                ? products("eyebrow")
+                : module === "agent"
+                  ? agent("eyebrow")
+                  : module === "conversations"
+                    ? inbox("eyebrow")
+                    : t("eyebrow")}
           </p>
           <h1
             id="module-title"
@@ -41,11 +47,13 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
             {nav(module)}
           </h1>
           <p className="mt-3 max-w-2xl text-xs leading-6 text-muted-foreground">
-            {module === "products"
-              ? products("workspaceDescription")
-              : module === "agent"
-                ? agent("workspaceDescription")
-                : t(`descriptions.${module}`)}
+            {module === "clients" || module === "orders"
+              ? commerce(module === "clients" ? "liveClients" : "liveOrders")
+              : module === "products"
+                ? products("workspaceDescription")
+                : module === "agent"
+                  ? agent("workspaceDescription")
+                  : t(`descriptions.${module}`)}
           </p>
         </div>
       </header>
@@ -59,7 +67,11 @@ export async function ModuleWorkspace({ module }: { module: ModuleKey }) {
       ) : module !== "help" && !persisted ? (
         <DemoToolbar />
       ) : null}
-      {persisted ? (
+      {module === "clients" || module === "orders" ? (
+        <CommerceScope>
+          <ModuleContent module={module} />
+        </CommerceScope>
+      ) : persisted ? (
         <ModuleContent module={module} />
       ) : (
         <DemoContent>

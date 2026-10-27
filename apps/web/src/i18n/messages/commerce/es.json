@@ -1,4 +1,71 @@
 {
+  "Commerce": {
+    "eyebrow": "Operación · Datos reales",
+    "liveClients": "Clientes reales del negocio activo, incluidos los registrados por la IA. Se actualiza cada 10 segundos; el dashboard y reportes siguen siendo demostraciones independientes.",
+    "liveOrders": "Pedidos reales del negocio activo, manuales y de WhatsApp. Se actualiza cada 10 segundos. No se ejecutan pagos, despachos ni descuentos de stock.",
+    "totalClients": "Clientes",
+    "activeClients": "Clientes activos",
+    "vipClients": "Clientes VIP",
+    "totalOrders": "Pedidos",
+    "draftOrders": "Borradores",
+    "pendingOrders": "Pendientes",
+    "subtotal": "Subtotal de productos",
+    "perUnit": "por unidad",
+    "orderStatus": "Estado del pedido",
+    "payment": "Revisión de pago",
+    "delivery": "Entrega",
+    "deliveryRequested": "Envío solicitado: tarifa y cobertura pendientes de revisión humana. El subtotal no incluye envío.",
+    "pickup": "Recojo",
+    "coordinates": "Coordenadas",
+    "limits": "Los precios son snapshots del catálogo. No hay reserva/descuento de stock, cobro ni despacho automático. Un comprobante adjunto no acredita el pago; su revisión humana se realiza en Conversaciones.",
+    "unknown": "Sin especificar",
+    "openInbox": "Abrir conversaciones",
+    "persistentTitle": "Datos del negocio activo",
+    "clientHint": "El email y país son opcionales. Usa el teléfono internacional normalizado. Desactivar un cliente impide crear nuevos pedidos y requiere revisión humana en la IA; no elimina su historial.",
+    "phoneHint": "Formato internacional sin espacios, por ejemplo +51987654321. La IA usa el remitente real de WhatsApp.",
+    "draftHint": "Se guarda un borrador con precios y moneda del catálogo vigente. Puedes buscar y paginar clientes/productos. Máximo 10 productos distintos, con cantidades positivas. La confirmación no acredita pago ni reserva stock.",
+    "forbidden": "Tu rol solo permite consultar. Solo OWNER/ADMIN pueden guardar cambios.",
+    "notFound": "No se encontró el registro en el negocio activo.",
+    "conflict": "No se pudo guardar: el registro cambió, hay un dato reservado o la operación no está permitida (cliente, productos o estado). Recarga para revisar los datos antes de continuar; no se reintentó automáticamente.",
+    "validation": "Revisa los campos y sus límites. El teléfono debe ser internacional y el email, si se indica, válido.",
+    "uncertain": "No se pudo confirmar el guardado. Revisa el listado antes de repetir una creación. No se reenvían mutaciones automáticamente; para editar un registro que cambió, recarga y revisa sus datos.",
+    "items": "Productos del pedido",
+    "stock": "Stock",
+    "searchClients": "Buscar cliente por nombre, email o teléfono",
+    "searchProducts": "Buscar producto por nombre, SKU o categoría",
+    "selectClient": "Selecciona un cliente activo",
+    "selectProduct": "Selecciona un producto",
+    "catalogPage": "El selector muestra esta página del catálogo activo. Usa búsqueda y paginación para encontrar otros productos. El servidor comprueba precios, moneda y stock al guardar.",
+    "addLine": "Añadir producto",
+    "removeLine": "Quitar",
+    "itemsValidation": "Incluye de 1 a 10 productos distintos, con cantidades enteras de 1 a 10000.",
+    "changeStatus": "Gestionar estado",
+    "nextStatus": "Nuevo estado",
+    "selectStatus": "Selecciona una transición",
+    "applyStatus": "Aplicar estado",
+    "saving": "Guardando…",
+    "statusConfirm": "¿Cambiar el pedido a «{status}»? Es una acción manual: no ejecuta pagos, envíos ni movimientos de stock.",
+    "customerConfirmation": "Este borrador pertenece a WhatsApp. Su cliente debe confirmar el resumen vigente en esa conversación; no se pueden cambiar sus líneas ni confirmarlo desde aquí. Puedes cancelarlo.",
+    "noTransitions": "No hay transiciones disponibles. Para marcar pagado se requiere primero validar un comprobante desde Conversaciones.",
+    "loading": "Cargando datos del negocio…",
+    "loadError": "No pudimos cargar los datos",
+    "loadErrorHint": "Comprueba tu acceso, el negocio activo y la disponibilidad de la API. No se muestran datos de demostración como reemplazo.",
+    "retry": "Reintentar lectura",
+    "empty": "No hay resultados. Revisa los filtros o crea un registro si tu rol lo permite.",
+    "statuses": {
+      "DRAFT": "Borrador",
+      "PENDING": "Pendiente",
+      "PAID": "Pagado",
+      "SHIPPED": "Enviado",
+      "CANCELLED": "Cancelado"
+    },
+    "payments": {
+      "PENDING": "Pendiente",
+      "IN_REVIEW": "Comprobante en revisión",
+      "VALIDATED": "Validado por una persona",
+      "REJECTED": "Rechazado"
+    }
+  },
   "Businesses": {
     "title": "Mis negocios",
     "intro": "Selecciona un negocio o crea uno nuevo. Su configuración y datos reales permanecen separados de los demás.",
@@ -31,7 +98,7 @@
     "activationError": "El negocio se creó, pero no se confirmó su activación. Usa Abrir negocio o selecciónalo en el menú; no vuelvas a crearlo.",
     "reload": "Recargar configuración",
     "reloadConfirm": "¿Recargar la página y descartar los cambios sin guardar?",
-    "setupHint": "Cada negocio mantiene su catálogo, agente, contexto y conexión WhatsApp. Clientes, pedidos y reportes continúan como demostración en memoria, no son datos comerciales persistentes.",
+    "setupHint": "Cada negocio mantiene su catálogo, agente, contexto y conexión WhatsApp. Clientes y pedidos son persistentes y se aíslan por negocio. Dashboard y reportes continúan como demostración en memoria, sin sincronización con los datos reales.",
     "context": "Contexto comercial",
     "contextHint": "Describe qué vendes, a quién ayudas, horarios, entregas, pagos, políticas, preguntas frecuentes y cuándo derivar a una persona. Es texto sin formato: los enlaces y HTML no se ejecutan.",
     "contextSafety": "No incluyas contraseñas, tokens, claves de pago ni datos personales innecesarios. El texto se guarda en PostgreSQL sin cifrado aplicativo y se envía al proveedor IA al generar respuestas. Publicar no activa por sí solo la automatización.",
@@ -191,12 +258,12 @@
     "deleteTitle": "Eliminar producto",
     "deleteDescription": "¿Eliminar «{name}» del catálogo? El borrado es lógico. Si tiene pedidos vinculados, desactívalo para conservar su historial.",
     "eyebrow": "Catálogo del negocio",
-    "workspaceDescription": "Gestiona los productos de tu negocio. Los cambios se guardan en la base de datos; el resto de los módulos comerciales continúa en modo demo.",
+    "workspaceDescription": "Gestiona el catálogo persistente de tu negocio. Clientes y pedidos también usan datos reales; dashboard y reportes conservan demostraciones independientes.",
     "readOnly": "Puedes consultar el catálogo. Solo propietarios y administradores pueden crear, editar o eliminar productos.",
     "lowStock": "Stock bajo",
     "deleted": "Producto eliminado del catálogo.",
     "storageTitle": "Catálogo persistente",
-    "storageHint": "Los cambios se guardan en el negocio activo. Los importes usan PEN y el stock se administra manualmente; los pedidos demo no afectan este inventario.",
+    "storageHint": "Los cambios se guardan en el negocio activo con su moneda. El stock se administra manualmente: ningún pedido descuenta o reserva inventario automáticamente.",
     "securityHint": "La referencia es única por negocio, incluso después de eliminar el producto. No cierres la página mientras se guarda. No se reintentan escrituras automáticamente.",
     "errors": {
       "imageInvalid": "No se pudo procesar la imagen. Usa un JPG, PNG o WebP válido de hasta 2 MB y 20 megapíxeles. Se conserva la imagen anterior.",
@@ -231,7 +298,7 @@
     "needsResources": "Prepara los recursos del pedido",
     "needsResourcesHint": "Necesitas al menos un cliente y un producto antes de crear un pedido.",
     "add": { "clients": "Crear cliente", "products": "Crear producto" },
-    "table": "Pedidos de demostración",
+    "table": "Pedidos del negocio",
     "order": "Pedido",
     "client": "Cliente",
     "date": "Fecha · UTC",
@@ -239,7 +306,7 @@
     "store": "Tienda",
     "detail": "Ver detalle",
     "hint": "Los estados se pueden cambiar libremente para explorar la demo. No hay pagos, envíos, impuestos ni ajustes automáticos de stock. Todos los pedidos conservan sus precios históricos en PEN.",
-    "detailHint": "Detalle del pedido de ejemplo. Cambiar su estado actualiza las métricas de dashboard y reportes; no ejecuta ninguna operación real."
+    "detailHint": "Pedido persistente del negocio activo. El subtotal no incluye tarifa de envío; no se ejecutan cobros, despachos ni movimientos de stock."
   },
   "Clients": {
     "contact": "Contacto y perfil comercial",
@@ -261,12 +328,13 @@
       "ES": "España",
       "AR": "Argentina",
       "CL": "Chile",
+      "EC": "Ecuador",
       "PE": "Perú"
     },
     "language": "Idioma preferido",
     "active": "Cliente activo",
-    "marketingConsent": "Consentimiento de marketing simulado (no envía comunicaciones)",
-    "table": "Clientes ficticios",
+    "marketingConsent": "Consentimiento de marketing registrado (no envía comunicaciones)",
+    "table": "Clientes del negocio",
     "create": "Nuevo cliente",
     "edit": "Editar cliente",
     "name": "Nombre",
@@ -277,7 +345,7 @@
     "orders": "Pedidos",
     "conversations": "Conversaciones",
     "history": "Historial",
-    "noOrders": "Este cliente todavía no tiene pedidos en la demo.",
+    "noOrders": "Este cliente todavía no tiene pedidos registrados.",
     "noConversations": "Este cliente todavía no tiene conversaciones en la demo.",
     "formHint": "Usa datos ficticios. Nombre de 2 a 100 caracteres, email único y teléfono internacional. No se enviará ningún mensaje ni email."
   },
@@ -536,7 +604,7 @@
     "articles": {
       "start": {
         "title": "¿Cómo empiezo?",
-        "body": "Registra tu cuenta y crea tu primer negocio en el onboarding. Se guardan el negocio, tu membresía y un agente deshabilitado. Después puedes configurar su contexto y conectar WhatsApp. Clientes, pedidos y reportes conservan datos de demostración independientes."
+        "body": "Registra tu cuenta y crea tu primer negocio en el onboarding. Se guardan el negocio, tu membresía y un agente deshabilitado. Después puedes configurar su contexto y conectar WhatsApp. Clientes y pedidos usan datos persistentes; dashboard y reportes conservan demostraciones independientes."
       },
       "messages": {
         "title": "¿Los mensajes se envían a WhatsApp?",
@@ -564,7 +632,7 @@
       },
       "reset": {
         "title": "¿Cómo exploro los estados vacío y error?",
-        "body": "Usa el selector «Escenario» sobre cada módulo. «Colecciones vacías» oculta las colecciones y deja la configuración de solo lectura. «Error de lectura» muestra un fallo simulado; «Reintentar» seguirá fallando hasta cambiar a «Con datos». Cambiar de escenario descarta borradores abiertos, pero conserva los cambios guardados. «Restablecer demo» restaura todos los datos comerciales y descarta borradores; no modifica el onboarding."
+        "body": "Los escenarios solo afectan los módulos de demostración, nunca clientes, pedidos ni catálogo reales. Usa el selector «Escenario» disponible en las demostraciones. «Colecciones vacías» oculta las colecciones y deja la configuración de solo lectura. «Error de lectura» muestra un fallo simulado; «Reintentar» seguirá fallando hasta cambiar a «Con datos». Cambiar de escenario descarta borradores abiertos, pero conserva los cambios guardados. «Restablecer demo» restaura todos los datos comerciales y descarta borradores; no modifica el onboarding."
       }
     }
   }

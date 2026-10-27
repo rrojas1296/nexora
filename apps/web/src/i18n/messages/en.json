@@ -1,4 +1,62 @@
 {
+  "ConversationCommerce": {
+    "title": "Orders in this conversation",
+    "hint": "Real orders, separate from the demo Orders module. AI prepares a draft; confirmation requires explicit customer acceptance.",
+    "previous": "Previous",
+    "next": "Next",
+    "refresh": "Refresh",
+    "loading": "Loading orders…",
+    "error": "Orders could not be loaded.",
+    "empty": "No orders in this conversation.",
+    "subtotal": "Product subtotal",
+    "perUnit": "each",
+    "noStockReservation": "Stock is not reserved or deducted. Delivery fee is not included.",
+    "payment": "Payment",
+    "delivery": "Fulfilment",
+    "deliveryMode": "Delivery",
+    "pickup": "Pickup",
+    "quotePending": "Delivery fee awaits a human quote. No final delivered total is available.",
+    "proofs": "Payment proofs",
+    "proofNumber": "Proof {number}",
+    "proofHint": "Receiving a file does not establish payment. Download and independently verify the transfer before validating. Files are not scanned for malware.",
+    "validate": "Validate payment",
+    "reject": "Reject",
+    "validateConfirm": "Have you independently verified the transfer? Validating this proof does not confirm the order or authorize dispatch.",
+    "rejectConfirm": "Reject this payment proof? This does not cancel the order.",
+    "saving": "Saving review…",
+    "reviewSaved": "Review saved.",
+    "reviewError": "Review could not be confirmed. Refresh orders before deciding again; the file must be available and versions current.",
+    "download": "Download private attachment",
+    "downloading": "Downloading…",
+    "downloadError": "The file is not available yet or access was denied. Refresh and try later.",
+    "location": "Received location",
+    "locationHint": "Customer-provided location; the address has not been verified and delivery has not been quoted.",
+    "media": {
+      "NONE": "Attachment cannot be downloaded.",
+      "PENDING": "Attachment download pending.",
+      "DOWNLOADING": "Processing attachment…",
+      "READY": "Private file available (not scanned for malware).",
+      "FAILED": "Attachment download failed or its format/size is unsupported."
+    },
+    "orders": {
+      "DRAFT": "Draft",
+      "PENDING": "Confirmed · pending",
+      "PAID": "Paid",
+      "SHIPPED": "Shipped",
+      "CANCELLED": "Cancelled"
+    },
+    "payments": {
+      "PENDING": "Pending",
+      "IN_REVIEW": "Awaiting human review",
+      "VALIDATED": "Validated by a person",
+      "REJECTED": "Proof rejected"
+    },
+    "proofStatuses": {
+      "RECEIVED": "Received · unverified",
+      "VALIDATED": "Validated by a person",
+      "REJECTED": "Rejected"
+    }
+  },
   "WhatsappConnection": {
     "title": "Business WhatsApp",
     "description": "Authorize with Facebook in this tab and connect an existing WhatsApp Business number. No token copying required.",

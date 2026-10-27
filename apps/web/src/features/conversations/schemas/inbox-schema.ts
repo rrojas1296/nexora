@@ -63,6 +63,15 @@ const messageSchema = z.object({
   body: z.string(),
   sentAt: z.iso.datetime(),
   receivedAt: z.iso.datetime(),
+  mediaStatus: z.enum(["NONE", "PENDING", "DOWNLOADING", "READY", "FAILED"]),
+  location: z
+    .object({
+      latitude: z.number(),
+      longitude: z.number(),
+      name: z.string().nullable(),
+      address: z.string().nullable(),
+    })
+    .nullable(),
 });
 export const threadResponseSchema = z.object({
   data: z.object({ items: z.array(threadSchema), nextCursor: z.uuid().nullable() }),
@@ -79,5 +88,6 @@ export type InboxAutomation = z.infer<typeof automationSchema>;
 export type InboxReply = z.infer<typeof replySchema>;
 export type InboxSendAttempt = z.infer<typeof sendAttemptResponseSchema>["data"];
 export type InboxTextValues = z.input<typeof sendTextSchema>;
+export type InboxMessage = z.infer<typeof messageSchema>;
 export type InboxThread = z.infer<typeof threadSchema>;
 export type InboxScope = { userId: string; businessId: string };

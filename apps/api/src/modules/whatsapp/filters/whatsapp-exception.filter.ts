@@ -4,6 +4,8 @@ import { WhatsappError, type WhatsappErrorCode } from "../models/whatsapp.js";
 
 const statuses: Record<WhatsappErrorCode, number> = {
   WHATSAPP_FORBIDDEN: 403,
+  WHATSAPP_RESOURCE_NOT_FOUND: 404,
+  WHATSAPP_ORDER_CONFLICT: 409,
   WHATSAPP_AI_ACTIVE: 409,
   WHATSAPP_CONTROL_CONFLICT: 409,
   WHATSAPP_NOT_CONNECTED: 409,

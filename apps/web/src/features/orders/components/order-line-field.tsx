@@ -1,90 +1,69 @@
 "use client";
-
-import type { UseFormReturn } from "react-hook-form";
+import { useWatch, type UseFormReturn } from "react-hook-form";
 import { useTranslations } from "next-intl";
-import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/components/ui/input-field";
 import { FormSelectField } from "@/components/ui/form-select-field";
-import type { Product } from "@/features/demo/types/workspace";
-import { useValidationMessage } from "@/features/demo/hooks/use-validation-message";
-import type { OrderDraft } from "../schemas/order-draft-schema";
-
+import { useProduct } from "@/features/products/hooks/use-products";
+import type { OrderInput } from "../schemas/order-schema";
 export function OrderLineField({
   form,
-  products,
   index,
+  options,
   onRemove,
-  canRemove,
-  disabled,
 }: {
-  form: UseFormReturn<OrderDraft>;
-  products: Product[];
+  form: UseFormReturn<OrderInput>;
   index: number;
+  options: { value: string; label: string }[];
   onRemove: () => void;
-  canRemove: boolean;
-  disabled?: boolean;
 }) {
   const t = useTranslations("Orders");
-  const common = useTranslations("Demo");
-  const validation = useValidationMessage();
-  const errors = form.formState.errors.items?.[index];
-  const id = `order-line-${index}`;
+  const c = useTranslations("Commerce");
+  const productId = useWatch({ control: form.control, name: `items.${index}.productId` });
+  const product = useProduct(productId);
+  const choices =
+    productId && !options.some((option) => option.value === productId)
+      ? [{ value: productId, label: product.data?.name ?? productId }, ...options]
+      : options;
+  const error = form.formState.errors.items?.[index];
   return (
-    <fieldset className="grid gap-4 rounded-2xl border p-4 sm:grid-cols-2 lg:grid-cols-4">
-      <legend className="px-2 text-xs text-muted-foreground">
-        {t("line", { number: index + 1 })}
-      </legend>
-      <div className="space-y-2 lg:col-span-2">
-        <label htmlFor={`${id}-product`} className="block text-xs font-medium">
+    <div className="grid items-end gap-3 rounded-2xl border p-4 sm:grid-cols-5">
+      <div className="space-y-2 sm:col-span-3">
+        <label htmlFor={`product-${index}`} className="block text-xs font-medium">
           {t("product")}
         </label>
         <FormSelectField
           control={form.control}
           name={`items.${index}.productId`}
-          id={`${id}-product`}
-          disabled={disabled}
-          options={products.map((row) => ({ value: row.id, label: `${row.name} · ${row.sku}` }))}
-          onValueChange={(value) => {
-            const product = products.find((row) => row.id === value);
-            if (product)
-              form.setValue(`items.${index}.unitPrice`, product.price, {
-                shouldDirty: true,
-                shouldValidate: true,
-              });
-          }}
+          id={`product-${index}`}
+          options={choices}
+          placeholder={c("selectProduct")}
+          aria-invalid={!!error?.productId}
         />
+        {error?.productId ? (
+          <p role="alert" className="text-xs text-destructive">
+            {c("validation")}
+          </p>
+        ) : null}
       </div>
       <InputField
-        id={`${id}-quantity`}
+        id={`quantity-${index}`}
         label={t("quantity")}
         type="number"
         min={1}
-        max={1000000}
+        max={10000}
         step={1}
         {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
-        error={validation(errors?.quantity)}
-      />
-      <InputField
-        id={`${id}-price`}
-        label={t("unitPrice")}
-        type="number"
-        min={0}
-        max={999999}
-        step={0.01}
-        {...form.register(`items.${index}.unitPrice`, { valueAsNumber: true })}
-        error={validation(errors?.unitPrice)}
+        error={error?.quantity ? c("validation") : undefined}
       />
       <Button
-        variant="ghost"
-        size="sm"
-        disabled={!canRemove}
+        type="button"
+        variant="outline"
         onClick={onRemove}
-        className="justify-self-start"
+        aria-label={`${c("removeLine")} ${index + 1}`}
       >
-        <Trash2 className="size-4" aria-hidden="true" />
-        {common("delete")}
+        {c("removeLine")}
       </Button>
-    </fieldset>
+    </div>
   );
 }

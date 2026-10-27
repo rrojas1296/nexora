@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { ConversationAutomation } from "./conversation-automation";
 import { ConversationComposer } from "./conversation-composer";
+import { ConversationAttachment } from "./conversation-attachment";
+import { ConversationOrders } from "./conversation-orders";
 import { useInboxMessages } from "../hooks/use-inbox";
 import type { InboxScope, InboxThread } from "../schemas/inbox-schema";
 
@@ -134,6 +136,7 @@ export function ConversationPanel({
             {message.body ? (
               <p className="whitespace-pre-wrap break-words text-xs leading-6">{message.body}</p>
             ) : null}
+            <ConversationAttachment scope={scope} threadId={conversation.id} message={message} />
             <time dateTime={message.sentAt} className="mt-2 block text-xs text-muted-foreground">
               {format.dateTime(new Date(message.sentAt), {
                 dateStyle: "short",
@@ -158,6 +161,11 @@ export function ConversationPanel({
           onSelect();
           setCursors([]);
         }}
+      />
+      <ConversationOrders
+        scope={scope}
+        threadId={conversation.id}
+        canManage={!query.isError && Boolean(query.data?.automation.canManage)}
       />
     </section>
   );

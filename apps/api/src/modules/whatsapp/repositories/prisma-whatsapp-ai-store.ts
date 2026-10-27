@@ -1,5 +1,9 @@
 import type { Prisma, PrismaClient } from "../../../database/generated/client.js";
-import type { AiReplyWork, WhatsappAiStore } from "../contracts/whatsapp-ai-store.js";
+import type {
+  AiReplyFallbackReason,
+  AiReplyWork,
+  WhatsappAiStore,
+} from "../contracts/whatsapp-ai-store.js";
 import type { WhatsappMessageHasher } from "../contracts/whatsapp.ports.js";
 import type { WhatsappMessage } from "../models/whatsapp.js";
 import { findAutomationAgent } from "./prisma-whatsapp-ai-agent.js";
@@ -80,9 +84,10 @@ export class PrismaWhatsappAiStore implements WhatsappAiStore {
           businessId: job.businessId,
           threadId: job.threadId,
           direction: "INBOUND",
-          type: "text",
+          type: { in: ["text", "image", "document", "location"] },
           isDeleted: false,
         },
+        omit: { mediaData: true },
       });
       const now = new Date();
       if (
@@ -124,7 +129,7 @@ export class PrismaWhatsappAiStore implements WhatsappAiStore {
           businessId: job.businessId,
           threadId: job.threadId,
           isDeleted: false,
-          type: "text",
+          type: { in: ["text", "image", "document", "location"] },
           OR: [
             { direction: "INBOUND" },
             {
@@ -135,11 +140,31 @@ export class PrismaWhatsappAiStore implements WhatsappAiStore {
         },
         orderBy: [{ receivedAt: "desc" }, { id: "desc" }],
         take: 20,
+        omit: { mediaData: true },
       });
       let remaining = 16_000;
       const history = recent
         .flatMap((entry) => {
-          const text = entry.body.slice(0, Math.min(4096, remaining));
+          const content =
+            entry.direction === "INBOUND" && entry.type !== "text"
+              ? JSON.stringify({
+                  messageId: entry.id,
+                  type: entry.type,
+                  caption: entry.body.slice(0, 1500),
+                  mediaStatus: entry.mediaStatus,
+                  location:
+                    entry.locationLatitude !== null
+                      ? {
+                          latitude: entry.locationLatitude,
+                          longitude: entry.locationLongitude,
+                          address: entry.locationAddress,
+                          name: entry.locationName,
+                        }
+                      : null,
+                  note: "Metadata only, file contents not available",
+                })
+              : entry.body;
+          const text = content.slice(0, Math.min(4096, remaining));
           remaining -= text.length;
           return text
             ? [
@@ -220,7 +245,7 @@ export class PrismaWhatsappAiStore implements WhatsappAiStore {
     return { business, thread, agent, connection };
   }
 
-  reserve(work: AiReplyWork, text: string) {
+  reserve(work: AiReplyWork, text: string, options?: { fallbackReason?: AiReplyFallbackReason }) {
     return this.client.$transaction(async (tx) => {
       await tx.$queryRaw`SELECT "id" FROM "Businesses" WHERE "id" = ${work.businessId}::uuid FOR NO KEY UPDATE`;
       const job = await tx.whatsappAiReplyJob.findFirst({
@@ -260,6 +285,18 @@ export class PrismaWhatsappAiStore implements WhatsappAiStore {
         });
         return null;
       }
+      if (options?.fallbackReason) {
+        // An accepted fallback is not an accepted order summary from this job.
+        await tx.order.updateMany({
+          where: {
+            businessId: work.businessId,
+            threadId: work.threadId,
+            isDeleted: false,
+            confirmationJobId: work.id,
+          },
+          data: { confirmationToken: null, confirmationJobId: null },
+        });
+      }
       const message: WhatsappMessage = {
         type: "text",
         to: current.thread.contactWaId,
@@ -289,7 +326,13 @@ export class PrismaWhatsappAiStore implements WhatsappAiStore {
         where: { businessId_id: { businessId: work.businessId, id: work.threadId } },
         data: { lastMessageAt: now, lastMessageBody: text, lastMessageType: "text" },
       });
-      await tx.whatsappAiReplyJob.update({ where: { id: job.id }, data: { status: "SENDING" } });
+      await tx.whatsappAiReplyJob.update({
+        where: { id: job.id },
+        data: {
+          status: "SENDING",
+          reason: options?.fallbackReason ? `GENERATION_FALLBACK_${options.fallbackReason}` : null,
+        },
+      });
       return {
         message,
         attempt: {
@@ -327,7 +370,7 @@ export class PrismaWhatsappAiStore implements WhatsappAiStore {
           status: { in: ["GENERATING", "SENDING"] },
           ...(staleBefore ? { updatedAt: { lt: staleBefore } } : {}),
         },
-        data: { status, reason: reason ?? null },
+        data: { status, ...(reason !== undefined ? { reason } : {}) },
       });
       if (changed.count && status === "UNKNOWN") {
         await tx.whatsappThread.updateMany({

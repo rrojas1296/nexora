@@ -60,6 +60,15 @@ export const inboxMessageSchema = z.object({
   body: z.string(),
   sentAt: z.iso.datetime(),
   receivedAt: z.iso.datetime(),
+  mediaStatus: z.string(),
+  location: z
+    .object({
+      latitude: z.number(),
+      longitude: z.number(),
+      name: z.string().nullable(),
+      address: z.string().nullable(),
+    })
+    .nullable(),
 });
 export const threadPageSchema = z.object({
   items: z.array(threadSchema),

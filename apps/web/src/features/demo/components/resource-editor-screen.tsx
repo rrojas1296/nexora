@@ -1,84 +1,52 @@
 "use client";
-
-import dynamic from "next/dynamic";
+import { z } from "zod";
 import { useTranslations } from "next-intl";
-import { Link, useRouter } from "@/i18n/navigation";
-import { Button } from "@/components/ui/button";
-import { useWorkspace } from "../hooks/use-workspace";
-import { useDemoScenarioStore } from "../stores/demo-scenario-store";
-import type { ResourceModule } from "../lib/resources";
-import { QueryState } from "./query-state";
-
-const ClientEditor = dynamic(() =>
-  import("@/features/clients/components/client-editor").then((module) => module.ClientEditor),
-);
-const OrderEditor = dynamic(() =>
-  import("@/features/orders/components/order-editor").then((module) => module.OrderEditor),
-);
-
+import { useRouter } from "@/i18n/navigation";
+import { ClientEditor } from "@/features/clients/components/client-editor";
+import { OrderEditor } from "@/features/orders/components/order-editor";
+import { useClient, useOrder, useCommerceAccess } from "@/features/commerce/hooks/use-commerce";
+import { CommerceQueryState as QueryState } from "@/features/commerce/components/commerce-query-state";
 export function ResourceEditorScreen({
   resource,
   id,
 }: {
-  resource: Exclude<ResourceModule, "products">;
+  resource: "clients" | "orders";
   id?: string;
 }) {
-  const t = useTranslations("ResourceEditor");
-  const common = useTranslations("Demo");
-  const query = useWorkspace();
+  const t = useTranslations("Commerce");
   const router = useRouter();
-  const readOnly = useDemoScenarioStore((state) => state.scenario !== "normal");
-  const workspace = query.data;
+  const { canWrite } = useCommerceAccess();
+  const client = useClient(resource === "clients" ? id : undefined);
+  const order = useOrder(resource === "orders" ? id : undefined);
+  const query = resource === "clients" ? client : order;
   const onClose = () => router.push(`/${resource}`);
-  const missing = id && workspace && !workspace[resource].some((row) => row.id === id);
+  if (id && !z.uuid().safeParse(id).success) return <p role="alert">{t("notFound")}</p>;
+  if (!id && !canWrite) return <p role="alert">{t("forbidden")}</p>;
   return (
     <QueryState
-      pending={query.isPending}
-      error={query.isError}
+      pending={!!id && query.isPending}
+      error={!!id && query.isError}
       retry={() => {
         void query.refetch();
       }}
     >
-      {workspace ? (
-        readOnly || missing ? (
-          <section className="rounded-3xl border bg-card p-6">
-            <h2 className="text-lg">{t(missing ? "notFound" : "readOnly")}</h2>
-            <p className="mt-3 text-sm text-muted-foreground">
-              {missing ? common("errors.missing") : common("emptyReadOnly")}
-            </p>
-            <Button asChild variant="outline" className="mt-5">
-              <Link href={`/${resource}`}>{t("back")}</Link>
-            </Button>
-          </section>
-        ) : (
-          <div className="grid items-start gap-6 xl:grid-cols-4">
-            <section className="min-w-0 rounded-3xl border bg-card p-5 sm:p-7 xl:col-span-3">
-              {resource === "clients" ? (
-                <ClientEditor
-                  key={id ?? "new"}
-                  client={workspace.clients.find((row) => row.id === id)}
-                  onClose={onClose}
-                />
-              ) : null}
-              {resource === "orders" ? (
-                <OrderEditor
-                  key={id ?? "new"}
-                  order={workspace.orders.find((row) => row.id === id)}
-                  workspace={workspace}
-                  onClose={onClose}
-                />
-              ) : null}
-            </section>
-            <aside className="rounded-3xl border bg-card p-5">
-              <h2 className="text-sm font-medium">{t("draftTitle")}</h2>
-              <p className="mt-3 text-xs leading-6 text-muted-foreground">{t("draftHint")}</p>
-              <p className="mt-4 border-t pt-4 text-xs leading-6 text-muted-foreground">
-                {t("simulation")}
-              </p>
-            </aside>
-          </div>
-        )
-      ) : null}
+      <div className="grid items-start gap-6 xl:grid-cols-4">
+        <section className="min-w-0 rounded-3xl border bg-card p-5 sm:p-7 xl:col-span-3">
+          {resource === "clients" && (!id || client.data) ? (
+            <ClientEditor key={id ?? "new"} client={client.data} onClose={onClose} />
+          ) : null}
+          {resource === "orders" && (!id || order.data) ? (
+            <OrderEditor key={id ?? "new"} order={order.data} onClose={onClose} />
+          ) : null}
+        </section>
+        <aside className="space-y-3 rounded-3xl border bg-card p-5">
+          <h2 className="text-sm font-medium">{t("persistentTitle")}</h2>
+          <p className="text-xs leading-6 text-muted-foreground">
+            {t(resource === "clients" ? "clientHint" : "draftHint")}
+          </p>
+          <p className="border-t pt-4 text-xs leading-6 text-muted-foreground">{t("uncertain")}</p>
+        </aside>
+      </div>
     </QueryState>
   );
 }

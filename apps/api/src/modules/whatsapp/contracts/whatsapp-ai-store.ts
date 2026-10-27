@@ -1,9 +1,11 @@
-import type { AiReplyInput } from "./ai-text-generator.js";
+import type { AiGenerationError, AiReplyInput } from "./ai-text-generator.js";
 import type {
   WhatsappCredentials,
   WhatsappMessage,
   WhatsappSendAttempt,
 } from "../models/whatsapp.js";
+
+export type AiReplyFallbackReason = AiGenerationError["code"] | "PROCESSING_FAILED";
 
 export interface AiReplyWork {
   id: string;
@@ -25,6 +27,10 @@ export interface AiReplyReservation {
 export interface WhatsappAiStore {
   recoverExpired(): Promise<void>;
   claim(provider: string, model: string): Promise<AiReplyWork | null>;
-  reserve(work: AiReplyWork, text: string): Promise<AiReplyReservation | null>;
+  reserve(
+    work: AiReplyWork,
+    text: string,
+    options?: { fallbackReason?: AiReplyFallbackReason },
+  ): Promise<AiReplyReservation | null>;
   finish(id: string, status: "ACCEPTED" | "FAILED" | "UNKNOWN", reason?: string): Promise<void>;
 }

@@ -30,6 +30,11 @@ import { OpenAiTextGenerator } from "./providers/openai-text-generator.js";
 import { PrismaWhatsappAiStore } from "./repositories/prisma-whatsapp-ai-store.js";
 import { WhatsappAiService } from "./services/whatsapp-ai.service.js";
 import { WhatsappAiWorker } from "./providers/whatsapp-ai-worker.js";
+import { WhatsappMediaWorker } from "./providers/whatsapp-media-worker.js";
+import { PrismaWhatsappTools } from "./repositories/prisma-whatsapp-tools.js";
+import { PrismaWhatsappCommerce } from "./repositories/prisma-whatsapp-commerce.js";
+import { WhatsappCommerceService } from "./services/whatsapp-commerce.service.js";
+import { WhatsappCommerceController } from "./controllers/whatsapp-commerce.controller.js";
 
 const AI_TEXT_GENERATOR = Symbol("AiTextGenerator");
 
@@ -37,6 +42,7 @@ const AI_TEXT_GENERATOR = Symbol("AiTextGenerator");
   imports: [DatabaseModule, AuthModule],
   controllers: [
     WhatsappWebhookController,
+    WhatsappCommerceController,
     WhatsappInboxController,
     WhatsappController,
     WhatsappAuthorizationController,
@@ -76,12 +82,37 @@ const AI_TEXT_GENERATOR = Symbol("AiTextGenerator");
     },
     {
       provide: WhatsappAiService,
-      inject: [PrismaWhatsappAiStore, AI_TEXT_GENERATOR, WhatsappService],
+      inject: [PrismaWhatsappAiStore, AI_TEXT_GENERATOR, WhatsappService, PrismaWhatsappTools],
       useFactory: (
         store: PrismaWhatsappAiStore,
         generator: AiTextGenerator,
         sender: WhatsappService,
-      ) => new WhatsappAiService(store, generator, sender),
+        tools: PrismaWhatsappTools,
+      ) => new WhatsappAiService(store, generator, sender, tools),
+    },
+    {
+      provide: PrismaWhatsappTools,
+      inject: [PrismaService],
+      useFactory: (prisma: PrismaService) => new PrismaWhatsappTools(prisma.client),
+    },
+    {
+      provide: PrismaWhatsappCommerce,
+      inject: [PrismaService],
+      useFactory: (prisma: PrismaService) => new PrismaWhatsappCommerce(prisma.client),
+    },
+    {
+      provide: WhatsappCommerceService,
+      inject: [PrismaWhatsappCommerce],
+      useFactory: (repository: PrismaWhatsappCommerce) => new WhatsappCommerceService(repository),
+    },
+    {
+      provide: WhatsappMediaWorker,
+      inject: [PrismaService, AesWhatsappTokenVault, ConfigService],
+      useFactory: (
+        prisma: PrismaService,
+        vault: AesWhatsappTokenVault,
+        config: ConfigService<Environment, true>,
+      ) => new WhatsappMediaWorker(prisma.client, vault, config),
     },
     {
       provide: WhatsappAiWorker,

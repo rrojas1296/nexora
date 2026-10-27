@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  conversationOrderResponse,
+  conversationOrdersResponse,
+  type ReviewProofInput,
+} from "../schemas/commerce-schema";
 import { apiClient } from "@/lib/api/client";
 import { normalizeApiError } from "@/lib/api/api-error";
 import { authService, withAuthenticatedSession } from "@/features/auth/services/auth-service";
@@ -31,6 +36,57 @@ async function read<T>(
 }
 
 export const inboxService = {
+  orders(scope: InboxScope, threadId: string, cursor: string | undefined, signal: AbortSignal) {
+    return read(
+      scope,
+      signal,
+      async () =>
+        conversationOrdersResponse.parse(
+          (
+            await apiClient.get(
+              `/businesses/${scope.businessId}/whatsapp/conversations/${threadId}/orders`,
+              { params: { cursor }, signal },
+            )
+          ).data,
+        ).data,
+    );
+  },
+  media(
+    scope: InboxScope,
+    threadId: string,
+    messageId: string,
+    signal: AbortSignal,
+  ): Promise<Blob> {
+    return read(
+      scope,
+      signal,
+      async () =>
+        (
+          await apiClient.get<Blob>(
+            `/businesses/${scope.businessId}/whatsapp/conversations/${threadId}/media/${messageId}`,
+            { responseType: "blob", signal },
+          )
+        ).data,
+    );
+  },
+  reviewProof(
+    scope: InboxScope,
+    threadId: string,
+    orderId: string,
+    proofId: string,
+    input: ReviewProofInput,
+  ) {
+    return withAuthenticatedSession(async (session, headers) => {
+      if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)
+        throw new Error("SESSION_CHANGED");
+      const response = await apiClient.post(
+        `/businesses/${scope.businessId}/whatsapp/conversations/${threadId}/orders/${orderId}/proofs/${proofId}/review`,
+        input,
+        { headers },
+      );
+      return conversationOrderResponse.parse(response.data).data;
+    });
+  },
   setControl(scope: InboxScope, threadId: string, mode: "AI" | "HUMAN", version: number) {
     return withAuthenticatedSession(async (session, headers) => {
       if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)

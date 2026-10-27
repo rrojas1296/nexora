@@ -6,6 +6,7 @@ import type {
 import type { WhatsappInboxRepository } from "../repositories/whatsapp-inbox.repository.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
 import { findAutomationAgent } from "./prisma-whatsapp-ai-agent.js";
+import { authorizeWhatsappActor } from "./authorize-whatsapp-actor.js";
 
 function summary(thread: WhatsappThread) {
   return {
@@ -26,21 +27,7 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
     private readonly automationEnabled = false,
   ) {}
 
-  private async authorize(tx: Prisma.TransactionClient, actor: WhatsappActor) {
-    const [membership] = await tx.$queryRaw<{ businessId: string; role: string }[]>`
-      SELECT m."businessId", m."role" FROM "Memberships" m
-      JOIN "Businesses" b ON b."id" = m."businessId"
-      JOIN "Users" u ON u."id" = m."userId"
-      JOIN "AuthSessions" s ON s."businessId" = m."businessId" AND s."userId" = m."userId"
-      WHERE m."businessId" = ${actor.businessId}::uuid AND m."userId" = ${actor.userId}::uuid
-        AND m."active" AND NOT m."isDeleted" AND NOT b."isDeleted" AND u."active" AND NOT u."isDeleted"
-        AND s."id" = ${actor.sessionId}::uuid AND NOT s."isDeleted" AND s."revokedAt" IS NULL
-        AND s."expiresAt" > CURRENT_TIMESTAMP AND s."idleExpiresAt" > CURRENT_TIMESTAMP
-      FOR SHARE OF b, m
-    `;
-    if (!membership) throw new WhatsappError("WHATSAPP_FORBIDDEN");
-    return membership;
-  }
+  private readonly authorize = authorizeWhatsappActor;
 
   async receive(messages: IncomingWhatsappMessage[]) {
     const groups = new Map<string, IncomingWhatsappMessage[]>();
@@ -121,6 +108,13 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
         providerMessageId: message.providerMessageId,
         type: message.type,
         body: message.body,
+        mediaId: message.mediaId,
+        mediaMimeType: message.mediaMimeType,
+        mediaStatus: message.mediaId ? "PENDING" : "NONE",
+        locationLatitude: message.location?.latitude,
+        locationLongitude: message.location?.longitude,
+        locationName: message.location?.name,
+        locationAddress: message.location?.address,
         sentAt: message.sentAt,
       },
     });
@@ -131,8 +125,7 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
     const agent =
       this.automationEnabled &&
       updated.controlMode === "AI" &&
-      message.type === "text" &&
-      message.body.trim()
+      ((message.type === "text" && message.body.trim()) || message.mediaId || message.location)
         ? await findAutomationAgent(tx, businessId)
         : null;
     if (agent)
@@ -315,6 +308,7 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
         where,
         orderBy: [{ sentAt: "desc" }, { id: "desc" }],
         take: 51,
+        omit: { mediaData: true },
         include: { sendAttempt: { select: { status: true, isDeleted: true } } },
         ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       });
@@ -331,6 +325,16 @@ export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
           body: message.body,
           sentAt: message.sentAt.toISOString(),
           receivedAt: message.receivedAt.toISOString(),
+          mediaStatus: message.mediaStatus,
+          location:
+            message.locationLatitude !== null && message.locationLongitude !== null
+              ? {
+                  latitude: message.locationLatitude,
+                  longitude: message.locationLongitude,
+                  name: message.locationName,
+                  address: message.locationAddress,
+                }
+              : null,
         })),
         nextCursor: records.length > 50 ? records[49]!.id : null,
         automation: {

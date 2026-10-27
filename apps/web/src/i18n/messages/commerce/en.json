@@ -1,4 +1,71 @@
 {
+  "Commerce": {
+    "eyebrow": "Operations · Live data",
+    "liveClients": "Real customers in the active business, including AI registrations. Refreshes every 10 seconds; dashboard and reports remain independent demos.",
+    "liveOrders": "Real manual and WhatsApp orders in the active business. Refreshes every 10 seconds. No payments, dispatch or stock deductions are executed.",
+    "totalClients": "Customers",
+    "activeClients": "Active customers",
+    "vipClients": "VIP customers",
+    "totalOrders": "Orders",
+    "draftOrders": "Drafts",
+    "pendingOrders": "Pending orders",
+    "subtotal": "Product subtotal",
+    "perUnit": "per unit",
+    "orderStatus": "Order status",
+    "payment": "Payment review",
+    "delivery": "Delivery",
+    "deliveryRequested": "Delivery requested: fee and coverage pending human review. Subtotal excludes delivery.",
+    "pickup": "Pickup",
+    "coordinates": "Coordinates",
+    "limits": "Prices are catalog snapshots. No stock reservation/deduction, charge or automatic dispatch. An attached proof does not verify payment; human review is available in Conversations.",
+    "unknown": "Unspecified",
+    "openInbox": "Open conversations",
+    "persistentTitle": "Active business data",
+    "clientHint": "Email and country are optional. Use a normalized international phone. Inactive customers cannot place new orders and require human review by the AI; their history is preserved.",
+    "phoneHint": "International format without spaces, for example +51987654321. The AI uses the real WhatsApp sender.",
+    "draftHint": "Saves a draft using current catalog prices and currency. Search and paginate customers/products. Up to 10 distinct products with positive quantities. Confirmation does not verify payment or reserve stock.",
+    "forbidden": "Your role allows reading only. Only OWNER/ADMIN can save changes.",
+    "notFound": "Record not found in the active business.",
+    "conflict": "Could not save: the record changed, a value is reserved, or the operation is not allowed (customer, products or status). Reload and review the data before continuing; no automatic retry occurred.",
+    "validation": "Check field values and limits. Phone must be international and email, if supplied, valid.",
+    "uncertain": "The save could not be confirmed. Check the list before repeating a creation. Writes are never replayed automatically; reload and review changed records before editing.",
+    "items": "Order products",
+    "stock": "Stock",
+    "searchClients": "Search customers by name, email or phone",
+    "searchProducts": "Search products by name, SKU or category",
+    "selectClient": "Select an active customer",
+    "selectProduct": "Select a product",
+    "catalogPage": "Selectors show this active catalog page. Use search and pagination to find other products. The server checks prices, currency and stock on save.",
+    "addLine": "Add product",
+    "removeLine": "Remove",
+    "itemsValidation": "Include 1–10 distinct products with integer quantities from 1 to 10000.",
+    "changeStatus": "Manage status",
+    "nextStatus": "New status",
+    "selectStatus": "Select a transition",
+    "applyStatus": "Apply status",
+    "saving": "Saving…",
+    "statusConfirm": "Change the order to “{status}”? This is a manual action: it does not execute payments, shipping or stock movements.",
+    "customerConfirmation": "This draft belongs to WhatsApp. Its customer must confirm the current summary in that conversation; its lines cannot be edited or confirmed here. You may cancel it.",
+    "noTransitions": "No transitions available. Marking paid requires validating a proof in Conversations first.",
+    "loading": "Loading business data…",
+    "loadError": "Could not load the data",
+    "loadErrorHint": "Check your access, active business and API availability. Demo records are never substituted for live data.",
+    "retry": "Retry read",
+    "empty": "No results. Check filters or create a record if your role allows it.",
+    "statuses": {
+      "DRAFT": "Draft",
+      "PENDING": "Pending",
+      "PAID": "Paid",
+      "SHIPPED": "Shipped",
+      "CANCELLED": "Cancelled"
+    },
+    "payments": {
+      "PENDING": "Pending",
+      "IN_REVIEW": "Proof under review",
+      "VALIDATED": "Human-validated",
+      "REJECTED": "Rejected"
+    }
+  },
   "Businesses": {
     "title": "My businesses",
     "intro": "Select a business or create a new one. Its configuration and real data stay separate from other businesses.",
@@ -31,7 +98,7 @@
     "activationError": "The business was created but activation was not confirmed. Use Open business or select it from the menu; do not create it again.",
     "reload": "Reload configuration",
     "reloadConfirm": "Reload the page and discard unsaved changes?",
-    "setupHint": "Each business keeps its own catalog, agent, context and WhatsApp connection. Customers, orders and reports remain in-memory demos, not persistent commercial data.",
+    "setupHint": "Each business keeps its own catalog, agent, context and WhatsApp connection. Customers and orders are persistent and business-isolated. Dashboard and reports remain independent in-memory demos.",
     "context": "Commercial context",
     "contextHint": "Describe what you sell, whom you help, opening hours, delivery, payments, policies, FAQs and when to hand off to a person. Plain text only: links and HTML are not executed.",
     "contextSafety": "Do not include passwords, tokens, payment secrets or unnecessary personal data. Text is stored in PostgreSQL without application-level encryption and sent to the AI provider when generating replies. Publishing alone does not enable automation.",
@@ -187,12 +254,12 @@
     "deleteTitle": "Delete product",
     "deleteDescription": "Delete “{name}” from the catalog? This is a soft delete. If it has linked orders, deactivate it to preserve its history.",
     "eyebrow": "Business catalog",
-    "workspaceDescription": "Manage your business products. Changes are saved to the database; the other commercial modules remain in demo mode.",
+    "workspaceDescription": "Manage your persistent business catalog. Customers and orders also use real data; dashboard and reports keep independent demos.",
     "readOnly": "You can view the catalog. Only owners and administrators can create, edit or delete products.",
     "lowStock": "Low stock",
     "deleted": "Product deleted from the catalog.",
     "storageTitle": "Persistent catalog",
-    "storageHint": "Changes are saved to the active business. Prices use PEN and stock is managed manually; demo orders do not affect this inventory.",
+    "storageHint": "Changes are saved to the active business using its currency. Stock is managed manually: no order automatically deducts or reserves inventory.",
     "securityHint": "References are unique per business, even after deletion. Do not close the page while saving. Writes are never retried automatically.",
     "errors": {
       "imageInvalid": "The image could not be processed. Use a valid JPG, PNG or WebP up to 2 MB and 20 megapixels. The previous image is preserved.",
@@ -227,7 +294,7 @@
     "needsResources": "Prepare your order resources",
     "needsResourcesHint": "You need at least one customer and product before creating an order.",
     "add": { "clients": "Create customer", "products": "Create product" },
-    "table": "Demo orders",
+    "table": "Business orders",
     "order": "Order",
     "client": "Customer",
     "date": "Date · UTC",
@@ -235,7 +302,7 @@
     "store": "Store",
     "detail": "View details",
     "hint": "Statuses can be changed freely to explore the demo. There are no payments, shipments, taxes or automatic stock adjustments. All orders retain their historical prices in PEN.",
-    "detailHint": "Sample order details. Changing its status updates dashboard and report metrics; it does not perform any real operation."
+    "detailHint": "Persistent order in the active business. Subtotal excludes delivery fees; no charges, dispatch or stock movements are executed."
   },
   "Clients": {
     "contact": "Contact and business profile",
@@ -257,12 +324,13 @@
       "ES": "Spain",
       "AR": "Argentina",
       "CL": "Chile",
+      "EC": "Ecuador",
       "PE": "Peru"
     },
     "language": "Preferred language",
     "active": "Active customer",
-    "marketingConsent": "Simulated marketing consent (does not send communications)",
-    "table": "Fictional customers",
+    "marketingConsent": "Recorded marketing consent (does not send communications)",
+    "table": "Business customers",
     "create": "New customer",
     "edit": "Edit customer",
     "name": "Name",
@@ -273,7 +341,7 @@
     "orders": "Orders",
     "conversations": "Conversations",
     "history": "History",
-    "noOrders": "This customer has no orders in the demo yet.",
+    "noOrders": "This customer has no recorded orders yet.",
     "noConversations": "This customer has no conversations in the demo yet.",
     "formHint": "Use fictional data. Name: 2 to 100 characters. Email must be unique and phone must use international format. No messages or emails will be sent."
   },
@@ -532,7 +600,7 @@
     "articles": {
       "start": {
         "title": "How do I get started?",
-        "body": "Register your account and create your first business in onboarding. The business, your membership and a disabled agent are saved. Afterwards configure its context and connect WhatsApp. Customers, orders and reports keep independent demo fixtures."
+        "body": "Register your account and create your first business in onboarding. The business, your membership and a disabled agent are saved. Afterwards configure its context and connect WhatsApp. Customers and orders use persistent data; dashboard and reports keep independent demos."
       },
       "messages": {
         "title": "Are messages sent to WhatsApp?",
@@ -560,7 +628,7 @@
       },
       "reset": {
         "title": "How do I explore empty and error states?",
-        "body": "Use the “Scenario” selector above each module. “Empty collections” hides collections and makes configuration read-only. “Read error” shows a simulated failure; “Retry” will keep failing until you switch to “With data”. Switching scenarios discards open drafts but keeps saved changes. “Reset demo” restores all business data and discards drafts; it does not affect onboarding."
+        "body": "Scenarios only affect demo modules, never real customers, orders or catalog. Use the “Scenario” selector where available in demos. “Empty collections” hides collections and makes configuration read-only. “Read error” shows a simulated failure; “Retry” will keep failing until you switch to “With data”. Switching scenarios discards open drafts but keeps saved changes. “Reset demo” restores all business data and discards drafts; it does not affect onboarding."
       }
     }
   }

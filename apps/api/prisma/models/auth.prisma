@@ -6,14 +6,14 @@ enum MembershipRole {
 }
 
 model User {
-  isDeleted    Boolean      @default(false)
-  id           String       @id @default(uuid()) @db.Uuid
-  email        String       @unique
+  isDeleted    Boolean       @default(false)
+  id           String        @id @default(uuid()) @db.Uuid
+  email        String        @unique
   name         String
   passwordHash String
-  active       Boolean      @default(true)
-  createdAt    DateTime     @default(now()) @db.Timestamptz(3)
-  updatedAt    DateTime     @updatedAt @db.Timestamptz(3)
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime      @updatedAt @db.Timestamptz(3)
   memberships  Membership[]
   authSessions AuthSession[]
 

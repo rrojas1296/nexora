@@ -3,8 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { validateResource } from "../lib/resources";
-import { DemoToolbar } from "./demo-toolbar";
-import { DemoContent } from "./demo-content";
+import { CommerceScope } from "@/features/commerce/components/commerce-scope";
 import { ResourceEditorScreen } from "./resource-editor-screen";
 import { ProductEditorScreen } from "@/features/products/components/product-editor-screen";
 
@@ -32,17 +31,16 @@ export async function ResourceWorkspace({ module, id }: { module: string; id?: s
         <h1 className="text-3xl font-normal tracking-tight sm:text-4xl">
           {t(id ? "edit" : "create")}
         </h1>
-        <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{t("formHint")}</p>
+        {resource === "products" ? (
+          <p className="max-w-3xl text-sm leading-6 text-muted-foreground">{t("formHint")}</p>
+        ) : null}
       </header>
       {resource === "products" ? (
         <ProductEditorScreen id={id} />
       ) : (
-        <>
-          <DemoToolbar />
-          <DemoContent>
-            <ResourceEditorScreen resource={resource} id={id} />
-          </DemoContent>
-        </>
+        <CommerceScope>
+          <ResourceEditorScreen resource={resource} id={id} />
+        </CommerceScope>
       )}
     </PageEntrance>
   );
