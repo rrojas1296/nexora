@@ -1,12 +1,17 @@
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  BUSINESS_REPOSITORY,
+  type IBusinessRepository,
+} from "../repositories/business.repository.js";
 import type {
   BusinessActor,
   CreateBusinessInput,
   UpdateBusinessInput,
 } from "../models/business.js";
-import type { BusinessRepository } from "../repositories/business.repository.js";
 
+@Injectable()
 export class BusinessService {
-  constructor(private readonly repository: BusinessRepository) {}
+  constructor(@Inject(BUSINESS_REPOSITORY) private readonly repository: IBusinessRepository) {}
 
   get(actor: BusinessActor, businessId: string) {
     if (actor.activeBusinessId !== businessId) return Promise.resolve(null);

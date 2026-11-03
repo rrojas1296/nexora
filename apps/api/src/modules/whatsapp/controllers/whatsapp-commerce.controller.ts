@@ -1,3 +1,4 @@
+import { WhatsappCommerceService } from "../services/whatsapp-commerce.service.js";
 import {
   Body,
   Controller,
@@ -25,7 +26,6 @@ import {
 import { inboxQuerySchema } from "../dto/whatsapp-inbox.dto.js";
 import { parseWhatsappRequest as parse, whatsappIdSchema } from "../dto/whatsapp.dto.js";
 import { WhatsappExceptionFilter } from "../filters/whatsapp-exception.filter.js";
-import { WhatsappCommerceService } from "../services/whatsapp-commerce.service.js";
 
 @ApiTags("Pedidos de conversaciones WhatsApp")
 @Controller("businesses/:businessId/whatsapp/conversations/:threadId")

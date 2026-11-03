@@ -1,9 +1,12 @@
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import type { Environment } from "../../../config/environment.js";
 import { z } from "zod";
 import type { AiToolDefinition, AiToolExchange, AiTurnResult } from "../contracts/ai-tools.js";
 import {
   AiGenerationError,
   type AiReplyInput,
-  type AiTextGenerator,
+  type IAiTextGenerator,
 } from "../contracts/ai-text-generator.js";
 
 const responseSchema = z.object({
@@ -19,13 +22,17 @@ const responseSchema = z.object({
   ),
 });
 
-export class OpenAiTextGenerator implements AiTextGenerator {
+@Injectable()
+export class OpenAiTextGenerator implements IAiTextGenerator {
   readonly provider = "openai";
 
-  constructor(
-    readonly model: string,
-    private readonly apiKey: string | undefined,
-  ) {}
+  readonly model: string;
+  private readonly apiKey: string | undefined;
+
+  constructor(config: ConfigService<Environment, true>) {
+    this.model = config.get("OPENAI_MODEL", { infer: true }) ?? "";
+    this.apiKey = config.get("OPENAI_API_KEY", { infer: true });
+  }
 
   async generate(
     input: AiReplyInput,

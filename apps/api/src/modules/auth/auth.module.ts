@@ -1,12 +1,15 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ConfigModule } from "@nestjs/config";
 import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
-import type { Environment } from "../../config/environment.js";
 import { DatabaseModule } from "../../database/database.module.js";
-import { PrismaService } from "../../database/prisma.service.js";
 import { AuthService } from "./services/auth.service.js";
-import type { AuthSettings } from "./models/auth.js";
+import { AUTH_SETTINGS } from "./models/auth.js";
+import { AuthSettings } from "./providers/auth-settings.js";
+import { AUTH_REPOSITORY, AUTH_TOKENS, PASSWORD_HASHER } from "./contracts/auth.ports.js";
+import { AUTH_COOKIES } from "./contracts/auth-cookies.js";
+import { CSRF_PROTECTION } from "./contracts/csrf-protection.js";
+import { SIGNED_CSRF } from "./contracts/signed-csrf.js";
 import { BcryptPasswordHasher } from "./providers/bcrypt-password-hasher.js";
 import { JoseAuthTokens } from "./providers/jose-auth-tokens.js";
 import { PrismaAuthRepository } from "./repositories/prisma-auth-repository.js";
@@ -17,84 +20,23 @@ import { AuthCookies } from "./http/auth.cookies.js";
 import { AuthGuard } from "./guards/auth.guard.js";
 import { CsrfProtection } from "./http/csrf.protection.js";
 
-const AUTH_SETTINGS = Symbol("AUTH_SETTINGS");
-
-function settings(config: ConfigService<Environment, true>): AuthSettings {
-  return {
-    accessTtl: config.get("AUTH_ACCESS_TTL_SECONDS", { infer: true }),
-    refreshTtl: config.get("AUTH_REFRESH_TTL_SECONDS", { infer: true }),
-    sessionTtl: config.get("AUTH_SESSION_TTL_SECONDS", { infer: true }),
-    csrfTtl: config.get("AUTH_CSRF_TTL_SECONDS", { infer: true }),
-    bcryptRounds: config.get("BCRYPT_ROUNDS", { infer: true }),
-    issuer: config.get("AUTH_ISSUER", { infer: true }),
-    audience: config.get("AUTH_AUDIENCE", { infer: true }),
-    accessSecret: config.get("AUTH_ACCESS_SECRET", { infer: true }),
-    refreshSecret: config.get("AUTH_REFRESH_SECRET", { infer: true }),
-    csrfSecret: config.get("AUTH_CSRF_SECRET", { infer: true }),
-    origins: config.get("CORS_ORIGINS", { infer: true }),
-    production: config.get("NODE_ENV", { infer: true }) === "production",
-  };
-}
-
 @Module({
   // The default storage is per-process; multi-instance deployments need shared storage.
   imports: [ConfigModule, DatabaseModule, ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }])],
   controllers: [AuthController],
   providers: [
-    { provide: AUTH_SETTINGS, inject: [ConfigService], useFactory: settings },
-    {
-      provide: BcryptPasswordHasher,
-      inject: [AUTH_SETTINGS],
-      useFactory: async (config: AuthSettings) => {
-        const hasher = new BcryptPasswordHasher(config.bcryptRounds);
-        await hasher.ready();
-        return hasher;
-      },
-    },
-    {
-      provide: JoseAuthTokens,
-      inject: [AUTH_SETTINGS],
-      useFactory: (config: AuthSettings) => new JoseAuthTokens(config),
-    },
-    {
-      provide: PrismaAuthRepository,
-      inject: [PrismaService, AUTH_SETTINGS],
-      useFactory: (prisma: PrismaService, config: AuthSettings) =>
-        new PrismaAuthRepository(prisma.client, config),
-    },
-    {
-      provide: AuthService,
-      inject: [PrismaAuthRepository, BcryptPasswordHasher, JoseAuthTokens],
-      useFactory: (
-        repository: PrismaAuthRepository,
-        passwords: BcryptPasswordHasher,
-        tokens: JoseAuthTokens,
-      ) => new AuthService(repository, passwords, tokens),
-    },
-    {
-      provide: AuthCookies,
-      inject: [AUTH_SETTINGS],
-      useFactory: (config: AuthSettings) => new AuthCookies(config),
-    },
-    {
-      provide: SignedCsrf,
-      inject: [AUTH_SETTINGS],
-      useFactory: (config: AuthSettings) => new SignedCsrf(config),
-    },
-    {
-      provide: CsrfProtection,
-      inject: [AuthService, AuthCookies, SignedCsrf, AUTH_SETTINGS],
-      useFactory: (
-        auth: AuthService,
-        cookies: AuthCookies,
-        signed: SignedCsrf,
-        config: AuthSettings,
-      ) => new CsrfProtection(auth, cookies, signed, config),
-    },
+    { provide: AUTH_SETTINGS, useClass: AuthSettings },
+    { provide: PASSWORD_HASHER, useClass: BcryptPasswordHasher },
+    { provide: AUTH_TOKENS, useClass: JoseAuthTokens },
+    { provide: AUTH_REPOSITORY, useClass: PrismaAuthRepository },
+    AuthService,
+    { provide: AUTH_COOKIES, useClass: AuthCookies },
+    { provide: SIGNED_CSRF, useClass: SignedCsrf },
+    { provide: CSRF_PROTECTION, useClass: CsrfProtection },
     { provide: APP_GUARD, useClass: ThrottlerGuard },
     { provide: APP_GUARD, useClass: AuthGuard },
     { provide: APP_FILTER, useClass: AuthExceptionFilter },
   ],
-  exports: [AuthService, AuthCookies],
+  exports: [AuthService, AUTH_COOKIES],
 })
 export class AuthModule {}

@@ -8,12 +8,16 @@ import type {
   TokenPair,
 } from "../models/auth.js";
 
-export interface PasswordHasher {
+export const PASSWORD_HASHER = Symbol("PasswordHasher");
+
+export interface IPasswordHasher {
   hash(password: string): Promise<string>;
   verify(password: string, hash?: string): Promise<boolean>;
 }
 
-export interface AuthTokens {
+export const AUTH_TOKENS = Symbol("AuthTokens");
+
+export interface IAuthTokens {
   issue(session: Session): Promise<TokenPair>;
   verify(token: string, purpose: "access" | "refresh"): Promise<TokenClaims>;
   hash(token: string): string;
@@ -21,7 +25,9 @@ export interface AuthTokens {
 
 export type IssueTokens = (session: Session) => Promise<TokenPair>;
 
-export interface AuthRepository {
+export const AUTH_REPOSITORY = Symbol("AuthRepository");
+
+export interface IAuthRepository {
   findCredentials(email: string): Promise<CredentialsUser | null>;
   findCredentialsById(userId: string): Promise<CredentialsUser | null>;
   changePassword(claims: TokenClaims, previousHash: string, newHash: string): Promise<void>;

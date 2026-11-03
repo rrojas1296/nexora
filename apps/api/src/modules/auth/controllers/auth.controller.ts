@@ -1,12 +1,13 @@
-import { Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
+import { AuthService } from "../services/auth.service.js";
+import { Inject, Body, Controller, Get, HttpCode, Post, Req, Res } from "@nestjs/common";
+import { CSRF_PROTECTION, type ICsrfProtection } from "../contracts/csrf-protection.js";
+import { AUTH_COOKIES, type IAuthCookies } from "../contracts/auth-cookies.js";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
 import { csrfResponse, identityResponse } from "../dto/auth-responses.dto.js";
 import { Throttle } from "@nestjs/throttler";
 import type { Response } from "express";
-import { AuthService } from "../services/auth.service.js";
 import { AuthError } from "../models/auth.js";
-import { AuthCookies } from "../http/auth.cookies.js";
 import {
   changePasswordSchema,
   credentialsChangePasswordSchema,
@@ -16,7 +17,6 @@ import {
   switchBusinessSchema,
 } from "../dto/auth.dto.js";
 import type { AuthRequest } from "../http/auth.request.js";
-import { CsrfProtection } from "../http/csrf.protection.js";
 import { Public } from "../decorators/public.decorator.js";
 
 @ApiTags("Autenticación")
@@ -24,8 +24,8 @@ import { Public } from "../decorators/public.decorator.js";
 export class AuthController {
   constructor(
     private readonly auth: AuthService,
-    private readonly cookies: AuthCookies,
-    private readonly csrf: CsrfProtection,
+    @Inject(AUTH_COOKIES) private readonly cookies: IAuthCookies,
+    @Inject(CSRF_PROTECTION) private readonly csrf: ICsrfProtection,
   ) {}
 
   @Public()

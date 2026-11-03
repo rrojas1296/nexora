@@ -1,24 +1,17 @@
 import { Module } from "@nestjs/common";
 import { DatabaseModule } from "../../database/database.module.js";
-import { PrismaService } from "../../database/prisma.service.js";
-import { BusinessService } from "./services/business.service.js";
+import { AuthModule } from "../auth/auth.module.js";
 import { PrismaBusinessRepository } from "./repositories/prisma-business-repository.js";
+import { BUSINESS_REPOSITORY } from "./repositories/business.repository.js";
+import { BusinessService } from "./services/business.service.js";
 import { BusinessController } from "./controllers/business.controller.js";
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AuthModule],
   controllers: [BusinessController],
   providers: [
-    {
-      provide: PrismaBusinessRepository,
-      inject: [PrismaService],
-      useFactory: (prisma: PrismaService) => new PrismaBusinessRepository(prisma.client),
-    },
-    {
-      provide: BusinessService,
-      inject: [PrismaBusinessRepository],
-      useFactory: (repository: PrismaBusinessRepository) => new BusinessService(repository),
-    },
+    { provide: BUSINESS_REPOSITORY, useClass: PrismaBusinessRepository },
+    BusinessService,
   ],
 })
 export class BusinessModule {}

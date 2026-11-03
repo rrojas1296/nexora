@@ -24,7 +24,9 @@ export interface AiReplyReservation {
   credentials: WhatsappCredentials;
 }
 
-export interface WhatsappAiStore {
+export const WHATSAPP_AI_STORE = Symbol("WhatsappAiStore");
+
+export interface IWhatsappAiStore {
   recoverExpired(): Promise<void>;
   claim(provider: string, model: string): Promise<AiReplyWork | null>;
   reserve(

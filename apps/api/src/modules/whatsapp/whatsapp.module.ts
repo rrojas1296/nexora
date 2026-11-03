@@ -1,237 +1,89 @@
 import { Module } from "@nestjs/common";
-import { ConfigService } from "@nestjs/config";
-import type { Environment } from "../../config/environment.js";
 import { DatabaseModule } from "../../database/database.module.js";
-import { PrismaService } from "../../database/prisma.service.js";
 import { AuthModule } from "../auth/auth.module.js";
-import { WhatsappAuthorizationService } from "./services/whatsapp-authorization.service.js";
-import { PrismaWhatsappAuthorizationStore } from "./repositories/prisma-whatsapp-authorization-store.js";
-import { MetaWhatsappAuthorizationProvider } from "./providers/meta-whatsapp-authorization-provider.js";
-import { WhatsappAuthorizationController } from "./controllers/whatsapp-authorization.controller.js";
-import { WhatsappOauthCallbackController } from "./controllers/whatsapp-oauth-callback.controller.js";
-import { WhatsappService } from "./services/whatsapp.service.js";
-import { WhatsappSignupService } from "./services/whatsapp-signup.service.js";
-import { MetaWhatsappSignupGateway } from "./providers/meta-whatsapp-signup-gateway.js";
-import { MetaWhatsappGraphClient } from "./providers/meta-whatsapp-graph-client.js";
-import { SignedWhatsappSignupState } from "./providers/whatsapp-signup-state.js";
 import { PrismaWhatsappRepository } from "./repositories/prisma-whatsapp-repository.js";
-import { MetaWhatsappGateway } from "./providers/meta-whatsapp-gateway.js";
-import { AesWhatsappTokenVault } from "./providers/whatsapp-token-vault.js";
-import { Sha256WhatsappMessageHasher } from "./providers/whatsapp-message-hasher.js";
-import { WhatsappController } from "./controllers/whatsapp.controller.js";
-import { WhatsappWebhookSecurity } from "./providers/whatsapp-webhook-security.js";
-import { WhatsappSignatureGuard } from "./guards/whatsapp-signature.guard.js";
-import { WhatsappWebhookController } from "./controllers/whatsapp-webhook.controller.js";
-import { WhatsappInboxService } from "./services/whatsapp-inbox.service.js";
+import { WHATSAPP_REPOSITORY } from "./contracts/whatsapp.ports.js";
 import { PrismaWhatsappInboxRepository } from "./repositories/prisma-whatsapp-inbox-repository.js";
-import { WhatsappInboxController } from "./controllers/whatsapp-inbox.controller.js";
-import type { AiTextGenerator } from "./contracts/ai-text-generator.js";
-import { OpenAiTextGenerator } from "./providers/openai-text-generator.js";
+import { WHATSAPP_INBOX_REPOSITORY } from "./repositories/whatsapp-inbox.repository.js";
+import { PrismaWhatsappAuthorizationStore } from "./repositories/prisma-whatsapp-authorization-store.js";
+import { WHATSAPP_AUTHORIZATION_STORE } from "./contracts/whatsapp-authorization.ports.js";
 import { PrismaWhatsappAiStore } from "./repositories/prisma-whatsapp-ai-store.js";
+import { WHATSAPP_AI_STORE } from "./contracts/whatsapp-ai-store.js";
+import { PrismaWhatsappCommerce } from "./repositories/prisma-whatsapp-commerce.js";
+import { WHATSAPP_COMMERCE_REPOSITORY } from "./contracts/whatsapp-commerce.js";
+import { PrismaWhatsappTools } from "./repositories/prisma-whatsapp-tools.js";
+import { AI_TOOL_EXECUTOR } from "./contracts/ai-tools.js";
+import { OpenAiTextGenerator } from "./providers/openai-text-generator.js";
+import { AI_TEXT_GENERATOR } from "./contracts/ai-text-generator.js";
+import { MetaWhatsappGateway } from "./providers/meta-whatsapp-gateway.js";
+import { WHATSAPP_GATEWAY } from "./contracts/whatsapp.ports.js";
+import { MetaWhatsappSignupGateway } from "./providers/meta-whatsapp-signup-gateway.js";
+import { WHATSAPP_SIGNUP_GATEWAY } from "./contracts/whatsapp.ports.js";
+import { MetaWhatsappAuthorizationProvider } from "./providers/meta-whatsapp-authorization-provider.js";
+import { WHATSAPP_AUTHORIZATION_PROVIDER } from "./contracts/whatsapp-authorization.ports.js";
+import { SignedWhatsappSignupState } from "./providers/whatsapp-signup-state.js";
+import { WHATSAPP_SIGNUP_STATE } from "./contracts/whatsapp.ports.js";
+import { AesWhatsappTokenVault } from "./providers/whatsapp-token-vault.js";
+import { WHATSAPP_TOKEN_VAULT } from "./contracts/whatsapp.ports.js";
+import { Sha256WhatsappMessageHasher } from "./providers/whatsapp-message-hasher.js";
+import { WHATSAPP_MESSAGE_HASHER } from "./contracts/whatsapp.ports.js";
+import { MetaWhatsappGraphClient } from "./providers/meta-whatsapp-graph-client.js";
+import { META_WHATSAPP_GRAPH_CLIENT } from "./contracts/meta-whatsapp-graph-client.js";
+import { WhatsappWebhookSecurity } from "./providers/whatsapp-webhook-security.js";
+import { WHATSAPP_WEBHOOK_SECURITY } from "./contracts/whatsapp-webhook-security.js";
+import { WhatsappService } from "./services/whatsapp.service.js";
+import { WhatsappInboxService } from "./services/whatsapp-inbox.service.js";
+import { WhatsappAuthorizationService } from "./services/whatsapp-authorization.service.js";
+import { WhatsappSignupService } from "./services/whatsapp-signup.service.js";
 import { WhatsappAiService } from "./services/whatsapp-ai.service.js";
+import { WhatsappCommerceService } from "./services/whatsapp-commerce.service.js";
+import { WhatsappAuthorizationController } from "./controllers/whatsapp-authorization.controller.js";
+import { WhatsappCommerceController } from "./controllers/whatsapp-commerce.controller.js";
+import { WhatsappInboxController } from "./controllers/whatsapp-inbox.controller.js";
+import { WhatsappOauthCallbackController } from "./controllers/whatsapp-oauth-callback.controller.js";
+import { WhatsappWebhookController } from "./controllers/whatsapp-webhook.controller.js";
+import { WhatsappController } from "./controllers/whatsapp.controller.js";
+import { WhatsappSignatureGuard } from "./guards/whatsapp-signature.guard.js";
+import { WHATSAPP_AI_WORKER } from "./contracts/whatsapp-ai-worker.js";
+import { WHATSAPP_MEDIA_WORKER } from "./contracts/whatsapp-media-worker.js";
 import { WhatsappAiWorker } from "./providers/whatsapp-ai-worker.js";
 import { WhatsappMediaWorker } from "./providers/whatsapp-media-worker.js";
-import { PrismaWhatsappTools } from "./repositories/prisma-whatsapp-tools.js";
-import { PrismaWhatsappCommerce } from "./repositories/prisma-whatsapp-commerce.js";
-import { WhatsappCommerceService } from "./services/whatsapp-commerce.service.js";
-import { WhatsappCommerceController } from "./controllers/whatsapp-commerce.controller.js";
-
-const AI_TEXT_GENERATOR = Symbol("AiTextGenerator");
 
 @Module({
   imports: [DatabaseModule, AuthModule],
   controllers: [
-    WhatsappWebhookController,
+    WhatsappAuthorizationController,
     WhatsappCommerceController,
     WhatsappInboxController,
-    WhatsappController,
-    WhatsappAuthorizationController,
     WhatsappOauthCallbackController,
+    WhatsappWebhookController,
+    WhatsappController,
   ],
   providers: [
-    WhatsappWebhookSecurity,
+    { provide: WHATSAPP_REPOSITORY, useClass: PrismaWhatsappRepository },
+    { provide: WHATSAPP_INBOX_REPOSITORY, useClass: PrismaWhatsappInboxRepository },
+    { provide: WHATSAPP_AUTHORIZATION_STORE, useClass: PrismaWhatsappAuthorizationStore },
+    { provide: WHATSAPP_AI_STORE, useClass: PrismaWhatsappAiStore },
+    { provide: WHATSAPP_COMMERCE_REPOSITORY, useClass: PrismaWhatsappCommerce },
+    { provide: AI_TOOL_EXECUTOR, useClass: PrismaWhatsappTools },
+    { provide: AI_TEXT_GENERATOR, useClass: OpenAiTextGenerator },
+    { provide: WHATSAPP_GATEWAY, useClass: MetaWhatsappGateway },
+    { provide: WHATSAPP_SIGNUP_GATEWAY, useClass: MetaWhatsappSignupGateway },
+    { provide: WHATSAPP_AUTHORIZATION_PROVIDER, useClass: MetaWhatsappAuthorizationProvider },
+    { provide: WHATSAPP_SIGNUP_STATE, useClass: SignedWhatsappSignupState },
+    { provide: WHATSAPP_TOKEN_VAULT, useClass: AesWhatsappTokenVault },
+    { provide: WHATSAPP_MESSAGE_HASHER, useClass: Sha256WhatsappMessageHasher },
+    { provide: META_WHATSAPP_GRAPH_CLIENT, useClass: MetaWhatsappGraphClient },
+    { provide: WHATSAPP_WEBHOOK_SECURITY, useClass: WhatsappWebhookSecurity },
+    WhatsappService,
+    WhatsappInboxService,
+    WhatsappAuthorizationService,
+    WhatsappSignupService,
+    WhatsappAiService,
+    WhatsappCommerceService,
     WhatsappSignatureGuard,
-    Sha256WhatsappMessageHasher,
-    {
-      provide: AI_TEXT_GENERATOR,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Environment, true>): AiTextGenerator => {
-        const providers: Record<Environment["AI_PROVIDER"], () => AiTextGenerator> = {
-          openai: () =>
-            new OpenAiTextGenerator(
-              config.get("OPENAI_MODEL", { infer: true }) ?? "",
-              config.get("OPENAI_API_KEY", { infer: true }),
-            ),
-        };
-        return providers[config.get("AI_PROVIDER", { infer: true })]();
-      },
-    },
-    {
-      provide: PrismaWhatsappAiStore,
-      inject: [PrismaService, Sha256WhatsappMessageHasher, ConfigService],
-      useFactory: (
-        prisma: PrismaService,
-        hasher: Sha256WhatsappMessageHasher,
-        config: ConfigService<Environment, true>,
-      ) =>
-        new PrismaWhatsappAiStore(
-          prisma.client,
-          hasher,
-          config.get("AI_DAILY_REPLY_LIMIT", { infer: true }),
-        ),
-    },
-    {
-      provide: WhatsappAiService,
-      inject: [PrismaWhatsappAiStore, AI_TEXT_GENERATOR, WhatsappService, PrismaWhatsappTools],
-      useFactory: (
-        store: PrismaWhatsappAiStore,
-        generator: AiTextGenerator,
-        sender: WhatsappService,
-        tools: PrismaWhatsappTools,
-      ) => new WhatsappAiService(store, generator, sender, tools),
-    },
-    {
-      provide: PrismaWhatsappTools,
-      inject: [PrismaService],
-      useFactory: (prisma: PrismaService) => new PrismaWhatsappTools(prisma.client),
-    },
-    {
-      provide: PrismaWhatsappCommerce,
-      inject: [PrismaService],
-      useFactory: (prisma: PrismaService) => new PrismaWhatsappCommerce(prisma.client),
-    },
-    {
-      provide: WhatsappCommerceService,
-      inject: [PrismaWhatsappCommerce],
-      useFactory: (repository: PrismaWhatsappCommerce) => new WhatsappCommerceService(repository),
-    },
-    {
-      provide: WhatsappMediaWorker,
-      inject: [PrismaService, AesWhatsappTokenVault, ConfigService],
-      useFactory: (
-        prisma: PrismaService,
-        vault: AesWhatsappTokenVault,
-        config: ConfigService<Environment, true>,
-      ) => new WhatsappMediaWorker(prisma.client, vault, config),
-    },
-    {
-      provide: WhatsappAiWorker,
-      inject: [WhatsappAiService, ConfigService],
-      useFactory: (service: WhatsappAiService, config: ConfigService<Environment, true>) =>
-        new WhatsappAiWorker(service, config.get("AI_AUTOREPLY_ENABLED", { infer: true })),
-    },
-    {
-      provide: PrismaWhatsappRepository,
-      inject: [PrismaService],
-      useFactory: (prisma: PrismaService) => new PrismaWhatsappRepository(prisma.client),
-    },
-    {
-      provide: PrismaWhatsappInboxRepository,
-      inject: [PrismaService, ConfigService],
-      useFactory: (prisma: PrismaService, config: ConfigService<Environment, true>) =>
-        new PrismaWhatsappInboxRepository(
-          prisma.client,
-          config.get("AI_AUTOREPLY_ENABLED", { infer: true }),
-        ),
-    },
-    {
-      provide: PrismaWhatsappAuthorizationStore,
-      inject: [PrismaService],
-      useFactory: (prisma: PrismaService) => new PrismaWhatsappAuthorizationStore(prisma.client),
-    },
-    {
-      provide: MetaWhatsappGateway,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Environment, true>) => new MetaWhatsappGateway(config),
-    },
-    {
-      provide: MetaWhatsappGraphClient,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Environment, true>) => new MetaWhatsappGraphClient(config),
-    },
-    {
-      provide: MetaWhatsappSignupGateway,
-      inject: [MetaWhatsappGraphClient],
-      useFactory: (graph: MetaWhatsappGraphClient) => new MetaWhatsappSignupGateway(graph),
-    },
-    {
-      provide: MetaWhatsappAuthorizationProvider,
-      inject: [ConfigService, MetaWhatsappGraphClient, MetaWhatsappSignupGateway],
-      useFactory: (
-        config: ConfigService<Environment, true>,
-        graph: MetaWhatsappGraphClient,
-        signup: MetaWhatsappSignupGateway,
-      ) => new MetaWhatsappAuthorizationProvider(config, graph, signup),
-    },
-    {
-      provide: SignedWhatsappSignupState,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Environment, true>) =>
-        new SignedWhatsappSignupState(config),
-    },
-    {
-      provide: AesWhatsappTokenVault,
-      inject: [ConfigService],
-      useFactory: (config: ConfigService<Environment, true>) => new AesWhatsappTokenVault(config),
-    },
-    {
-      provide: WhatsappInboxService,
-      inject: [PrismaWhatsappInboxRepository, WhatsappService],
-      useFactory: (repository: PrismaWhatsappInboxRepository, sender: WhatsappService) =>
-        new WhatsappInboxService(repository, sender),
-    },
-    {
-      provide: WhatsappAuthorizationService,
-      inject: [
-        PrismaWhatsappRepository,
-        PrismaWhatsappAuthorizationStore,
-        MetaWhatsappAuthorizationProvider,
-        MetaWhatsappGateway,
-        MetaWhatsappSignupGateway,
-        AesWhatsappTokenVault,
-      ],
-      useFactory: (
-        repository: PrismaWhatsappRepository,
-        store: PrismaWhatsappAuthorizationStore,
-        authorization: MetaWhatsappAuthorizationProvider,
-        gateway: MetaWhatsappGateway,
-        signup: MetaWhatsappSignupGateway,
-        vault: AesWhatsappTokenVault,
-      ) =>
-        new WhatsappAuthorizationService(repository, store, authorization, gateway, signup, vault),
-    },
-    {
-      provide: WhatsappSignupService,
-      inject: [
-        PrismaWhatsappRepository,
-        MetaWhatsappGateway,
-        MetaWhatsappSignupGateway,
-        SignedWhatsappSignupState,
-        AesWhatsappTokenVault,
-      ],
-      useFactory: (
-        repository: PrismaWhatsappRepository,
-        gateway: MetaWhatsappGateway,
-        signup: MetaWhatsappSignupGateway,
-        state: SignedWhatsappSignupState,
-        vault: AesWhatsappTokenVault,
-      ) => new WhatsappSignupService(repository, gateway, signup, state, vault),
-    },
-    {
-      provide: WhatsappService,
-      inject: [
-        PrismaWhatsappRepository,
-        MetaWhatsappGateway,
-        AesWhatsappTokenVault,
-        Sha256WhatsappMessageHasher,
-      ],
-      useFactory: (
-        repository: PrismaWhatsappRepository,
-        gateway: MetaWhatsappGateway,
-        vault: AesWhatsappTokenVault,
-        hasher: Sha256WhatsappMessageHasher,
-      ) => new WhatsappService(repository, gateway, vault, hasher),
-    },
+    { provide: WHATSAPP_AI_WORKER, useClass: WhatsappAiWorker },
+    { provide: WHATSAPP_MEDIA_WORKER, useClass: WhatsappMediaWorker },
   ],
 })
 export class WhatsappModule {}

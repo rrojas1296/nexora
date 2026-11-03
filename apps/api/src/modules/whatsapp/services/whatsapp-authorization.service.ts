@@ -1,28 +1,37 @@
-import { createHash, randomBytes } from "node:crypto";
-import type {
-  WhatsappAuthorizationProvider,
-  WhatsappAuthorizationStore,
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  WHATSAPP_AUTHORIZATION_PROVIDER,
+  WHATSAPP_AUTHORIZATION_STORE,
+  type IWhatsappAuthorizationProvider,
+  type IWhatsappAuthorizationStore,
 } from "../contracts/whatsapp-authorization.ports.js";
-import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
-import type {
-  WhatsappGateway,
-  WhatsappRepository,
-  WhatsappSignupGateway,
-  WhatsappTokenVault,
+import {
+  WHATSAPP_TOKEN_VAULT,
+  WHATSAPP_SIGNUP_GATEWAY,
+  WHATSAPP_GATEWAY,
+  WHATSAPP_REPOSITORY,
+  type IWhatsappGateway,
+  type IWhatsappRepository,
+  type IWhatsappSignupGateway,
+  type IWhatsappTokenVault,
 } from "../contracts/whatsapp.ports.js";
+import { createHash, randomBytes } from "node:crypto";
+import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
 
 function hash(state: string) {
   return createHash("sha256").update(state).digest("hex");
 }
 
+@Injectable()
 export class WhatsappAuthorizationService {
   constructor(
-    private readonly repository: WhatsappRepository,
-    private readonly store: WhatsappAuthorizationStore,
-    private readonly provider: WhatsappAuthorizationProvider,
-    private readonly gateway: WhatsappGateway,
-    private readonly signup: WhatsappSignupGateway,
-    private readonly vault: WhatsappTokenVault,
+    @Inject(WHATSAPP_REPOSITORY) private readonly repository: IWhatsappRepository,
+    @Inject(WHATSAPP_AUTHORIZATION_STORE) private readonly store: IWhatsappAuthorizationStore,
+    @Inject(WHATSAPP_AUTHORIZATION_PROVIDER)
+    private readonly provider: IWhatsappAuthorizationProvider,
+    @Inject(WHATSAPP_GATEWAY) private readonly gateway: IWhatsappGateway,
+    @Inject(WHATSAPP_SIGNUP_GATEWAY) private readonly signup: IWhatsappSignupGateway,
+    @Inject(WHATSAPP_TOKEN_VAULT) private readonly vault: IWhatsappTokenVault,
   ) {}
 
   async start(actor: WhatsappActor, businessId: string, locale: "es" | "en") {

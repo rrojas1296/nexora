@@ -1,12 +1,14 @@
+import { Inject, Injectable } from "@nestjs/common";
+import { ORDERS_REPOSITORY, type IOrdersRepository } from "../repositories/orders.repository.js";
 import {
   checkBusiness,
   type CommerceActor,
   type CommerceQuery,
 } from "../../../common/commerce/commerce.js";
 import type { OrderCreate, OrderUpdate } from "../models/order.js";
-import { OrdersRepository } from "../repositories/orders.repository.js";
+@Injectable()
 export class OrdersService {
-  constructor(private readonly repository: OrdersRepository) {}
+  constructor(@Inject(ORDERS_REPOSITORY) private readonly repository: IOrdersRepository) {}
   list(actor: CommerceActor, businessId: string, query: CommerceQuery) {
     checkBusiness(actor, businessId);
     return this.repository.list(actor, query);

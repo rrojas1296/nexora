@@ -1,16 +1,24 @@
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  PRODUCTS_REPOSITORY,
+  type IProductsRepository,
+} from "../repositories/products.repository.js";
 import {
   ProductError,
   type ProductActor,
   type ProductInput,
   type ProductListQuery,
 } from "../models/product.js";
-import type { ProductsRepository } from "../repositories/products.repository.js";
-import type { ProductImageNormalizer } from "../contracts/product-image-normalizer.js";
+import {
+  PRODUCT_IMAGE_NORMALIZER,
+  type IProductImageNormalizer,
+} from "../contracts/product-image-normalizer.js";
 
+@Injectable()
 export class ProductsService {
   constructor(
-    private readonly repository: ProductsRepository,
-    private readonly normalizeImage: ProductImageNormalizer,
+    @Inject(PRODUCTS_REPOSITORY) private readonly repository: IProductsRepository,
+    @Inject(PRODUCT_IMAGE_NORMALIZER) private readonly imageNormalizer: IProductImageNormalizer,
   ) {}
 
   private scope(actor: ProductActor, businessId: string): ProductActor {
@@ -21,7 +29,7 @@ export class ProductsService {
   async uploadImage(actor: ProductActor, businessId: string, input?: Uint8Array) {
     const scope = this.scope(actor, businessId);
     await this.repository.checkImageWriteAccess(scope);
-    const data = await this.normalizeImage(input);
+    const data = await this.imageNormalizer.normalize(input);
     return this.repository.createImage(scope, data);
   }
 

@@ -75,7 +75,9 @@ export interface LoginInput {
   businessId?: string;
 }
 
-export interface AuthSettings {
+export const AUTH_SETTINGS = Symbol("AuthSettings");
+
+export interface IAuthSettings {
   accessTtl: number;
   refreshTtl: number;
   sessionTtl: number;

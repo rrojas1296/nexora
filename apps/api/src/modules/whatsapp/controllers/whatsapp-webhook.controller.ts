@@ -1,4 +1,6 @@
+import { WhatsappInboxService } from "../services/whatsapp-inbox.service.js";
 import {
+  Inject,
   BadRequestException,
   Body,
   Controller,
@@ -11,14 +13,16 @@ import {
   SetMetadata,
   UseGuards,
 } from "@nestjs/common";
+import {
+  WHATSAPP_WEBHOOK_SECURITY,
+  type IWhatsappWebhookSecurity,
+} from "../contracts/whatsapp-webhook-security.js";
 import { ApiHeader, ApiTags } from "@nestjs/swagger";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
 import { z } from "zod";
 import { EXTERNAL_WEBHOOK_ROUTE } from "../../../common/external-webhook.js";
 import { Public } from "../../auth/decorators/public.decorator.js";
-import { WhatsappInboxService } from "../services/whatsapp-inbox.service.js";
 import { decodeWhatsappNotification, notificationSchema } from "../dto/whatsapp-notification.js";
-import { WhatsappWebhookSecurity } from "../providers/whatsapp-webhook-security.js";
 import { WhatsappSignatureGuard } from "../guards/whatsapp-signature.guard.js";
 
 const verificationSchema = z.object({
@@ -31,7 +35,7 @@ const verificationSchema = z.object({
 @Controller("whatsapp/webhook")
 export class WhatsappWebhookController {
   constructor(
-    private readonly security: WhatsappWebhookSecurity,
+    @Inject(WHATSAPP_WEBHOOK_SECURITY) private readonly security: IWhatsappWebhookSecurity,
     private readonly inbox: WhatsappInboxService,
   ) {}
 

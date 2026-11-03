@@ -18,7 +18,9 @@ export interface AiToolResult {
   data: Record<string, unknown>;
   finalText?: string;
 }
-export interface AiToolExecutor {
+export const AI_TOOL_EXECUTOR = Symbol("AiToolExecutor");
+
+export interface IAiToolExecutor {
   readonly definitions: AiToolDefinition[];
   execute(work: AiReplyWork, call: AiToolCall): Promise<AiToolResult>;
 }

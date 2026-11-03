@@ -1,18 +1,21 @@
-import { createHash, randomUUID } from "node:crypto";
-import { jwtVerify, SignJWT } from "jose";
-import type { AuthTokens } from "../contracts/auth.ports.js";
+import { Inject, Injectable } from "@nestjs/common";
 import {
+  AUTH_SETTINGS,
   AuthError,
-  type AuthSettings,
+  type IAuthSettings,
   type Session,
   type TokenClaims,
   type TokenPair,
 } from "../models/auth.js";
+import { createHash, randomUUID } from "node:crypto";
+import { jwtVerify, SignJWT } from "jose";
+import type { IAuthTokens } from "../contracts/auth.ports.js";
 
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export class JoseAuthTokens implements AuthTokens {
-  constructor(private readonly settings: AuthSettings) {}
+@Injectable()
+export class JoseAuthTokens implements IAuthTokens {
+  constructor(@Inject(AUTH_SETTINGS) private readonly settings: IAuthSettings) {}
 
   async issue(session: Session): Promise<TokenPair> {
     const now = Math.floor(Date.now() / 1000);

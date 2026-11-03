@@ -1,3 +1,4 @@
+import { WhatsappAuthorizationService } from "../services/whatsapp-authorization.service.js";
 import { Body, Controller, Get, HttpCode, Param, Post, Req, UseFilters } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { Throttle } from "@nestjs/throttler";
@@ -5,7 +6,6 @@ import { ApiRoute } from "../../../common/documentation/api-route.js";
 import { envelope } from "../../../common/documentation/response-schemas.js";
 import { connectionResponse } from "../dto/whatsapp-responses.dto.js";
 import { getAuthenticatedActor, type AuthRequest } from "../../auth/http/auth.request.js";
-import { WhatsappAuthorizationService } from "../services/whatsapp-authorization.service.js";
 import { WhatsappExceptionFilter } from "../filters/whatsapp-exception.filter.js";
 import { parseWhatsappRequest as parse, whatsappIdSchema } from "../dto/whatsapp.dto.js";
 import {

@@ -1,8 +1,16 @@
-import type { ProofReview, WhatsappCommerceRepository } from "../contracts/whatsapp-commerce.js";
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  WHATSAPP_COMMERCE_REPOSITORY,
+  type ProofReview,
+  type IWhatsappCommerceRepository,
+} from "../contracts/whatsapp-commerce.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
 
+@Injectable()
 export class WhatsappCommerceService {
-  constructor(private readonly repository: WhatsappCommerceRepository) {}
+  constructor(
+    @Inject(WHATSAPP_COMMERCE_REPOSITORY) private readonly repository: IWhatsappCommerceRepository,
+  ) {}
 
   private assertBusiness(actor: WhatsappActor, businessId: string) {
     if (actor.businessId !== businessId) throw new WhatsappError("WHATSAPP_FORBIDDEN");

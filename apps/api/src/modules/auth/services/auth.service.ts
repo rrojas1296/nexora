@@ -1,3 +1,12 @@
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  AUTH_REPOSITORY,
+  AUTH_TOKENS,
+  PASSWORD_HASHER,
+  type IAuthRepository,
+  type IAuthTokens,
+  type IPasswordHasher,
+} from "../contracts/auth.ports.js";
 import {
   AuthError,
   type ChangePasswordInput,
@@ -6,13 +15,13 @@ import {
   type RegisterInput,
   type TokenClaims,
 } from "../models/auth.js";
-import type { AuthRepository, AuthTokens, PasswordHasher } from "../contracts/auth.ports.js";
 
+@Injectable()
 export class AuthService {
   constructor(
-    private readonly repository: AuthRepository,
-    private readonly passwords: PasswordHasher,
-    private readonly tokens: AuthTokens,
+    @Inject(AUTH_REPOSITORY) private readonly repository: IAuthRepository,
+    @Inject(PASSWORD_HASHER) private readonly passwords: IPasswordHasher,
+    @Inject(AUTH_TOKENS) private readonly tokens: IAuthTokens,
   ) {}
 
   async register(input: RegisterInput) {

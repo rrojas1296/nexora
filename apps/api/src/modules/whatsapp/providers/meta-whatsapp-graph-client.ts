@@ -1,9 +1,12 @@
+import type { IMetaWhatsappGraphClient } from "../contracts/meta-whatsapp-graph-client.js";
+import { Injectable } from "@nestjs/common";
 import { createHmac } from "node:crypto";
 import { ConfigService } from "@nestjs/config";
 import type { Environment } from "../../../config/environment.js";
 import { WhatsappError } from "../models/whatsapp.js";
 
-export class MetaWhatsappGraphClient {
+@Injectable()
+export class MetaWhatsappGraphClient implements IMetaWhatsappGraphClient {
   constructor(private readonly config: ConfigService<Environment, true>) {}
 
   credentials() {

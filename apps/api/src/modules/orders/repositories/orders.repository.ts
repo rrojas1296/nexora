@@ -1,7 +1,9 @@
 import type { CommerceActor, CommerceQuery } from "../../../common/commerce/commerce.js";
 import type { OrderCreate, OrderUpdate, OrderView } from "../models/order.js";
-export abstract class OrdersRepository {
-  abstract list(
+export const ORDERS_REPOSITORY = Symbol("OrdersRepository");
+
+export interface IOrdersRepository {
+  list(
     actor: CommerceActor,
     query: CommerceQuery,
   ): Promise<{
@@ -16,7 +18,7 @@ export abstract class OrdersRepository {
       cancelled: number;
     };
   }>;
-  abstract get(actor: CommerceActor, id: string): Promise<OrderView>;
-  abstract create(actor: CommerceActor, input: OrderCreate): Promise<OrderView>;
-  abstract update(actor: CommerceActor, id: string, input: OrderUpdate): Promise<OrderView>;
+  get(actor: CommerceActor, id: string): Promise<OrderView>;
+  create(actor: CommerceActor, input: OrderCreate): Promise<OrderView>;
+  update(actor: CommerceActor, id: string, input: OrderUpdate): Promise<OrderView>;
 }

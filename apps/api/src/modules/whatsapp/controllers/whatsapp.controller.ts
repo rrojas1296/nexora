@@ -1,3 +1,5 @@
+import { WhatsappSignupService } from "../services/whatsapp-signup.service.js";
+import { WhatsappService } from "../services/whatsapp.service.js";
 import {
   Body,
   Controller,
@@ -17,8 +19,6 @@ import { envelope } from "../../../common/documentation/response-schemas.js";
 import { attemptResponse, connectionResponse } from "../dto/whatsapp-responses.dto.js";
 import { Throttle } from "@nestjs/throttler";
 import { getAuthenticatedActor, type AuthRequest } from "../../auth/http/auth.request.js";
-import { WhatsappService } from "../services/whatsapp.service.js";
-import { WhatsappSignupService } from "../services/whatsapp-signup.service.js";
 import { WhatsappExceptionFilter } from "../filters/whatsapp-exception.filter.js";
 import {
   parseWhatsappRequest as parse,

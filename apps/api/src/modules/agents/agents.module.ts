@@ -1,24 +1,14 @@
 import { Module } from "@nestjs/common";
 import { DatabaseModule } from "../../database/database.module.js";
-import { PrismaService } from "../../database/prisma.service.js";
-import { AgentsService } from "./services/agents.service.js";
+import { AuthModule } from "../auth/auth.module.js";
 import { PrismaAgentsRepository } from "./repositories/prisma-agents-repository.js";
+import { AGENTS_REPOSITORY } from "./repositories/agents.repository.js";
+import { AgentsService } from "./services/agents.service.js";
 import { AgentsController } from "./controllers/agents.controller.js";
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AuthModule],
   controllers: [AgentsController],
-  providers: [
-    {
-      provide: PrismaAgentsRepository,
-      inject: [PrismaService],
-      useFactory: (prisma: PrismaService) => new PrismaAgentsRepository(prisma.client),
-    },
-    {
-      provide: AgentsService,
-      inject: [PrismaAgentsRepository],
-      useFactory: (repository: PrismaAgentsRepository) => new AgentsService(repository),
-    },
-  ],
+  providers: [{ provide: AGENTS_REPOSITORY, useClass: PrismaAgentsRepository }, AgentsService],
 })
 export class AgentsModule {}

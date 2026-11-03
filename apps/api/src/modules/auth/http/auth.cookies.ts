@@ -1,12 +1,15 @@
+import type { IAuthCookies } from "../contracts/auth-cookies.js";
+import { Inject, Injectable } from "@nestjs/common";
+import { AUTH_SETTINGS, type IAuthSettings, type TokenPair } from "../models/auth.js";
 import { randomUUID } from "node:crypto";
 import type { CookieOptions, Request, Response } from "express";
-import type { AuthSettings, TokenPair } from "../models/auth.js";
 
-export class AuthCookies {
+@Injectable()
+export class AuthCookies implements IAuthCookies {
   readonly names: { access: string; refresh: string; csrf: string; pre: string };
   private readonly options: CookieOptions;
 
-  constructor(private readonly settings: AuthSettings) {
+  constructor(@Inject(AUTH_SETTINGS) private readonly settings: IAuthSettings) {
     const prefix = settings.production ? "__Host-" : "dev-";
     this.names = {
       access: `${prefix}access`,

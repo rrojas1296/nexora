@@ -1,23 +1,30 @@
-import { randomUUID } from "node:crypto";
-import { Prisma, type PrismaClient } from "../../../database/generated/client.js";
-import type { AuthRepository, IssueTokens } from "../contracts/auth.ports.js";
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Inject, Injectable } from "@nestjs/common";
 import {
+  AUTH_SETTINGS,
   AuthError,
-  type AuthSettings,
+  type IAuthSettings,
   type Identity,
   type RegisterInput,
   type Session,
   type TokenClaims,
   type TokenPair,
 } from "../models/auth.js";
+import { randomUUID } from "node:crypto";
+import { Prisma, type PrismaClient } from "../../../database/generated/client.js";
+import type { IAuthRepository, IssueTokens } from "../contracts/auth.ports.js";
 
 type Transaction = Prisma.TransactionClient;
 
-export class PrismaAuthRepository implements AuthRepository {
+@Injectable()
+export class PrismaAuthRepository implements IAuthRepository {
+  private readonly client: PrismaClient;
   constructor(
-    private readonly client: PrismaClient,
-    private readonly settings: AuthSettings,
-  ) {}
+    prismaService: PrismaService,
+    @Inject(AUTH_SETTINGS) private readonly settings: IAuthSettings,
+  ) {
+    this.client = prismaService.client;
+  }
 
   findCredentials(email: string) {
     return this.client.user.findUnique({

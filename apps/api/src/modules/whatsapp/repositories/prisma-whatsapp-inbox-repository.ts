@@ -1,9 +1,13 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import type { Environment } from "../../../config/environment.js";
 import type { Prisma, PrismaClient, WhatsappThread } from "../../../database/generated/client.js";
 import type {
   IncomingWhatsappMessage,
   WhatsappReplyAvailability,
 } from "../models/whatsapp-inbox.js";
-import type { WhatsappInboxRepository } from "../repositories/whatsapp-inbox.repository.js";
+import type { IWhatsappInboxRepository } from "../repositories/whatsapp-inbox.repository.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
 import { findAutomationAgent } from "./prisma-whatsapp-ai-agent.js";
 import { authorizeWhatsappActor } from "./authorize-whatsapp-actor.js";
@@ -21,11 +25,15 @@ function summary(thread: WhatsappThread) {
   };
 }
 
-export class PrismaWhatsappInboxRepository implements WhatsappInboxRepository {
-  constructor(
-    private readonly client: PrismaClient,
-    private readonly automationEnabled = false,
-  ) {}
+@Injectable()
+export class PrismaWhatsappInboxRepository implements IWhatsappInboxRepository {
+  private readonly client: PrismaClient;
+  constructor(prismaService: PrismaService, config: ConfigService<Environment, true>) {
+    this.client = prismaService.client;
+    this.automationEnabled = config.get("AI_AUTOREPLY_ENABLED", { infer: true });
+  }
+
+  private readonly automationEnabled: boolean;
 
   private readonly authorize = authorizeWhatsappActor;
 

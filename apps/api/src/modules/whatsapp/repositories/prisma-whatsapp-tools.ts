@@ -1,19 +1,24 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import { randomBytes, randomUUID } from "node:crypto";
 import { Prisma, type PrismaClient } from "../../../database/generated/client.js";
 import type { AiReplyWork } from "../contracts/whatsapp-ai-store.js";
-import type { AiToolCall, AiToolExecutor, AiToolResult } from "../contracts/ai-tools.js";
+import type { AiToolCall, IAiToolExecutor, AiToolResult } from "../contracts/ai-tools.js";
 import { toolDefinitions, toolSchemas } from "../dto/whatsapp-tools.js";
 import { findAutomationAgent } from "./prisma-whatsapp-ai-agent.js";
-
 import { orderInclude, orderView, type CommerceOrder } from "./whatsapp-order-view.js";
 
 type Tx = Prisma.TransactionClient;
 
 class ToolInputError extends Error {}
 
-export class PrismaWhatsappTools implements AiToolExecutor {
+@Injectable()
+export class PrismaWhatsappTools implements IAiToolExecutor {
+  private readonly client: PrismaClient;
   readonly definitions = toolDefinitions;
-  constructor(private readonly client: PrismaClient) {}
+  constructor(prismaService: PrismaService) {
+    this.client = prismaService.client;
+  }
 
   async execute(work: AiReplyWork, call: AiToolCall): Promise<AiToolResult> {
     if (call.arguments.length > 16_384 || !Object.hasOwn(toolSchemas, call.name))

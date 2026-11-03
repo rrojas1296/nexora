@@ -1,11 +1,11 @@
-import { Injectable, type CanActivate, type ExecutionContext } from "@nestjs/common";
+import { AuthService } from "../services/auth.service.js";
+import { Inject, Injectable, type CanActivate, type ExecutionContext } from "@nestjs/common";
+import { CSRF_PROTECTION, type ICsrfProtection } from "../contracts/csrf-protection.js";
+import { AUTH_COOKIES, type IAuthCookies } from "../contracts/auth-cookies.js";
 import { Reflector } from "@nestjs/core";
 import { EXTERNAL_WEBHOOK_ROUTE } from "../../../common/external-webhook.js";
-import { AuthService } from "../services/auth.service.js";
 import { AuthError } from "../models/auth.js";
-import { AuthCookies } from "../http/auth.cookies.js";
 import type { AuthRequest } from "../http/auth.request.js";
-import { CsrfProtection } from "../http/csrf.protection.js";
 import { PUBLIC_ROUTE } from "../decorators/public.decorator.js";
 
 @Injectable()
@@ -13,8 +13,8 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly auth: AuthService,
-    private readonly cookies: AuthCookies,
-    private readonly csrf: CsrfProtection,
+    @Inject(AUTH_COOKIES) private readonly cookies: IAuthCookies,
+    @Inject(CSRF_PROTECTION) private readonly csrf: ICsrfProtection,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {

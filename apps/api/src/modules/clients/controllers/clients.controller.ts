@@ -1,3 +1,4 @@
+import { ClientsService } from "../services/clients.service.js";
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseFilters } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
@@ -9,7 +10,6 @@ import {
 } from "../../../common/commerce/commerce-http.js";
 import { getAuthenticatedActor, type AuthRequest } from "../../auth/http/auth.request.js";
 import { clientCreate, clientUpdate, clientResponse, clientsResponse } from "../dto/clients.dto.js";
-import { ClientsService } from "../services/clients.service.js";
 @ApiTags("Clientes")
 @Controller("businesses/:businessId/clients")
 @UseFilters(CommerceExceptionFilter)

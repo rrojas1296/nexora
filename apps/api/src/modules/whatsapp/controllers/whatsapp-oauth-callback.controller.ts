@@ -1,14 +1,14 @@
-import { Controller, Get, Query, Req, Res } from "@nestjs/common";
+import { WhatsappAuthorizationService } from "../services/whatsapp-authorization.service.js";
+import { AuthService } from "../../auth/services/auth.service.js";
+import { Inject, Controller, Get, Query, Req, Res } from "@nestjs/common";
+import { AUTH_COOKIES, type IAuthCookies } from "../../auth/contracts/auth-cookies.js";
 import { ConfigService } from "@nestjs/config";
 import { ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
 import type { Environment } from "../../../config/environment.js";
-import { AuthService } from "../../auth/services/auth.service.js";
-import { AuthCookies } from "../../auth/http/auth.cookies.js";
 import type { AuthRequest } from "../../auth/http/auth.request.js";
 import { Public } from "../../auth/decorators/public.decorator.js";
-import { WhatsappAuthorizationService } from "../services/whatsapp-authorization.service.js";
 import { authorizationCallbackSchema } from "../dto/whatsapp-authorization.dto.js";
 
 @ApiTags("WhatsApp")
@@ -17,7 +17,7 @@ export class WhatsappOauthCallbackController {
   constructor(
     private readonly authorization: WhatsappAuthorizationService,
     private readonly auth: AuthService,
-    private readonly cookies: AuthCookies,
+    @Inject(AUTH_COOKIES) private readonly cookies: IAuthCookies,
     private readonly config: ConfigService<Environment, true>,
   ) {}
 

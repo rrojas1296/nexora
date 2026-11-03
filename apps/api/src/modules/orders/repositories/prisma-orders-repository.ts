@@ -1,3 +1,5 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import { Prisma, type PrismaClient } from "../../../database/generated/client.js";
 import { authorizeCommerce } from "../../../common/commerce/authorize-commerce.js";
@@ -8,7 +10,7 @@ import {
   type CommerceQuery,
 } from "../../../common/commerce/commerce.js";
 import type { OrderCreate, OrderLineInput, OrderUpdate, OrderView } from "../models/order.js";
-import { OrdersRepository } from "./orders.repository.js";
+import { IOrdersRepository } from "./orders.repository.js";
 const include = {
   client: true,
   items: { where: { isDeleted: false }, orderBy: { id: "asc" as const } },
@@ -73,9 +75,11 @@ async function lines(
     };
   });
 }
-export class PrismaOrdersRepository extends OrdersRepository {
-  constructor(private readonly prisma: PrismaClient) {
-    super();
+@Injectable()
+export class PrismaOrdersRepository implements IOrdersRepository {
+  private readonly prisma: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.prisma = prismaService.client;
   }
   list(actor: CommerceActor, query: CommerceQuery) {
     return this.prisma.$transaction(async (tx) => {

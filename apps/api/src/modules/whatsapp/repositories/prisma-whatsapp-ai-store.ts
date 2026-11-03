@@ -1,21 +1,35 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Inject, Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import type { Environment } from "../../../config/environment.js";
+import {
+  WHATSAPP_MESSAGE_HASHER,
+  type IWhatsappMessageHasher,
+} from "../contracts/whatsapp.ports.js";
 import type { Prisma, PrismaClient } from "../../../database/generated/client.js";
 import type {
   AiReplyFallbackReason,
   AiReplyWork,
-  WhatsappAiStore,
+  IWhatsappAiStore,
 } from "../contracts/whatsapp-ai-store.js";
-import type { WhatsappMessageHasher } from "../contracts/whatsapp.ports.js";
 import type { WhatsappMessage } from "../models/whatsapp.js";
 import { findAutomationAgent } from "./prisma-whatsapp-ai-agent.js";
 
 const leaseMilliseconds = 120_000;
 
-export class PrismaWhatsappAiStore implements WhatsappAiStore {
+@Injectable()
+export class PrismaWhatsappAiStore implements IWhatsappAiStore {
+  private readonly client: PrismaClient;
   constructor(
-    private readonly client: PrismaClient,
-    private readonly hasher: WhatsappMessageHasher,
-    private readonly dailyLimit: number,
-  ) {}
+    prismaService: PrismaService,
+    @Inject(WHATSAPP_MESSAGE_HASHER) private readonly hasher: IWhatsappMessageHasher,
+    config: ConfigService<Environment, true>,
+  ) {
+    this.client = prismaService.client;
+    this.dailyLimit = config.get("AI_DAILY_REPLY_LIMIT", { infer: true });
+  }
+
+  private readonly dailyLimit: number;
 
   async recoverExpired() {
     const before = new Date(Date.now() - leaseMilliseconds);

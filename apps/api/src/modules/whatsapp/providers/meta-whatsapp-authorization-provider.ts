@@ -1,11 +1,18 @@
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  META_WHATSAPP_GRAPH_CLIENT,
+  type IMetaWhatsappGraphClient,
+} from "../contracts/meta-whatsapp-graph-client.js";
 import { ConfigService } from "@nestjs/config";
 import { z } from "zod";
 import type { Environment } from "../../../config/environment.js";
-import { MetaWhatsappGraphClient } from "./meta-whatsapp-graph-client.js";
 import type { WhatsappAuthorizedAsset } from "../models/whatsapp-authorization.js";
-import type { WhatsappAuthorizationProvider } from "../contracts/whatsapp-authorization.ports.js";
+import type { IWhatsappAuthorizationProvider } from "../contracts/whatsapp-authorization.ports.js";
 import { WhatsappError } from "../models/whatsapp.js";
-import { MetaWhatsappSignupGateway } from "./meta-whatsapp-signup-gateway.js";
+import {
+  WHATSAPP_SIGNUP_GATEWAY,
+  type IWhatsappSignupGateway,
+} from "../contracts/whatsapp.ports.js";
 
 const pageSchema = z.object({
   data: z.array(
@@ -24,11 +31,12 @@ const pageSchema = z.object({
     .optional(),
 });
 
-export class MetaWhatsappAuthorizationProvider implements WhatsappAuthorizationProvider {
+@Injectable()
+export class MetaWhatsappAuthorizationProvider implements IWhatsappAuthorizationProvider {
   constructor(
     private readonly config: ConfigService<Environment, true>,
-    private readonly graph: MetaWhatsappGraphClient,
-    private readonly signup: MetaWhatsappSignupGateway,
+    @Inject(META_WHATSAPP_GRAPH_CLIENT) private readonly graph: IMetaWhatsappGraphClient,
+    @Inject(WHATSAPP_SIGNUP_GATEWAY) private readonly signup: IWhatsappSignupGateway,
   ) {}
 
   private configuration() {

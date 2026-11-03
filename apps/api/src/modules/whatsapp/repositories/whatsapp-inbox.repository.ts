@@ -6,7 +6,9 @@ import type {
   WhatsappMessagePage,
 } from "../models/whatsapp-inbox.js";
 
-export interface WhatsappInboxRepository {
+export const WHATSAPP_INBOX_REPOSITORY = Symbol("WhatsappInboxRepository");
+
+export interface IWhatsappInboxRepository {
   setControl(
     actor: WhatsappActor,
     threadId: string,

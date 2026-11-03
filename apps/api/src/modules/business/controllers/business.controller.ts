@@ -1,3 +1,4 @@
+import { BusinessService } from "../services/business.service.js";
 import {
   BadRequestException,
   Body,
@@ -14,7 +15,6 @@ import { ApiTags } from "@nestjs/swagger";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
 import { businessResponse } from "../dto/business-responses.dto.js";
 import type { AuthRequest } from "../../auth/http/auth.request.js";
-import { BusinessService } from "../services/business.service.js";
 import {
   businessIdSchema,
   createBusinessSchema,

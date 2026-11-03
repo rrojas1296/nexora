@@ -1,11 +1,17 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import type { Prisma, PrismaClient } from "../../../database/generated/client.js";
-import type { ProofReview, WhatsappCommerceRepository } from "../contracts/whatsapp-commerce.js";
+import type { ProofReview, IWhatsappCommerceRepository } from "../contracts/whatsapp-commerce.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
 import { authorizeWhatsappActor } from "./authorize-whatsapp-actor.js";
 import { orderInclude, orderView } from "./whatsapp-order-view.js";
 
-export class PrismaWhatsappCommerce implements WhatsappCommerceRepository {
-  constructor(private readonly client: PrismaClient) {}
+@Injectable()
+export class PrismaWhatsappCommerce implements IWhatsappCommerceRepository {
+  private readonly client: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.client = prismaService.client;
+  }
 
   private async thread(tx: Prisma.TransactionClient, actor: WhatsappActor, id: string) {
     const membership = await authorizeWhatsappActor(tx, actor);

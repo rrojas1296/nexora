@@ -1,9 +1,11 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import {
   Prisma,
   type PrismaClient,
   type Agent as AgentRecord,
 } from "../../../database/generated/client.js";
-import type { AgentsRepository } from "./agents.repository.js";
+import type { IAgentsRepository } from "./agents.repository.js";
 import {
   AgentError,
   type AgentActor,
@@ -35,8 +37,12 @@ function serialize(agent: AgentRecord): AgentConfiguration {
   };
 }
 
-export class PrismaAgentsRepository implements AgentsRepository {
-  constructor(private readonly client: PrismaClient) {}
+@Injectable()
+export class PrismaAgentsRepository implements IAgentsRepository {
+  private readonly client: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.client = prismaService.client;
+  }
 
   private async authorize(tx: Prisma.TransactionClient, actor: AgentActor, write = false) {
     // Lock the business before the first-save lookup: nullable storeId is not a

@@ -22,7 +22,9 @@ export interface ProofReview {
   revision: number;
   orderVersion: number;
 }
-export interface WhatsappCommerceRepository {
+export const WHATSAPP_COMMERCE_REPOSITORY = Symbol("WhatsappCommerceRepository");
+
+export interface IWhatsappCommerceRepository {
   orders(
     actor: WhatsappActor,
     threadId: string,

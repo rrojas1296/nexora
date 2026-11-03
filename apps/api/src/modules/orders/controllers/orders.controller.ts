@@ -1,3 +1,4 @@
+import { OrdersService } from "../services/orders.service.js";
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseFilters } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
@@ -14,7 +15,6 @@ import {
   orderResponse,
   ordersResponse,
 } from "../dto/orders.dto.js";
-import { OrdersService } from "../services/orders.service.js";
 @ApiTags("Pedidos")
 @Controller("businesses/:businessId/orders")
 @UseFilters(CommerceExceptionFilter)

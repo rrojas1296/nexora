@@ -1,9 +1,9 @@
+import { AgentsService } from "../services/agents.service.js";
 import { Body, Controller, Get, Param, Put, Req, UseFilters } from "@nestjs/common";
 import { ApiTags } from "@nestjs/swagger";
 import { ApiRoute } from "../../../common/documentation/api-route.js";
 import { agentResponse, nullableAgentResponse } from "../dto/agents-responses.dto.js";
 import { getAuthenticatedActor, type AuthRequest } from "../../auth/http/auth.request.js";
-import { AgentsService } from "../services/agents.service.js";
 import { AgentsExceptionFilter } from "../filters/agents-exception.filter.js";
 import {
   agentBusinessIdSchema,

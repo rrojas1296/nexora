@@ -1,16 +1,19 @@
-import type { Response } from "express";
 import { AuthService } from "../services/auth.service.js";
-import { AuthError, type AuthSettings } from "../models/auth.js";
-import { SignedCsrf } from "../providers/signed-csrf.js";
-import { AuthCookies } from "./auth.cookies.js";
+import type { ICsrfProtection } from "../contracts/csrf-protection.js";
+import { Inject, Injectable } from "@nestjs/common";
+import { AUTH_SETTINGS, AuthError, type IAuthSettings } from "../models/auth.js";
+import { AUTH_COOKIES, type IAuthCookies } from "../contracts/auth-cookies.js";
+import { SIGNED_CSRF, type ISignedCsrf } from "../contracts/signed-csrf.js";
+import type { Response } from "express";
 import { header, type AuthRequest } from "./auth.request.js";
 
-export class CsrfProtection {
+@Injectable()
+export class CsrfProtection implements ICsrfProtection {
   constructor(
     private readonly auth: AuthService,
-    private readonly cookies: AuthCookies,
-    private readonly signed: SignedCsrf,
-    private readonly settings: AuthSettings,
+    @Inject(AUTH_COOKIES) private readonly cookies: IAuthCookies,
+    @Inject(SIGNED_CSRF) private readonly signed: ISignedCsrf,
+    @Inject(AUTH_SETTINGS) private readonly settings: IAuthSettings,
   ) {}
 
   async bootstrap(request: AuthRequest, response: Response): Promise<string> {

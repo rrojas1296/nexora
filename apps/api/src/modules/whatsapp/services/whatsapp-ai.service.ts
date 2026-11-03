@@ -1,17 +1,31 @@
-import { AiGenerationError, type AiTextGenerator } from "../contracts/ai-text-generator.js";
-import type { AiToolExchange, AiToolExecutor } from "../contracts/ai-tools.js";
-import type { AiReplyFallbackReason, AiReplyWork } from "../contracts/whatsapp-ai-store.js";
-import type { WhatsappAiStore } from "../contracts/whatsapp-ai-store.js";
-import type { WhatsappService } from "./whatsapp.service.js";
+import { WhatsappService } from "./whatsapp.service.js";
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  AI_TOOL_EXECUTOR,
+  type AiToolExchange,
+  type IAiToolExecutor,
+} from "../contracts/ai-tools.js";
+import {
+  AI_TEXT_GENERATOR,
+  AiGenerationError,
+  type IAiTextGenerator,
+} from "../contracts/ai-text-generator.js";
+import {
+  WHATSAPP_AI_STORE,
+  type AiReplyFallbackReason,
+  type AiReplyWork,
+  type IWhatsappAiStore,
+} from "../contracts/whatsapp-ai-store.js";
 
 const maxToolCalls = 8;
 
+@Injectable()
 export class WhatsappAiService {
   constructor(
-    private readonly store: WhatsappAiStore,
-    private readonly generator: AiTextGenerator,
+    @Inject(WHATSAPP_AI_STORE) private readonly store: IWhatsappAiStore,
+    @Inject(AI_TEXT_GENERATOR) private readonly generator: IAiTextGenerator,
     private readonly sender: WhatsappService,
-    private readonly tools: AiToolExecutor,
+    @Inject(AI_TOOL_EXECUTOR) private readonly tools: IAiToolExecutor,
   ) {}
 
   private async generate(work: AiReplyWork): Promise<string> {

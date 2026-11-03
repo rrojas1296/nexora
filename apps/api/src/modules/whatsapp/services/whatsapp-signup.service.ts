@@ -1,19 +1,26 @@
-import { WhatsappError, type WhatsappActor, type WhatsappSignupInput } from "../models/whatsapp.js";
-import type {
-  WhatsappGateway,
-  WhatsappRepository,
-  WhatsappSignupGateway,
-  WhatsappSignupState,
-  WhatsappTokenVault,
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  WHATSAPP_TOKEN_VAULT,
+  WHATSAPP_SIGNUP_STATE,
+  WHATSAPP_SIGNUP_GATEWAY,
+  WHATSAPP_GATEWAY,
+  WHATSAPP_REPOSITORY,
+  type IWhatsappGateway,
+  type IWhatsappRepository,
+  type IWhatsappSignupGateway,
+  type IWhatsappSignupState,
+  type IWhatsappTokenVault,
 } from "../contracts/whatsapp.ports.js";
+import { WhatsappError, type WhatsappActor, type WhatsappSignupInput } from "../models/whatsapp.js";
 
+@Injectable()
 export class WhatsappSignupService {
   constructor(
-    private readonly repository: WhatsappRepository,
-    private readonly gateway: WhatsappGateway,
-    private readonly signup: WhatsappSignupGateway,
-    private readonly state: WhatsappSignupState,
-    private readonly vault: WhatsappTokenVault,
+    @Inject(WHATSAPP_REPOSITORY) private readonly repository: IWhatsappRepository,
+    @Inject(WHATSAPP_GATEWAY) private readonly gateway: IWhatsappGateway,
+    @Inject(WHATSAPP_SIGNUP_GATEWAY) private readonly signup: IWhatsappSignupGateway,
+    @Inject(WHATSAPP_SIGNUP_STATE) private readonly state: IWhatsappSignupState,
+    @Inject(WHATSAPP_TOKEN_VAULT) private readonly vault: IWhatsappTokenVault,
   ) {}
 
   private async authorize(actor: WhatsappActor, businessId: string) {

@@ -8,7 +8,9 @@ import type {
   StoredProductImage,
 } from "../models/product.js";
 
-export interface ProductsRepository {
+export const PRODUCTS_REPOSITORY = Symbol("ProductsRepository");
+
+export interface IProductsRepository {
   checkImageWriteAccess(actor: ProductActor): Promise<void>;
   createImage(actor: ProductActor, data: Uint8Array): Promise<string>;
   getImage(actor: ProductActor, id: string): Promise<StoredProductImage>;

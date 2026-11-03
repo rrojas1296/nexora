@@ -10,7 +10,7 @@ Revisar SQL, backup, destino y **todas** las pendientes antes de un deploy expl�
 
 ## API
 
-Prefijo `/api/v1/businesses/:businessId`. Cookie/sesión válida, Business activo igual al de la ruta, usuario/membresía/negocio no eliminados y membresía activa en cada operación. Lectura para cualquier rol activo; escritura solo OWNER/ADMIN con Origin/CSRF. Controllers documentados con Zod/Swagger; servicios/modelos/contratos sin Nest ni Prisma. Sin RLS/filtro global ni autorización delegada a las FK.
+Prefijo `/api/v1/businesses/:businessId`. Cookie/sesión válida, Business activo igual al de la ruta, usuario/membresía/negocio no eliminados y membresía activa en cada operación. Lectura para cualquier rol activo; escritura solo OWNER/ADMIN con Origin/CSRF. Controllers documentados con Zod/Swagger; modelos/contratos sin Nest ni Prisma, servicios `@Injectable()` registrados e inyectados directamente por clase. Solo los repositorios/providers usan interfaces `I…` y tokens `Symbol` mediante `@Inject`/`provide/useClass`. Sin RLS/filtro global ni autorización delegada a las FK.
 
 | Ruta                       | Comportamiento                                                                                                                                                                   |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

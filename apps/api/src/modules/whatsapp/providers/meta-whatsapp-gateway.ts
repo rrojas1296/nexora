@@ -1,7 +1,8 @@
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { z } from "zod";
 import type { Environment } from "../../../config/environment.js";
-import type { WhatsappGateway, WhatsappSendResult } from "../contracts/whatsapp.ports.js";
+import type { IWhatsappGateway, WhatsappSendResult } from "../contracts/whatsapp.ports.js";
 import { WhatsappError, type WhatsappMessage } from "../models/whatsapp.js";
 
 const errorSchema = z.object({
@@ -45,7 +46,8 @@ function payload(message: WhatsappMessage) {
   };
 }
 
-export class MetaWhatsappGateway implements WhatsappGateway {
+@Injectable()
+export class MetaWhatsappGateway implements IWhatsappGateway {
   constructor(private readonly config: ConfigService<Environment, true>) {}
 
   private url(phoneNumberId: string, suffix = ""): string {

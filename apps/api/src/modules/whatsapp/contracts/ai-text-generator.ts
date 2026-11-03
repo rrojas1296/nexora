@@ -1,7 +1,9 @@
 import type { AiToolDefinition, AiToolExchange, AiTurnResult } from "./ai-tools.js";
 
 // Provider-neutral boundary: business orchestration never receives SDK response objects.
-export interface AiTextGenerator {
+export const AI_TEXT_GENERATOR = Symbol("AiTextGenerator");
+
+export interface IAiTextGenerator {
   readonly provider: string;
   readonly model: string;
   generate(

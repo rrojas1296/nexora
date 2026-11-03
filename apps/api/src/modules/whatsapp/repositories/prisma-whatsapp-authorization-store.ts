@@ -1,10 +1,12 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import { z } from "zod";
 import type {
   PrismaClient,
   WhatsappAuthorizationAttempt,
 } from "../../../database/generated/client.js";
 import type { WhatsappAuthorizationAttempt as AuthorizationAttempt } from "../models/whatsapp-authorization.js";
-import type { WhatsappAuthorizationStore } from "../contracts/whatsapp-authorization.ports.js";
+import type { IWhatsappAuthorizationStore } from "../contracts/whatsapp-authorization.ports.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
 
 const assetsSchema = z.array(
@@ -24,8 +26,12 @@ function attempt(record: WhatsappAuthorizationAttempt): AuthorizationAttempt {
   };
 }
 
-export class PrismaWhatsappAuthorizationStore implements WhatsappAuthorizationStore {
-  constructor(private readonly client: PrismaClient) {}
+@Injectable()
+export class PrismaWhatsappAuthorizationStore implements IWhatsappAuthorizationStore {
+  private readonly client: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.client = prismaService.client;
+  }
 
   private scope(actor: WhatsappActor) {
     return { ...actor, isDeleted: false };

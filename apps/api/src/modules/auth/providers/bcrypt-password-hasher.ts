@@ -1,12 +1,21 @@
+import { Inject, Injectable, type OnModuleInit } from "@nestjs/common";
+import { AUTH_SETTINGS, type IAuthSettings } from "../models/auth.js";
 import { randomBytes } from "node:crypto";
+import type { IPasswordHasher } from "../contracts/auth.ports.js";
 import bcrypt from "bcrypt";
-import type { PasswordHasher } from "../contracts/auth.ports.js";
 
-export class BcryptPasswordHasher implements PasswordHasher {
+@Injectable()
+export class BcryptPasswordHasher implements IPasswordHasher, OnModuleInit {
   private readonly dummyHash: Promise<string>;
+  private readonly rounds: number;
 
-  constructor(private readonly rounds: number) {
-    this.dummyHash = bcrypt.hash(randomBytes(32).toString("hex"), rounds);
+  constructor(@Inject(AUTH_SETTINGS) settings: IAuthSettings) {
+    this.rounds = settings.bcryptRounds;
+    this.dummyHash = bcrypt.hash(randomBytes(32).toString("hex"), this.rounds);
+  }
+
+  async onModuleInit(): Promise<void> {
+    await this.ready();
   }
 
   hash(password: string): Promise<string> {

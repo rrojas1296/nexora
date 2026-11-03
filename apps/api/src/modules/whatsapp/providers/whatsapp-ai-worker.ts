@@ -1,15 +1,23 @@
-import { Logger, type OnModuleInit, type OnModuleDestroy } from "@nestjs/common";
-import type { WhatsappAiService } from "../services/whatsapp-ai.service.js";
+import { WhatsappAiService } from "../services/whatsapp-ai.service.js";
+import { Injectable, Logger, type OnModuleInit, type OnModuleDestroy } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import type { IWhatsappAiWorker } from "../contracts/whatsapp-ai-worker.js";
+import type { Environment } from "../../../config/environment.js";
 
-export class WhatsappAiWorker implements OnModuleInit, OnModuleDestroy {
+@Injectable()
+export class WhatsappAiWorker implements IWhatsappAiWorker, OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(WhatsappAiWorker.name);
   private timer: ReturnType<typeof setInterval> | undefined;
   private running: Promise<void> | undefined;
 
   constructor(
     private readonly service: WhatsappAiService,
-    private readonly enabled: boolean,
-  ) {}
+    config: ConfigService<Environment, true>,
+  ) {
+    this.enabled = config.get("AI_AUTOREPLY_ENABLED", { infer: true });
+  }
+
+  private readonly enabled: boolean;
 
   onModuleInit() {
     if (!this.enabled) return;

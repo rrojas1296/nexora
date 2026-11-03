@@ -1,6 +1,8 @@
 import type { AgentActor, AgentConfiguration, AgentInput } from "../models/agent.js";
 
-export interface AgentsRepository {
+export const AGENTS_REPOSITORY = Symbol("AgentsRepository");
+
+export interface IAgentsRepository {
   getConfiguration(actor: AgentActor): Promise<AgentConfiguration | null>;
   saveConfiguration(actor: AgentActor, input: AgentInput): Promise<AgentConfiguration>;
 }

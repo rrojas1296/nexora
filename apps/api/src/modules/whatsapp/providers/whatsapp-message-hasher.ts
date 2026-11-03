@@ -1,8 +1,10 @@
+import { Injectable } from "@nestjs/common";
 import { createHash } from "node:crypto";
-import type { WhatsappMessageHasher } from "../contracts/whatsapp.ports.js";
+import type { IWhatsappMessageHasher } from "../contracts/whatsapp.ports.js";
 import type { WhatsappMessage } from "../models/whatsapp.js";
 
-export class Sha256WhatsappMessageHasher implements WhatsappMessageHasher {
+@Injectable()
+export class Sha256WhatsappMessageHasher implements IWhatsappMessageHasher {
   hash(message: WhatsappMessage): string {
     const canonical =
       message.type === "text"

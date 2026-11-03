@@ -1,9 +1,11 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import {
   Prisma,
   type PrismaClient,
   type Product as ProductRecord,
 } from "../../../database/generated/client.js";
-import type { ProductsRepository } from "./products.repository.js";
+import type { IProductsRepository } from "./products.repository.js";
 import {
   ProductError,
   type Product,
@@ -44,8 +46,12 @@ function productData(input: Partial<ProductInput>) {
   return { ...fields, ...(weight === undefined ? {} : { weightGrams: weight }) };
 }
 
-export class PrismaProductsRepository implements ProductsRepository {
-  constructor(private readonly client: PrismaClient) {}
+@Injectable()
+export class PrismaProductsRepository implements IProductsRepository {
+  private readonly client: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.client = prismaService.client;
+  }
 
   private async authorize(tx: Transaction, actor: ProductActor, write = false) {
     // Hold the membership/business through the operation: role changes and logical

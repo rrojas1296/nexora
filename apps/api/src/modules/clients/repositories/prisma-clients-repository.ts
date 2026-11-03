@@ -1,3 +1,5 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import { createHash } from "node:crypto";
 import { Prisma, type PrismaClient } from "../../../database/generated/client.js";
 import { authorizeCommerce } from "../../../common/commerce/authorize-commerce.js";
@@ -8,7 +10,7 @@ import {
   type CommerceQuery,
 } from "../../../common/commerce/commerce.js";
 import type { ClientInput, ClientView } from "../models/client.js";
-import { ClientsRepository } from "./clients.repository.js";
+import { IClientsRepository } from "./clients.repository.js";
 const include = { _count: { select: { orders: { where: { isDeleted: false } } } } } as const;
 type Row = Prisma.ClientGetPayload<{ include: typeof include }>;
 function view(row: Row): ClientView {
@@ -45,9 +47,11 @@ function data(input: ClientInput) {
           : ("RETAIL" as const),
   };
 }
-export class PrismaClientsRepository extends ClientsRepository {
-  constructor(private readonly prisma: PrismaClient) {
-    super();
+@Injectable()
+export class PrismaClientsRepository implements IClientsRepository {
+  private readonly prisma: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.prisma = prismaService.client;
   }
   list(actor: CommerceActor, query: CommerceQuery) {
     return this.prisma.$transaction(async (tx) => {

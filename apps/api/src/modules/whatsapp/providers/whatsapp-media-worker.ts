@@ -1,10 +1,18 @@
-import { Logger, type OnModuleInit, type OnModuleDestroy } from "@nestjs/common";
+import { PrismaService } from "../../../database/prisma.service.js";
+import {
+  Inject,
+  Injectable,
+  Logger,
+  type OnModuleInit,
+  type OnModuleDestroy,
+} from "@nestjs/common";
+import { WHATSAPP_TOKEN_VAULT, type IWhatsappTokenVault } from "../contracts/whatsapp.ports.js";
 import { ConfigService } from "@nestjs/config";
+import type { IWhatsappMediaWorker } from "../contracts/whatsapp-media-worker.js";
 import { z } from "zod";
-import sharp from "sharp";
 import type { Environment } from "../../../config/environment.js";
 import type { PrismaClient } from "../../../database/generated/client.js";
-import type { WhatsappTokenVault } from "../contracts/whatsapp.ports.js";
+import sharp from "sharp";
 
 const maxBytes = 5 * 1024 * 1024;
 const metadataSchema = z.object({
@@ -13,16 +21,20 @@ const metadataSchema = z.object({
   file_size: z.number().int().positive().max(maxBytes),
 });
 
-export class WhatsappMediaWorker implements OnModuleInit, OnModuleDestroy {
+@Injectable()
+export class WhatsappMediaWorker implements IWhatsappMediaWorker, OnModuleInit, OnModuleDestroy {
+  private readonly client: PrismaClient;
   private timer: ReturnType<typeof setInterval> | undefined;
   private running: Promise<void> | undefined;
   private readonly logger = new Logger(WhatsappMediaWorker.name);
 
   constructor(
-    private readonly client: PrismaClient,
-    private readonly vault: WhatsappTokenVault,
+    prismaService: PrismaService,
+    @Inject(WHATSAPP_TOKEN_VAULT) private readonly vault: IWhatsappTokenVault,
     private readonly config: ConfigService<Environment, true>,
-  ) {}
+  ) {
+    this.client = prismaService.client;
+  }
 
   onModuleInit() {
     if (

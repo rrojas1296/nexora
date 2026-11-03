@@ -1,3 +1,4 @@
+import { WhatsappInboxService } from "../services/whatsapp-inbox.service.js";
 import {
   Controller,
   Body,
@@ -17,7 +18,6 @@ import { ApiRoute } from "../../../common/documentation/api-route.js";
 import { envelope } from "../../../common/documentation/response-schemas.js";
 import { attemptResponse } from "../dto/whatsapp-responses.dto.js";
 import { getAuthenticatedActor, type AuthRequest } from "../../auth/http/auth.request.js";
-import { WhatsappInboxService } from "../services/whatsapp-inbox.service.js";
 import { WhatsappExceptionFilter } from "../filters/whatsapp-exception.filter.js";
 import {
   inboxQuerySchema,

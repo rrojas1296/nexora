@@ -1,3 +1,14 @@
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  WHATSAPP_MESSAGE_HASHER,
+  WHATSAPP_TOKEN_VAULT,
+  WHATSAPP_GATEWAY,
+  WHATSAPP_REPOSITORY,
+  type IWhatsappGateway,
+  type IWhatsappMessageHasher,
+  type IWhatsappRepository,
+  type IWhatsappTokenVault,
+} from "../contracts/whatsapp.ports.js";
 import {
   WhatsappError,
   type WhatsappActor,
@@ -7,19 +18,14 @@ import {
   type WhatsappConversationSend,
   type WhatsappMessage,
 } from "../models/whatsapp.js";
-import type {
-  WhatsappGateway,
-  WhatsappMessageHasher,
-  WhatsappRepository,
-  WhatsappTokenVault,
-} from "../contracts/whatsapp.ports.js";
 
+@Injectable()
 export class WhatsappService {
   constructor(
-    private readonly repository: WhatsappRepository,
-    private readonly gateway: WhatsappGateway,
-    private readonly vault: WhatsappTokenVault,
-    private readonly hasher: WhatsappMessageHasher,
+    @Inject(WHATSAPP_REPOSITORY) private readonly repository: IWhatsappRepository,
+    @Inject(WHATSAPP_GATEWAY) private readonly gateway: IWhatsappGateway,
+    @Inject(WHATSAPP_TOKEN_VAULT) private readonly vault: IWhatsappTokenVault,
+    @Inject(WHATSAPP_MESSAGE_HASHER) private readonly hasher: IWhatsappMessageHasher,
   ) {}
 
   private scope(actor: WhatsappActor, businessId: string): WhatsappActor {

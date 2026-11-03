@@ -1,11 +1,16 @@
+import { WhatsappService } from "./whatsapp.service.js";
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  WHATSAPP_INBOX_REPOSITORY,
+  type IWhatsappInboxRepository,
+} from "../repositories/whatsapp-inbox.repository.js";
 import type { IncomingWhatsappMessage } from "../models/whatsapp-inbox.js";
-import type { WhatsappInboxRepository } from "../repositories/whatsapp-inbox.repository.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
-import type { WhatsappService } from "./whatsapp.service.js";
 
+@Injectable()
 export class WhatsappInboxService {
   constructor(
-    private readonly repository: WhatsappInboxRepository,
+    @Inject(WHATSAPP_INBOX_REPOSITORY) private readonly repository: IWhatsappInboxRepository,
     private readonly sender: WhatsappService,
   ) {}
 

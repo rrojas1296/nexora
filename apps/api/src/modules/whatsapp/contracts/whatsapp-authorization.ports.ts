@@ -4,7 +4,9 @@ import type {
   WhatsappAuthorizedAsset,
 } from "../models/whatsapp-authorization.js";
 
-export interface WhatsappAuthorizationStore {
+export const WHATSAPP_AUTHORIZATION_STORE = Symbol("WhatsappAuthorizationStore");
+
+export interface IWhatsappAuthorizationStore {
   create(
     actor: WhatsappActor,
     stateHash: string,
@@ -26,7 +28,9 @@ export interface WhatsappAuthorizationStore {
   ): Promise<void>;
 }
 
-export interface WhatsappAuthorizationProvider {
+export const WHATSAPP_AUTHORIZATION_PROVIDER = Symbol("WhatsappAuthorizationProvider");
+
+export interface IWhatsappAuthorizationProvider {
   authorizationUrl(state: string): string;
   returnUrl(locale: "es" | "en", attemptId?: string): string;
   exchangeCode(code: string): Promise<string>;

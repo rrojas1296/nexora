@@ -1,10 +1,12 @@
+import { Injectable } from "@nestjs/common";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { ConfigService } from "@nestjs/config";
 import type { Environment } from "../../../config/environment.js";
-import type { WhatsappTokenVault } from "../contracts/whatsapp.ports.js";
+import type { IWhatsappTokenVault } from "../contracts/whatsapp.ports.js";
 import { WhatsappError } from "../models/whatsapp.js";
 
-export class AesWhatsappTokenVault implements WhatsappTokenVault {
+@Injectable()
+export class AesWhatsappTokenVault implements IWhatsappTokenVault {
   constructor(private readonly config: ConfigService<Environment, true>) {}
 
   private key(): Buffer {

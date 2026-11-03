@@ -1,6 +1,10 @@
+import { Inject, Injectable } from "@nestjs/common";
+import {
+  META_WHATSAPP_GRAPH_CLIENT,
+  type IMetaWhatsappGraphClient,
+} from "../contracts/meta-whatsapp-graph-client.js";
 import { z } from "zod";
-import { MetaWhatsappGraphClient } from "./meta-whatsapp-graph-client.js";
-import type { WhatsappSignupGateway } from "../contracts/whatsapp.ports.js";
+import type { IWhatsappSignupGateway } from "../contracts/whatsapp.ports.js";
 import { WhatsappError } from "../models/whatsapp.js";
 
 const tokenSchema = z.object({ access_token: z.string().min(20).max(4096) });
@@ -25,8 +29,11 @@ const phonesSchema = z.object({
 });
 const successSchema = z.object({ success: z.literal(true) });
 
-export class MetaWhatsappSignupGateway implements WhatsappSignupGateway {
-  constructor(private readonly graph: MetaWhatsappGraphClient) {}
+@Injectable()
+export class MetaWhatsappSignupGateway implements IWhatsappSignupGateway {
+  constructor(
+    @Inject(META_WHATSAPP_GRAPH_CLIENT) private readonly graph: IMetaWhatsappGraphClient,
+  ) {}
 
   async exchangeCode(code: string, redirectUri?: string) {
     const { appId, secret } = this.graph.credentials();

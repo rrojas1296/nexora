@@ -1,13 +1,15 @@
+import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { SignJWT, jwtVerify } from "jose";
 import { ConfigService } from "@nestjs/config";
 import type { Environment } from "../../../config/environment.js";
-import type { WhatsappSignupState } from "../contracts/whatsapp.ports.js";
+import type { IWhatsappSignupState } from "../contracts/whatsapp.ports.js";
 import { WhatsappError, type WhatsappActor } from "../models/whatsapp.js";
 
 const audience = "nexora-whatsapp-embedded-signup";
 
-export class SignedWhatsappSignupState implements WhatsappSignupState {
+@Injectable()
+export class SignedWhatsappSignupState implements IWhatsappSignupState {
   constructor(private readonly config: ConfigService<Environment, true>) {}
 
   private key() {

@@ -1,10 +1,12 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import {
   Prisma,
   type PrismaClient,
   type WhatsappConnection as ConnectionRecord,
   type WhatsappSendAttempt as AttemptRecord,
 } from "../../../database/generated/client.js";
-import type { WhatsappRepository, WhatsappSendResult } from "../contracts/whatsapp.ports.js";
+import type { IWhatsappRepository, WhatsappSendResult } from "../contracts/whatsapp.ports.js";
 import {
   WhatsappError,
   type WhatsappActor,
@@ -34,8 +36,12 @@ function attempt(record: AttemptRecord) {
   };
 }
 
-export class PrismaWhatsappRepository implements WhatsappRepository {
-  constructor(private readonly client: PrismaClient) {}
+@Injectable()
+export class PrismaWhatsappRepository implements IWhatsappRepository {
+  private readonly client: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.client = prismaService.client;
+  }
 
   private async authorizeInTransaction(tx: Prisma.TransactionClient, actor: WhatsappActor) {
     // Serializes configuration changes and send reservations within this business.

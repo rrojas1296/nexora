@@ -1,5 +1,7 @@
+import { PrismaService } from "../../../database/prisma.service.js";
+import { Injectable } from "@nestjs/common";
 import type { PrismaClient } from "../../../database/generated/client.js";
-import type { BusinessRepository } from "./business.repository.js";
+import type { IBusinessRepository } from "./business.repository.js";
 import type {
   BusinessProfile,
   CreateBusinessInput,
@@ -30,8 +32,12 @@ function membership(userId: string, write = false) {
   };
 }
 
-export class PrismaBusinessRepository implements BusinessRepository {
-  constructor(private readonly client: PrismaClient) {}
+@Injectable()
+export class PrismaBusinessRepository implements IBusinessRepository {
+  private readonly client: PrismaClient;
+  constructor(prismaService: PrismaService) {
+    this.client = prismaService.client;
+  }
 
   get(businessId: string, userId: string): Promise<BusinessProfile | null> {
     return this.client.business.findFirst({

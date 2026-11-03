@@ -1,3 +1,4 @@
+import { ProductsService } from "../services/products.service.js";
 import {
   Body,
   Controller,
@@ -29,7 +30,6 @@ import { Throttle } from "@nestjs/throttler";
 import type { Response } from "express";
 import { maxProductImageBytes } from "../models/product-image.js";
 import { getAuthenticatedActor, type AuthRequest } from "../../auth/http/auth.request.js";
-import { ProductsService } from "../services/products.service.js";
 import { ProductsExceptionFilter } from "../filters/products-exception.filter.js";
 import {
   parseProductRequest as parse,

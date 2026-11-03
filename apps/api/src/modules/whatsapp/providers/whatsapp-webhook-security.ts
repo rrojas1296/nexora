@@ -1,10 +1,11 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import type { IWhatsappWebhookSecurity } from "../contracts/whatsapp-webhook-security.js";
 import { Injectable, ServiceUnavailableException } from "@nestjs/common";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { ConfigService } from "@nestjs/config";
 import type { Environment } from "../../../config/environment.js";
 
 @Injectable()
-export class WhatsappWebhookSecurity {
+export class WhatsappWebhookSecurity implements IWhatsappWebhookSecurity {
   constructor(private readonly config: ConfigService<Environment, true>) {}
 
   verifySubscriptionToken(token: string): boolean {

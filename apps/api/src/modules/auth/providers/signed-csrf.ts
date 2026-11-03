@@ -1,8 +1,11 @@
+import type { ISignedCsrf } from "../contracts/signed-csrf.js";
+import { Inject, Injectable } from "@nestjs/common";
+import { AUTH_SETTINGS, type IAuthSettings } from "../models/auth.js";
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
-import type { AuthSettings } from "../models/auth.js";
 
-export class SignedCsrf {
-  constructor(private readonly settings: AuthSettings) {}
+@Injectable()
+export class SignedCsrf implements ISignedCsrf {
+  constructor(@Inject(AUTH_SETTINGS) private readonly settings: IAuthSettings) {}
 
   issue(context: string): string {
     const nonce = randomBytes(32).toString("base64url");
