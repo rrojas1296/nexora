@@ -1,5 +1,7 @@
 "use client";
 import { useFormatter, useTranslations } from "next-intl";
+import { DeliveryAddressCard } from "./delivery-address-card";
+import { DeliveryPricing } from "./delivery-pricing";
 import type { Order } from "../schemas/order-schema";
 export function OrderSummary({ order }: { order: Order }) {
   const t = useTranslations("Orders");
@@ -53,21 +55,21 @@ export function OrderSummary({ order }: { order: Order }) {
       <p className="text-sm font-medium">
         {c("subtotal")}: {money(order.subtotal)}
       </p>
-      <section className="space-y-2 text-xs leading-6">
-        <h3 className="font-medium">{c("delivery")}</h3>
-        <p>{c(order.deliveryMode === "DELIVERY" ? "deliveryRequested" : "pickup")}</p>
-        {order.deliveryAddress ? (
-          <p className="whitespace-pre-wrap break-words">{order.deliveryAddress}</p>
-        ) : null}
-        {order.deliveryReference ? (
-          <p className="whitespace-pre-wrap break-words">{order.deliveryReference}</p>
-        ) : null}
-        {order.latitude !== null && order.longitude !== null ? (
-          <p>
-            {c("coordinates")}: {order.latitude}, {order.longitude}
-          </p>
-        ) : null}
-      </section>
+      {order.deliveryMode === "DELIVERY" ? (
+        <DeliveryAddressCard
+          address={order.deliveryAddress}
+          reference={order.deliveryReference}
+          latitude={order.latitude}
+          longitude={order.longitude}
+        >
+          <DeliveryPricing order={order} />
+        </DeliveryAddressCard>
+      ) : (
+        <>
+          <p className="text-xs">{c("pickup")}</p>
+          <DeliveryPricing order={order} />
+        </>
+      )}
       <p className="text-xs leading-6 text-muted-foreground">{c("limits")}</p>
     </div>
   );

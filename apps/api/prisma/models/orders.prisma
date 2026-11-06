@@ -23,6 +23,10 @@ model Order {
   deliveryLatitude    Float?
   deliveryLongitude   Float?
   deliveryQuoteStatus String          @default("NOT_REQUIRED")
+  deliveryFee         Decimal?        @db.Decimal(18, 2)
+  deliveryQuotedBy    String?         @db.Uuid
+  deliveryQuotedAt    DateTime?       @db.Timestamptz(3)
+  deliveryQuoteNote   String          @default("") @db.Text
   paymentStatus       String          @default("PENDING")
   confirmationToken   String?
   confirmationJobId   String?         @db.Uuid

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { InputField, fieldClassName } from "@/components/ui/input-field";
 import { FormSelectField } from "@/components/ui/form-select-field";
 import { useValidationMessage } from "@/features/demo/hooks/use-validation-message";
-import { tones, type AgentInput } from "../schemas/agent-schema";
+import { responseLanguages, tones, type AgentInput } from "../schemas/agent-schema";
 
 export function AgentFields({
   form,
@@ -42,6 +42,25 @@ export function AgentFields({
           disabled={disabled}
           options={tones.map((value) => ({ value, label: t(`tones.${value}`) }))}
         />
+      </div>
+      <div className="space-y-2">
+        <label htmlFor="agent-response-language" className="block text-xs font-medium">
+          {t("responseLanguage")}
+        </label>
+        <FormSelectField
+          control={form.control}
+          name="responseLanguage"
+          id="agent-response-language"
+          disabled={disabled}
+          aria-describedby="agent-response-language-hint"
+          options={responseLanguages.map((value) => ({
+            value,
+            label: t(`responseLanguages.${value}`),
+          }))}
+        />
+        <p id="agent-response-language-hint" className="text-xs leading-6 text-muted-foreground">
+          {t("responseLanguageHint")}
+        </p>
       </div>
       {(["greeting"] as const).map((name) => (
         <Controller

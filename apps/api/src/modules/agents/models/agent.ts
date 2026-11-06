@@ -13,6 +13,7 @@ export interface AgentActor {
 export interface AgentInput {
   name: string;
   tone: "friendly" | "professional" | "concise";
+  responseLanguage: "es" | "en";
   instructions: string;
   greeting: string;
   enabled: boolean;

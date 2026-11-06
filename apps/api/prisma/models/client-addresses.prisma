@@ -1,0 +1,45 @@
+model ClientAddress {
+  id           String   @id @default(uuid()) @db.Uuid
+  businessId   String   @db.Uuid
+  clientId     String   @db.Uuid
+  label        String
+  address      String   @db.Text
+  reference    String   @default("") @db.Text
+  country      String   @default("")
+  city         String   @default("")
+  district     String   @default("")
+  latitude     Float?
+  longitude    Float?
+  isDefault    Boolean  @default(false)
+  version      Int      @default(0)
+  creationHash String?
+  isDeleted    Boolean  @default(false)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
+  business     Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  client       Client   @relation(fields: [businessId, clientId], references: [businessId, id], onDelete: Restrict)
+
+  @@unique([businessId, id])
+  @@index([businessId, clientId, isDeleted])
+  @@map("ClientAddresses")
+}
+
+model WhatsappAddressAction {
+  id         String         @id @default(uuid()) @db.Uuid
+  businessId String         @db.Uuid
+  clientId   String         @db.Uuid
+  threadId   String         @db.Uuid
+  jobId      String         @db.Uuid
+  token      String
+  payload    Json
+  expiresAt  DateTime       @db.Timestamptz(3)
+  isDeleted  Boolean        @default(false)
+  createdAt  DateTime       @default(now()) @db.Timestamptz(3)
+  business   Business       @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  client     Client         @relation(fields: [businessId, clientId], references: [businessId, id], onDelete: Restrict)
+  thread     WhatsappThread @relation(fields: [businessId, threadId], references: [businessId, id], onDelete: Restrict)
+
+  @@unique([businessId, id])
+  @@index([businessId, threadId, isDeleted])
+  @@map("WhatsappAddressActions")
+}

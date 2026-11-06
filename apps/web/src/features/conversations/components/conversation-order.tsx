@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import type { ConversationOrder as Order } from "../schemas/commerce-schema";
 import type { InboxScope } from "../schemas/inbox-schema";
 import { useProofReview } from "../hooks/use-conversation-orders";
+import { Link } from "@/i18n/navigation";
+import { DeliveryAddressCard } from "@/features/orders/components/delivery-address-card";
+import { DeliveryPricing } from "@/features/orders/components/delivery-pricing";
 import { PrivateAttachment } from "./private-attachment";
 
 export function ConversationOrder({
@@ -21,6 +24,7 @@ export function ConversationOrder({
   refreshing: boolean;
 }) {
   const t = useTranslations("ConversationCommerce");
+  const d = useTranslations("Delivery");
   const mutation = useProofReview(scope, threadId);
   return (
     <article className="space-y-4 border-t py-4">
@@ -52,20 +56,25 @@ export function ConversationOrder({
         <div>
           <dt className="font-medium">{t("delivery")}</dt>
           <dd>{t(order.deliveryMode === "DELIVERY" ? "deliveryMode" : "pickup")}</dd>
-          {order.deliveryMode === "DELIVERY" ? (
-            <dd className="space-y-1">
-              <p className="whitespace-pre-wrap break-words">{order.deliveryAddress}</p>
-              <p className="whitespace-pre-wrap break-words">{order.deliveryReference}</p>
-              {order.latitude !== null && order.longitude !== null ? (
-                <p dir="ltr">
-                  {order.latitude}, {order.longitude}
-                </p>
-              ) : null}
-              <p className="text-muted-foreground">{t("quotePending")}</p>
-            </dd>
-          ) : null}
         </div>
       </dl>
+      {order.deliveryMode === "DELIVERY" ? (
+        <DeliveryAddressCard
+          address={order.deliveryAddress}
+          reference={order.deliveryReference}
+          latitude={order.latitude}
+          longitude={order.longitude}
+        >
+          <DeliveryPricing order={order} />
+        </DeliveryAddressCard>
+      ) : (
+        <DeliveryPricing order={order} />
+      )}
+      {canManage && order.status === "DRAFT" && order.deliveryMode === "DELIVERY" ? (
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/orders/${order.id}/edit`}>{d("quoteTitle")}</Link>
+        </Button>
+      ) : null}
       {order.proofs.length ? (
         <div className="space-y-4">
           <h5 className="text-xs font-medium">{t("proofs")}</h5>

@@ -56,6 +56,22 @@ function spreadsheetText(element: Element): string {
     .join("");
 }
 
+function normalizeSpreadsheetPrefixes(document: Document) {
+  const namespace = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+  // ExcelJS matches literal element names, not XML namespace/local-name pairs.
+  // Recreate only SpreadsheetML elements; do not strip arbitrary XML prefixes.
+  const elements = Array.from(document.getElementsByTagNameNS(namespace, "*"));
+  for (const element of elements) {
+    if (!element.prefix) continue;
+    const replacement = document.createElementNS(namespace, element.localName);
+    for (const attribute of Array.from(element.attributes)) {
+      replacement.setAttributeNS(attribute.namespaceURI, attribute.name, attribute.value);
+    }
+    while (element.firstChild) replacement.appendChild(element.firstChild);
+    element.parentNode?.replaceChild(replacement, element);
+  }
+}
+
 function normalizeWorkbookXml(xml: string, sharedStrings: readonly string[]): string {
   const document = parseWorkbookXml(xml);
   const elements = Array.from(document.getElementsByTagName("*"));
@@ -103,6 +119,7 @@ function normalizeWorkbookXml(xml: string, sharedStrings: readonly string[]): st
       else element.setAttribute("max", String(Math.min(max, 15)));
     }
   }
+  normalizeSpreadsheetPrefixes(document);
   return new XMLSerializer().serializeToString(document);
 }
 

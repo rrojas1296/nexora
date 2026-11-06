@@ -1,4 +1,6 @@
 import { Module } from "@nestjs/common";
+import { GOOGLE_MAPS_LINK_RESOLVER } from "./contracts/google-maps-link-resolver.js";
+import { GoogleMapsLinkResolver } from "./providers/google-maps-link-resolver.js";
 import { DatabaseModule } from "../../database/database.module.js";
 import { AuthModule } from "../auth/auth.module.js";
 import { PrismaWhatsappRepository } from "./repositories/prisma-whatsapp-repository.js";
@@ -66,6 +68,7 @@ import { WhatsappMediaWorker } from "./providers/whatsapp-media-worker.js";
     { provide: WHATSAPP_AI_STORE, useClass: PrismaWhatsappAiStore },
     { provide: WHATSAPP_COMMERCE_REPOSITORY, useClass: PrismaWhatsappCommerce },
     { provide: AI_TOOL_EXECUTOR, useClass: PrismaWhatsappTools },
+    { provide: GOOGLE_MAPS_LINK_RESOLVER, useClass: GoogleMapsLinkResolver },
     { provide: AI_TEXT_GENERATOR, useClass: OpenAiTextGenerator },
     { provide: WHATSAPP_GATEWAY, useClass: MetaWhatsappGateway },
     { provide: WHATSAPP_SIGNUP_GATEWAY, useClass: MetaWhatsappSignupGateway },

@@ -13,6 +13,7 @@ model WhatsappThread {
   controlVersion  Int                      @default(0)
   aiJobs          WhatsappAiReplyJob[]
   orders          Order[]
+  addressActions  WhatsappAddressAction[]
   isDeleted       Boolean                  @default(false)
   createdAt       DateTime                 @default(now()) @db.Timestamptz(3)
   updatedAt       DateTime                 @updatedAt @db.Timestamptz(3)

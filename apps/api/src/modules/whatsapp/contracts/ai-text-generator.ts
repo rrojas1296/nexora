@@ -19,6 +19,7 @@ export interface AiReplyInput {
   context: string;
   agentName: string;
   tone: string;
+  responseLanguage: "es" | "en";
   instructions: string;
   greeting: string;
   firstReply: boolean;

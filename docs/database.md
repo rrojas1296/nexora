@@ -54,6 +54,10 @@ El token de autorización se elimina al terminar/fallar/cancelar y la limpieza d
 
 `20261020270000_clients_orders_pages`, **creada y no aplicada**, hace opcionales email/país de Clients, añade version/creationHash y creationHash de Orders, clientId opcional de WhatsappThreads, FK compuesta Business/cliente e índices. Mantiene unicidad email por negocio (múltiples null permitidos), no añade unicidad de teléfono ni fusiona/backfillea contactos/pedidos. Coincidencias múltiples/inactivas requieren revisión humana. Requiere todas las anteriores, incluida `20261020260000_whatsapp_commerce_tools`, antes de arrancar este código. No se conectó a DB ni se aplicaron cambios; revisar backup/destino/todas las pendientes y despliegue coordinado. Ver [clients-orders.md](./clients-orders.md).
 
+## Migración pendiente — Direcciones y cotizaciones de delivery
+
+`20261020300000_customer_addresses_delivery_quotes`, **creada/no aplicada**, añade ClientAddress → ClientAddresses y WhatsappAddressAction → WhatsappAddressActions, ambas con isDeleted y FK compuestas Business/cliente (acción también al hilo), índices y default único parcial por cliente activo. Check de par/rangos de coordenadas; Orders añade deliveryFee Decimal(18,2), deliveryQuotedBy/At y deliveryQuoteNote con checks no negativo/QUOTED requiere fee. Invalida resúmenes DRAFT DELIVERY previos e incrementa versión sin copiar Client.address ni convertir envío pendiente a cero. Requiere migraciones anteriores, incluida `20261020290000_agent_response_language`. Sin DB/migraciones ejecutadas; revisar todas las pendientes antes de desplegar explícitamente. Acciones vencidas/borradas, direcciones y snapshots permanecen sin purga/cifrado aplicativo; ver [delivery-addresses.md](./delivery-addresses.md).
+
 ## Organización del esquema
 
 `apps/api/prisma.config.ts` apunta a la carpeta `prisma`: Prisma 7 carga recursivamente sus archivos `.prisma` como un único esquema lógico, sin imports ni flags experimentales. `prisma/schema.prisma` conserva únicamente generator/datasource; la ruta relativa del cliente generado no cambia. Las migraciones continúan en `prisma/migrations`.
@@ -69,6 +73,7 @@ apps/api/prisma/
     product-categories.prisma   ProductCategory
     product-images.prisma       ProductImage
     clients.prisma              Client y ClientSegment
+    client-addresses.prisma     ClientAddress y WhatsappAddressAction
     orders.prisma               Order, OrderItem y OrderStatus
     conversations.prisma        Conversation, ConversationStatus y ConversationAssignment
     messages.prisma             Message, MessageDirection y MessageStatus

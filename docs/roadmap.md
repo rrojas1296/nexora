@@ -1,5 +1,50 @@
 # Roadmap de implementación
 
+## Enlaces cortos de Google Maps del celular (implementado)
+
+- `maps.app.goo.gl/<token>` y `goo.gl/maps/<token>` ya se intentan resolver mediante provider con interfaz/Symbol, sin clave ni Embed. Largos conservan parser local; nunca @ centro como destino ni geocodificación.
+- GET solo en hosts/rutas cortos exactos, redirects manuales y destinos Google Maps permitidos, máximo tres peticiones/4 s compartidos, sin retries/cookies/leer HTML o descargar URL larga. Bloquea destinos externos, credenciales, puertos, loops y formatos arbitrarios; fallo explícito pide ubicación nativa/dirección escrita, no afirma invalidez de la dirección.
+- Elegibilidad, pertenencia, versiones e idempotencia antes del HTTP; red fuera de bloqueos/transacciones, revalidación de trabajo/mensaje/pedido antes de resultado/mutación. Mensaje original mantiene su identidad; lectura/escritura distintas pueden resolver otra vez. El destino histórico se confirma por resumen exacto, sin asumir que un enlace externo es inmutable.
+- Prompt deja de rechazar un enlace solo por ser corto. No se modifican DB/secretos ni se agregan migraciones; política de privacidad incluye petición servidor→Google. Ver [delivery-addresses.md](./delivery-addresses.md).
+- Verificación estática: lint, formato, tipos y build; sin tests, navegador/smoke, DB ni Google/Meta/OpenAI. Resolución real de formatos/redirecciones pendiente de validación autorizada.
+
+## Lectura local de enlaces Google Maps por el agente (implementado)
+
+- Herramienta `read_google_maps_location` sobre messageId TEXT INBOUND del mismo Business/hilo, sin URLs ni coordenadas elegibles por el modelo. Encabezado con ID en historial entrante para identificar la fuente; límites de historial conservados.
+- Parser puro de hosts/rutas Maps acotados: q/query numérico o !3d/!4d de place, etiqueta textual no verificada, rangos de coordenadas y rechazo de múltiples/conflictos. Nunca usa @ centro de cámara, ni abre URLs, resuelve enlaces cortos, geocodifica o llama a Google.
+- Prompt exige preguntar destino/referencia antes de usarlo; no equivale a prueba determinista de intención. `set_delivery_details.locationMessageId` acepta ubicación nativa o texto Maps y vuelve a parsear en servidor antes de copiar snapshot/inutilizar tarifa y resumen. Compra y guardado mantienen sus comandos exactos independientes.
+- Sin DB/migraciones nuevas, API externa, clave o Embed; la tarjeta sigue sin coordenadas visibles. Formatos soportados y límites/privacidad en [delivery-addresses.md](./delivery-addresses.md).
+- Verificación estática: lint, formato, tipos y build; no se ejecutaron tests, navegador, smoke checks ni Google/Meta/OpenAI por la restricción vigente.
+
+## Simplificación de ubicación: sin Embed ni coordenadas visibles (implementado)
+
+- Por petición del usuario se retira Google Maps Embed, su componente, traducciones y variable de ejemplo. No se modifican entornos privados. Sin iframe ni clave/API de mapas.
+- La tarjeta de ubicación conserva dirección/referencia, costos y botones «Ver en Google Maps» / «Copiar dirección», sin mostrar coordenadas. Coordenadas persistidas se usan internamente para el enlace externo; sin texto se copia el enlace, no números sueltos. Sin cambios de DB o migraciones.
+- Verificación estática: lint, formato, tipos y build; sin navegador/tests/smoke ni llamadas externas. Ver [delivery-addresses.md](./delivery-addresses.md).
+
+## Tarjeta de dirección con Google Maps (implementado)
+
+- Destino de pedidos e inbox con tarjeta reutilizable: ubicación, dirección/referencia, costo/cobertura/total, acceso a Google Maps y copia al portapapeles con feedback es/en. Ubicaciones nativas del chat se identifican como compartidas, sin confirmar delivery implícitamente.
+- Enlace externo seguro en pestaña nueva: coordenadas válidas o búsqueda de dirección textual codificada; sin mapa/SDK/imagen/geocodificación ni llamadas externas al renderizar. Sin cambios backend/DB, mensajes salientes o migraciones adicionales. Ver [delivery-addresses.md](./delivery-addresses.md).
+- Verificación estática: lint, formato, tipos y build; sin navegador/tests/smoke checks ni Google/Meta/OpenAI conforme a la restricción vigente.
+
+## Compra y direcciones de delivery del agente (implementado; migración pendiente)
+
+- Extensión del checkout persistente: selección explícita de dirección guardada del remitente real, destino histórico independiente y libreta de hasta diez direcciones por cliente/Business, default único, versiones, UUID idempotente y borrado lógico. No se importa Client.address ni se alteran fixtures.
+- Guardar/editar/eliminar mediante IA exige resumen servidor y comando DIRECCION/ADDRESS separado de CONFIRMAR/CONFIRM; aceptación Meta, nuevo texto exacto, acción de 30 minutos, payload fijo y consumo atómico. Usar destino o confirmar compra no concede permiso de almacenamiento ni marketing.
+- Cotización humana OWNER/ADMIN en DRAFT DELIVERY: QUOTED con fee decimal no negativo o REJECTED sin tarifa, nota visible y revisor/fecha. Cambios de destino/líneas invalidan cotización; cotizar invalida resumen, sin enviar mensajes. Delivery no puede confirmarse con tarifa/cobertura pendiente. Resumen y vistas muestran costo y total, no confunden subtotal con envío gratuito.
+- Panel es/en con direcciones en cliente, formularios en páginas dedicadas y cotización desde Pedidos/enlace del inbox. RHF/Zod, React Query por usuario/Business, CSRF/RBAC/versiones, sin replay automático. Sin mapas, cobros, stock o transporte automáticos; elección/intención conversacional dependen del modelo y requieren validación autorizada.
+- Migración `20261020300000_customer_addresses_delivery_quotes` creada/no aplicada; SQL aditivo con índices/checks y anulación de resúmenes DRAFT DELIVERY previos. No se tocaron secretos ni DB/servicios externos.
+- Verificación estática correcta: Prisma format/validate/generate, lint, format:check, typecheck, build API/web (75 páginas) y git diff --check. Sin tests, navegador o smoke checks por la restricción vigente. Detalles y pendientes operativos en [delivery-addresses.md](./delivery-addresses.md), [clients-orders.md](./clients-orders.md) y [whatsapp-commerce.md](./whatsapp-commerce.md).
+
+## Idioma configurable del agente (implementado; migración pendiente)
+
+- Agente incorpora selector de respuesta Español/Inglés para OWNER/ADMIN, persistido por negocio con `responseLanguage: es | en`, español por defecto e independiente del idioma del panel/cliente.
+- Validación backend/frontend y contrato OpenAPI actualizados; generación instruida para responder solo en el idioma elegido y adaptar el saludo. Vista previa local literal, sin traducción ni proveedor.
+- Resúmenes y acuses de pedidos y respaldo de errores dejan de duplicarse en dos idiomas. Estados de pago visibles traducidos; comandos `CONFIRMAR`/`CONFIRM` verificados contra el resumen realmente aceptado para conservar confirmaciones pendientes aunque cambie la preferencia.
+- Migración aditiva `20261020290000_agent_response_language` creada/no aplicada. Requiere aplicación explícita antes de desplegar la API; no se modificaron entornos privados ni se activaron servicios externos.
+- Verificación estática: lint, formato, tipos y build; sin tests, navegador ni llamadas a DB/OpenAI/Meta. Ver `agents.md`, `ai.md` y `whatsapp-commerce.md`.
+
 ## Restricción temporal
 
 La restricción original de no implementar ni ejecutar tests se mantuvo en las etapas históricas descritas abajo. La petición de reorganización backend autoriza ejecutar sus tests existentes; no añadir tests nuevos ni verificar integraciones externas. Lint, formato, TypeScript y build siguen habilitados. El fallo e2e preexistente y el alcance de esta excepción se documentan en la sección de reorganización.
@@ -489,6 +534,20 @@ Los seis pasos están completados: frontend funcional con mocks y revisiones vis
 - Incluye auth, negocios, productos, clientes, pedidos, agentes y WhatsApp, normalizador Sharp, configuración auth, cliente Prisma y workers. `PrismaService` se registra/exporta directamente por clase, igual que los demás services. `ConfigService`/`Reflector` se inyectan por clase sin `@Inject`; guards/filtros conservan los tokens exigidos por Nest. Bcrypt conserva la espera inicial del hash dummy mediante `onModuleInit`; workers/Prisma conservan sus hooks de ciclo de vida.
 - Sin cambios de endpoints, payloads, autorización, lógica comercial, esquema, migraciones o dependencias. Sin llamadas a PostgreSQL/Meta/OpenAI, cambios de secretos, arranque de la aplicación ni smoke checks. Documentación arquitectónica y convenciones actualizadas en [backend.md](./backend.md).
 - Verificaciones correctas: `pnpm lint`, `pnpm format:check`, `pnpm typecheck`, `pnpm build` y test unitario existente de API (1/1); sin tests nuevos. Revisión estática del wiring sin dependencias faltantes ni ciclos detectados; no acredita funcionamiento de integraciones en runtime. E2E heredado omitido conforme a la autorización previa: fallo conocido por esperar 200 en `/` frente al 401 del guard global; no deshabilitado ni considerado aprobado.
+
+## Corrección — XLSX con prefijos SpreadsheetML
+
+- Inspección estática de `marlet-20-productos.xlsx`: hoja Products, 15 encabezados correctos y 20 productos, con elementos XML prefijados `x:`. ExcelJS 4.4.0 compara nombres literales sin ese prefijo y no interpreta correctamente esa representación válida.
+- El preflight normaliza por namespace los elementos SpreadsheetML a nombres sin prefijo después de validar el XML, conservando atributos, contenido y namespaces ajenos. Sin reemplazos de texto indiscriminados ni relajar límites ZIP/XML, rechazo de fórmulas/enlaces/rangos o validaciones por producto/categoría. No modifica el archivo original ni importa productos.
+- Verificación limitada a formato, lint, tipos, build y diff; sin tests, navegador, smoke checks, peticiones de aplicación, servicios externos ni operaciones DB. Importación real pendiente de comprobación autorizada; las categorías del archivo deben existir en el negocio.
+
+## Corrección — Búsqueda por palabras y borradores IA tras registrar cliente
+
+- Revisión autorizada de la última conversación mediante transacciones PostgreSQL READ ONLY: búsquedas vacías de Samsung/iPhone pese a productos activos con stock; después de recibir el nombre, registro/vínculo del cliente y consulta de catálogo exitosos, cero pedidos del hilo y `GENERATION_FALLBACK_PROCESSING_FAILED`. Los registros anteriores no guardan argumentos de búsqueda ni la excepción original: no se atribuye el fallo histórico a una excepción concreta confirmada.
+- `search_products` deja de exigir una frase contigua: AND por palabras con OR entre nombre/SKU/marca/categoría, normalización NFKC, separadores/unidades MB/GB/TB, conectores comunes es/en y deduplicación. Se mantienen scope activo/no eliminado por negocio, filtro stock, orden y máximo cinco resultados/hasMore; query vacía sigue explorando catálogo y texto sin términos útiles produce error. Sin búsqueda semántica, sinónimos o corrección de faltas. Descripción de herramienta actualizada.
+- `prepare_order` omite `businessId` de las líneas anidadas en alta y reemplazo: Prisma lo hereda de la relación compuesta del pedido y no lo admite en `OrderItemUncheckedCreateWithoutOrderInput`. `satisfies` comprueba ese contrato sobre el literal. Se preservan precios servidor, stock sin reserva, versiones, confirmación exacta y transacción/idempotencia existentes.
+- Diagnóstico sanitizado de errores inesperados de herramientas con job ID/nombre autorizado/código acotado, sin argumentos, cuerpos, perfiles, mensajes/stacks ni secretos. No cambia la respuesta de respaldo ni reintenta operaciones. Ver [whatsapp-commerce.md](./whatsapp-commerce.md).
+- Sin reejecutar trabajos, crear pedidos/clientes, reenviar mensajes, aplicar migraciones o cambiar secretos. Sin llamadas OpenAI/Meta, tests ni smoke checks; validación de formato, lint, tipos, build y diff. Continuidad real de la conversación pendiente de verificación runtime autorizada; requiere cargar la API actualizada.
 
 ## Fase posterior, fuera del alcance actual
 

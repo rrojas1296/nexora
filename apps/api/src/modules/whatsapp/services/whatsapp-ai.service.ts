@@ -67,10 +67,10 @@ export class WhatsappAiService {
     } catch (error) {
       // A generation/tool failure is not proof that information is absent or an action failed.
       return {
-        text: [
-          "No pude obtener una respuesta confiable para tu consulta en este momento. Puedes reformular la pregunta o pedir ayuda a un asesor. Si consultabas un pedido o pago, pide revisar su estado antes de repetir la operación.",
-          "I couldn't obtain a reliable answer to your question right now. Please rephrase it or ask for human assistance. For an order or payment, ask to check its status before repeating the operation.",
-        ].join("\n\n"),
+        text:
+          work.input.responseLanguage === "en"
+            ? "I couldn't obtain a reliable answer to your question right now. Please rephrase it or ask for human assistance. For an order or payment, ask to check its status before repeating the operation."
+            : "No pude obtener una respuesta confiable para tu consulta en este momento. Puedes reformular la pregunta o pedir ayuda a un asesor. Si consultabas un pedido o pago, pide revisar su estado antes de repetir la operación.",
         fallbackReason: error instanceof AiGenerationError ? error.code : "PROCESSING_FAILED",
       };
     }

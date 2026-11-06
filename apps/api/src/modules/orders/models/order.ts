@@ -13,6 +13,7 @@ export interface OrderUpdate {
   clientId?: string;
   items?: OrderLineInput[];
   status?: OrderStatus;
+  deliveryQuote?: { status: "QUOTED" | "REJECTED"; fee: string | null; note: string };
 }
 export interface OrderView {
   id: string;
@@ -24,6 +25,9 @@ export interface OrderView {
   status: OrderStatus;
   currency: string;
   subtotal: string;
+  deliveryFee: string | null;
+  total: string | null;
+  deliveryQuoteNote: string;
   placedAt: string;
   paymentStatus: string;
   deliveryMode: string;

@@ -16,11 +16,26 @@ export const orderUpdate = z
     clientId: z.uuid().optional(),
     items: lines.optional(),
     status: orderStatus.optional(),
+    deliveryQuote: z
+      .object({
+        status: z.enum(["QUOTED", "REJECTED"]),
+        fee: z
+          .string()
+          .regex(/^\d{1,12}(\.\d{1,2})?$/)
+          .nullable(),
+        note: z.string().trim().max(1024),
+      })
+      .strict()
+      .refine((quote) => (quote.status === "QUOTED" ? quote.fee !== null : quote.fee === null))
+      .optional(),
   })
   .strict()
   .refine(
     (input) =>
-      input.clientId !== undefined || input.items !== undefined || input.status !== undefined,
+      input.clientId !== undefined ||
+      input.items !== undefined ||
+      input.status !== undefined ||
+      input.deliveryQuote !== undefined,
     "No changes",
   );
 export const ordersQuery = commerceQuery.extend({
@@ -37,6 +52,9 @@ export const orderView = z.object({
   status: orderStatus,
   currency: z.string(),
   subtotal: z.string(),
+  deliveryFee: z.string().nullable(),
+  total: z.string().nullable(),
+  deliveryQuoteNote: z.string(),
   placedAt: z.string(),
   paymentStatus: z.string(),
   deliveryMode: z.string(),

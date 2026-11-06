@@ -7,6 +7,9 @@ export interface CommerceOrderView {
   status: string;
   currency: string;
   subtotal: string;
+  deliveryFee: string | null;
+  total: string | null;
+  deliveryQuoteNote: string;
   paymentStatus: string;
   deliveryMode: string;
   deliveryAddress: string;

@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
+import { ClientAddressList } from "@/features/clients/components/client-address-list";
 import { ClientEditor } from "@/features/clients/components/client-editor";
 import { OrderEditor } from "@/features/orders/components/order-editor";
 import { useClient, useOrder, useCommerceAccess } from "@/features/commerce/hooks/use-commerce";
@@ -33,7 +34,10 @@ export function ResourceEditorScreen({
       <div className="grid items-start gap-6 xl:grid-cols-4">
         <section className="min-w-0 rounded-3xl border bg-card p-5 sm:p-7 xl:col-span-3">
           {resource === "clients" && (!id || client.data) ? (
-            <ClientEditor key={id ?? "new"} client={client.data} onClose={onClose} />
+            <>
+              <ClientEditor key={id ?? "new"} client={client.data} onClose={onClose} />
+              {client.data?.active ? <ClientAddressList clientId={client.data.id} /> : null}
+            </>
           ) : null}
           {resource === "orders" && (!id || order.data) ? (
             <OrderEditor key={id ?? "new"} order={order.data} onClose={onClose} />

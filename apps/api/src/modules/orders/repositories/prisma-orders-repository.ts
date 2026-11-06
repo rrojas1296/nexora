@@ -17,6 +17,10 @@ const include = {
 } as const;
 type Row = Prisma.OrderGetPayload<{ include: typeof include }>;
 function view(row: Row): OrderView {
+  const subtotal = row.items.reduce(
+    (sum, line) => sum.plus(line.unitPrice.times(line.quantity)),
+    new Prisma.Decimal(0),
+  );
   return {
     id: row.id,
     reference: row.reference,
@@ -26,9 +30,15 @@ function view(row: Row): OrderView {
     threadId: row.threadId,
     status: row.status,
     currency: row.currency,
-    subtotal: row.items
-      .reduce((sum, line) => sum.plus(line.unitPrice.times(line.quantity)), new Prisma.Decimal(0))
-      .toFixed(2),
+    subtotal: subtotal.toFixed(2),
+    deliveryFee: row.deliveryFee?.toFixed(2) ?? null,
+    total:
+      row.deliveryMode !== "DELIVERY"
+        ? subtotal.toFixed(2)
+        : row.deliveryQuoteStatus === "QUOTED" && row.deliveryFee !== null
+          ? subtotal.plus(row.deliveryFee).toFixed(2)
+          : null,
+    deliveryQuoteNote: row.deliveryQuoteNote,
     placedAt: row.placedAt.toISOString(),
     paymentStatus: row.paymentStatus,
     deliveryMode: row.deliveryMode,
@@ -193,6 +203,7 @@ export class PrismaOrdersRepository implements IOrdersRepository {
   update(actor: CommerceActor, id: string, input: OrderUpdate) {
     return this.write(() =>
       this.prisma.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "Businesses" WHERE "id" = ${actor.businessId}::uuid FOR NO KEY UPDATE`;
         await authorizeCommerce(tx, actor, true);
         const businessId = actor.businessId!;
         await tx.$queryRaw`SELECT "id" FROM "Orders" WHERE "id" = ${id}::uuid AND "businessId" = ${businessId}::uuid AND NOT "isDeleted" FOR UPDATE`;
@@ -204,6 +215,15 @@ export class PrismaOrdersRepository implements IOrdersRepository {
         if (row.version !== input.version) throw new CommerceError("COMMERCE_CONFLICT");
         if ((input.items || input.clientId) && (row.status !== "DRAFT" || row.threadId))
           throw new CommerceError("COMMERCE_INVALID_TRANSITION");
+        if (
+          input.deliveryQuote &&
+          (row.status !== "DRAFT" ||
+            row.deliveryMode !== "DELIVERY" ||
+            input.items ||
+            input.clientId ||
+            input.status)
+        )
+          throw new CommerceError("COMMERCE_INVALID_TRANSITION");
         if (input.clientId) await client(tx, businessId, input.clientId);
         const status = input.status ?? row.status;
         if (status !== row.status) {
@@ -214,6 +234,13 @@ export class PrismaOrdersRepository implements IOrdersRepository {
             (row.status === "PAID" && status === "SHIPPED");
           if (!allowed) throw new CommerceError("COMMERCE_INVALID_TRANSITION");
           if (status === "PENDING") {
+            if (
+              row.deliveryMode === "DELIVERY" &&
+              (row.deliveryQuoteStatus !== "QUOTED" ||
+                row.deliveryFee === null ||
+                row.deliveryFee.isNegative())
+            )
+              throw new CommerceError("COMMERCE_INVALID_TRANSITION");
             if (!row.clientId) throw new CommerceError("COMMERCE_INVALID_CLIENT");
             await client(tx, businessId, row.clientId);
             const current = await lines(tx, businessId, row.currency, row.items);
@@ -242,7 +269,29 @@ export class PrismaOrdersRepository implements IOrdersRepository {
             data: {
               status,
               ...(input.clientId ? { clientId: input.clientId } : {}),
-              ...(items ? { items: { create: items } } : {}),
+              ...(items
+                ? {
+                    items: { create: items },
+                    deliveryFee: null,
+                    deliveryQuotedBy: null,
+                    deliveryQuotedAt: null,
+                    deliveryQuoteNote: "",
+                    deliveryQuoteStatus:
+                      row.deliveryMode === "DELIVERY" ? "PENDING_HUMAN" : "NOT_REQUIRED",
+                  }
+                : {}),
+              ...(input.deliveryQuote
+                ? {
+                    deliveryQuoteStatus: input.deliveryQuote.status,
+                    deliveryFee:
+                      input.deliveryQuote.fee === null
+                        ? null
+                        : new Prisma.Decimal(input.deliveryQuote.fee),
+                    deliveryQuoteNote: input.deliveryQuote.note,
+                    deliveryQuotedBy: actor.userId,
+                    deliveryQuotedAt: new Date(),
+                  }
+                : {}),
               version: { increment: 1 },
               confirmationToken: null,
               confirmationJobId: null,

@@ -18,6 +18,8 @@ model Business {
   products                Product[]
   productCategories       ProductCategory[]
   productImages           ProductImage[]
+  clientAddresses         ClientAddress[]
+  addressActions          WhatsappAddressAction[]
   clients                 Client[]
   orders                  Order[]
   orderItems              OrderItem[]

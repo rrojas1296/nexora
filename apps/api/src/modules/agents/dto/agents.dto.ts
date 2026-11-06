@@ -5,6 +5,7 @@ export const agentBusinessIdSchema = z.uuid();
 export const agentInputSchema = z.strictObject({
   name: z.string().trim().min(2).max(100),
   tone: z.enum(["friendly", "professional", "concise"]),
+  responseLanguage: z.enum(["es", "en"]),
   instructions: z.string().trim().max(2000),
   greeting: z.string().trim().min(5).max(300),
   enabled: z.boolean(),

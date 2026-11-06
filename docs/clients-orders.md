@@ -8,6 +8,8 @@ Migración `20261020270000_clients_orders_pages`, **creada y no aplicada**. Requ
 
 Revisar SQL, backup, destino y **todas** las pendientes antes de un deploy explícitamente autorizado. No arrancar este código contra un esquema anterior. `db:migrate:deploy` aplica todas las pendientes, no solo esta. No se conectó a PostgreSQL, Meta u OpenAI ni se modificaron secretos durante esta ampliación.
 
+Ampliación: [direcciones de delivery y cotización](./delivery-addresses.md), migración `20261020300000_customer_addresses_delivery_quotes` creada/no aplicada. Añade libreta independiente de `Client.address` y cotización humana desde Pedidos para DRAFT DELIVERY; se exige antes de confirmar compra por WhatsApp.
+
 ## API
 
 Prefijo `/api/v1/businesses/:businessId`. Cookie/sesión válida, Business activo igual al de la ruta, usuario/membresía/negocio no eliminados y membresía activa en cada operación. Lectura para cualquier rol activo; escritura solo OWNER/ADMIN con Origin/CSRF. Controllers documentados con Zod/Swagger; modelos/contratos sin Nest ni Prisma, servicios `@Injectable()` registrados e inyectados directamente por clase. Solo los repositorios/providers usan interfaces `I…` y tokens `Symbol` mediante `@Inject`/`provide/useClass`. Sin RLS/filtro global ni autorización delegada a las FK.
@@ -35,9 +37,9 @@ Creación idempotente: UUID y SHA-256 del input validado por registro. Un UUID r
 - DRAFT/PENDING → CANCELLED. No devuelve dinero ni repone inventario porque no se ejecutó ninguna operación financiera/de stock.
 - PENDING → PAID solo si `paymentStatus === VALIDATED`, obtenido por revisión humana de comprobante en Conversaciones. No permite acreditar pagos escribiendo un campo desde este API. Los pedidos manuales no tienen actualmente alta/revisión de comprobantes fuera del inbox; no se pueden marcar pagados por esta UI sin ese prerrequisito.
 - PAID → SHIPPED es registro manual del estado, no integración con transporte/cotización ni prueba de entrega.
-- Los borradores de WhatsApp **no** pueden editar cliente/líneas ni pasar a PENDING desde esta página: necesitan el resumen y comando exacto del cliente en el hilo. Sí pueden cancelarse. No hay transición de vuelta a DRAFT ni reapertura de CANCELLED/SHIPPED.
+- Los borradores de WhatsApp **no** pueden editar cliente/líneas ni pasar a PENDING desde esta página: necesitan el resumen y comando exacto del cliente en el hilo. Sí pueden cancelarse y recibir cotización humana `deliveryQuote` exclusivamente en DRAFT DELIVERY, sin editar simultáneamente líneas/cliente/estado. La tarifa/nota se muestran en el resumen nuevo; cotizar no envía mensajes ni confirma. No hay transición de vuelta a DRAFT ni reapertura de CANCELLED/SHIPPED.
 
-Cada edición incrementa versión e invalida token/job de resumen. Precios de líneas no cambian al editar el catálogo; guardar las líneas de un borrador manual vuelve a tomar precios/nombres actuales de todas las líneas. Stock se comprueba, pero no se reserva ni descuenta: pedidos simultáneos pueden competir por existencias. Se conservan Store/FK legacy sin selector de tiendas ni inventario por sucursal. No se borran físicamente clientes, pedidos o líneas: al reemplazar líneas se marcan anteriores `isDeleted`.
+Cada edición incrementa versión e invalida token/job de resumen. Modificar líneas invalida tarifa/quote; el agente también las invalida al cambiar el destino. Las lecturas incluyen deliveryFee y total decimal string/null (total null para delivery pendiente/rechazado), y deliveryQuoteNote. Precios de líneas no cambian al editar el catálogo; guardar las líneas de un borrador manual vuelve a tomar precios/nombres actuales de todas las líneas. Stock se comprueba, pero no se reserva ni descuenta: pedidos simultáneos pueden competir por existencias. Se conservan Store/FK legacy sin selector de tiendas ni inventario por sucursal. No se borran físicamente clientes, pedidos o líneas: al reemplazar líneas se marcan anteriores `isDeleted`.
 
 ## IA: crear/vincular clientes y pedidos
 
@@ -49,7 +51,7 @@ El proveedor sigue siendo reemplazable y acotado; ver [ai.md](./ai.md) y [whatsa
 - Vínculo eliminado/inactivo o cuyo teléfono cambió requiere revisión humana; no se reasigna a otra identidad automáticamente. Vincular a un cliente existente no cambia su nombre/email.
 - La vinculación asigna al cliente los borradores del mismo hilo sin cliente, incrementa sus versiones e invalida resúmenes. No rellena pedidos PENDING históricos. Después de vincular, la IA debe releer los borradores.
 - Preparar pedido, presentar resumen y confirmar requieren cliente activo vinculado con teléfono del remitente y mismo cliente del pedido. Productos/precios/stock provienen del catálogo real. Se mantienen la confirmación exacta posterior a resumen aceptado por Meta, versiones, control AI/HUMAN y ventana de 24h. No se crean clientes por saludos/consultas de catálogo: el prompt exige intención de compra o registro explícito y preguntar el nombre si falta. Esta intención/nombre suministrado depende del modelo, no de un clasificador verificable.
-- Herramientas y mutaciones son transaccionales/idempotentes por job/callId, con bloqueos y revalidación por Business. Pueden persistir clientes/borradores aunque la respuesta posterior falle o se cancele; no se deshacen por un fallo de envío. El límite de herramientas sigue siendo cuatro por trabajo/cinco turnos: una conversación puede requerir varios mensajes para completar registro, selección y resumen.
+- Herramientas y mutaciones son transaccionales/idempotentes por job/callId, con bloqueos y revalidación por Business. Pueden persistir clientes/borradores aunque la respuesta posterior falle o se cancele; no se deshacen por un fallo de envío. El límite de herramientas es ocho por trabajo/nueve turnos (último sin herramientas): una conversación puede requerir varios mensajes para completar registro, selección y resumen.
 
 ## Frontend y privacidad
 

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiClient } from "@/lib/api/client";
 import { normalizeApiError } from "@/lib/api/api-error";
 import { authService, withAuthenticatedSession } from "@/features/auth/services/auth-service";
+import { addressesSchema, addressResponseSchema } from "@/features/clients/schemas/address-schema";
 import { clientResponseSchema, clientsSchema } from "@/features/clients/schemas/client-schema";
 import { orderResponseSchema, ordersSchema } from "@/features/orders/schemas/order-schema";
 import type { CommerceFilters, CommerceScope } from "../schemas/commerce-schema";
@@ -65,6 +66,38 @@ export const commerceService = {
     get(scope, "clients", clientResponseSchema, id, signal),
   order: (scope: CommerceScope, id: string, signal: AbortSignal) =>
     get(scope, "orders", orderResponseSchema, id, signal),
+  addresses: (scope: CommerceScope, clientId: string, signal: AbortSignal) =>
+    read(
+      scope,
+      signal,
+      async () =>
+        addressesSchema.parse(
+          (await apiClient.get(`${url(scope, "clients")}/${clientId}/addresses`, { signal })).data,
+        ).data,
+    ),
+  saveAddress: (
+    scope: CommerceScope,
+    clientId: string,
+    input: unknown,
+    id?: string,
+    remove = false,
+  ) =>
+    withAuthenticatedSession(async (session, headers) => {
+      if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)
+        throw new Error("SESSION_CHANGED");
+      const base = `${url(scope, "clients")}/${clientId}/addresses`;
+      if (remove) {
+        if (!id) throw new Error("ADDRESS_REQUIRED");
+        z.object({ removed: z.literal(true) }).parse(
+          (await apiClient.post(`${base}/${id}/remove`, input, { headers })).data,
+        );
+        return null;
+      }
+      const response = id
+        ? await apiClient.patch(`${base}/${id}`, input, { headers })
+        : await apiClient.post(base, input, { headers });
+      return addressResponseSchema.parse(response.data).data;
+    }),
   save: (scope: CommerceScope, resource: Resource, input: unknown, id?: string) =>
     withAuthenticatedSession(async (session, headers) => {
       if (session.user.id !== scope.userId || session.activeBusinessId !== scope.businessId)

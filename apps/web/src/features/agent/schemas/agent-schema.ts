@@ -1,9 +1,11 @@
 import { z } from "zod";
 
+export const responseLanguages = ["es", "en"] as const;
 export const tones = ["friendly", "professional", "concise"] as const;
 export const agentInputSchema = z.object({
   name: z.string().trim().min(2, "name").max(100, "name"),
   tone: z.enum(tones, { error: "required" }),
+  responseLanguage: z.enum(responseLanguages, { error: "required" }),
   instructions: z.string().trim().max(2000, "instructions"),
   greeting: z.string().trim().min(5, "greeting").max(300, "greeting"),
   enabled: z.boolean(),
@@ -14,6 +16,7 @@ export const agentSchema = z.object({
   id: z.uuid(),
   name: z.string(),
   tone: z.enum(tones),
+  responseLanguage: z.enum(responseLanguages),
   instructions: z.string(),
   greeting: z.string(),
   enabled: z.boolean(),
@@ -29,6 +32,7 @@ export type AgentScope = { userId: string; businessId: string };
 export const emptyAgent: AgentInput = {
   name: "",
   tone: "friendly",
+  responseLanguage: "es",
   instructions: "",
   greeting: "",
   enabled: false,

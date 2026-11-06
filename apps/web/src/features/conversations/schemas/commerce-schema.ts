@@ -7,13 +7,16 @@ export const conversationOrderSchema = z.object({
   status: z.enum(["DRAFT", "PENDING", "PAID", "SHIPPED", "CANCELLED"]),
   currency: z.string(),
   subtotal: z.string(),
+  deliveryFee: z.string().nullable(),
+  total: z.string().nullable(),
+  deliveryQuoteNote: z.string(),
   paymentStatus: z.enum(["PENDING", "IN_REVIEW", "VALIDATED", "REJECTED"]),
   deliveryMode: z.enum(["PICKUP", "DELIVERY"]),
   deliveryAddress: z.string(),
   deliveryReference: z.string(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
-  deliveryQuoteStatus: z.enum(["NOT_REQUIRED", "PENDING_HUMAN"]),
+  deliveryQuoteStatus: z.enum(["NOT_REQUIRED", "PENDING_HUMAN", "QUOTED", "REJECTED"]),
   items: z.array(
     z.object({
       productId: z.uuid(),

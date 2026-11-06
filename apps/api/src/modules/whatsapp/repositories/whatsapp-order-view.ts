@@ -21,6 +21,14 @@ export function orderView(order: CommerceOrder) {
     status: order.status,
     currency: order.currency,
     subtotal: subtotal.toFixed(2),
+    deliveryFee: order.deliveryFee?.toFixed(2) ?? null,
+    total:
+      order.deliveryMode !== "DELIVERY"
+        ? subtotal.toFixed(2)
+        : order.deliveryQuoteStatus === "QUOTED" && order.deliveryFee !== null
+          ? subtotal.plus(order.deliveryFee).toFixed(2)
+          : null,
+    deliveryQuoteNote: order.deliveryQuoteNote,
     paymentStatus: order.paymentStatus,
     deliveryMode: order.deliveryMode,
     deliveryAddress: order.deliveryAddress,

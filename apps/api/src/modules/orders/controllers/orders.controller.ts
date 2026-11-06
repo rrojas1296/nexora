@@ -86,7 +86,7 @@ export class OrdersController {
     body: orderUpdate,
     response: orderResponse,
     description:
-      "Items/cliente solo editables en DRAFT manual. DRAFT manual→PENDING, DRAFT/PENDING→CANCELLED, PENDING→PAID solo con paymentStatus VALIDATED por revisión humana, PAID→SHIPPED. Borradores WhatsApp exigen confirmación del cliente por el flujo IA; no se pueden confirmar/editarlos desde aquí. Cambios invalidan tokens. No llama proveedores, acredita pagos, cobra envío ni descuenta stock.",
+      "Items/cliente solo editables en DRAFT manual. DRAFT manual→PENDING, DRAFT/PENDING→CANCELLED, PENDING→PAID solo con paymentStatus VALIDATED por revisión humana, PAID→SHIPPED. Borradores WhatsApp exigen confirmación del cliente por el flujo IA; no se pueden confirmar ni editar sus líneas desde aquí. Excepción: deliveryQuote permite cotizar cobertura/tarifa exclusivamente en DRAFT DELIVERY (incluido WhatsApp), sin otros cambios simultáneos: QUOTED exige fee decimal no negativo; REJECTED exige fee null. Registra actor/fecha/nota, incrementa versión e invalida resumen sin enviar mensajes. Cambios de líneas invalidan tarifa. Cambios invalidan tokens. No llama proveedores, acredita pagos, cobra envío ni descuenta stock.",
     errors: {
       409: "COMMERCE_CONFLICT, COMMERCE_INVALID_TRANSITION, COMMERCE_INVALID_CLIENT, COMMERCE_INVALID_PRODUCTS",
     },

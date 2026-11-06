@@ -29,6 +29,7 @@ function serialize(agent: AgentRecord): AgentConfiguration {
     id: agent.id,
     name: agent.name,
     tone: responseTones[agent.tone],
+    responseLanguage: agent.responseLanguage,
     instructions: agent.instructions,
     greeting: agent.greeting,
     enabled: agent.active,

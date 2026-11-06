@@ -6,6 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { EditorDialog } from "@/features/demo/components/editor-dialog";
 import { CommerceQueryState as QueryState } from "@/features/commerce/components/commerce-query-state";
 import { Pagination } from "@/features/demo/components/pagination";
+import { ClientAddressList } from "./client-address-list";
 import type { Client } from "../schemas/client-schema";
 export function ClientDetail({ client, onClose }: { client: Client; onClose: () => void }) {
   const t = useTranslations("Clients");
@@ -27,6 +28,7 @@ export function ClientDetail({ client, onClose }: { client: Client; onClose: () 
           </div>
         ))}
       </dl>
+      {client.active ? <ClientAddressList clientId={client.id} /> : null}
       <h3 className="mt-7 text-sm">{t("orders")}</h3>
       <QueryState
         pending={query.isPending}

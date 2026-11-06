@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { orderInputSchema, type Order, type OrderInput } from "../schemas/order-schema";
 import { OrderCatalogFields } from "./order-catalog-fields";
 import { OrderSummary } from "./order-summary";
+import { DeliveryQuoteEditor } from "./delivery-quote-editor";
 import { OrderActions } from "./order-actions";
 export function OrderEditor({ order, onClose }: { order?: Order; onClose: () => void }) {
   const c = useTranslations("Commerce");
@@ -67,6 +68,7 @@ export function OrderEditor({ order, onClose }: { order?: Order; onClose: () => 
       ) : null}
       {order ? (
         <>
+          <DeliveryQuoteEditor order={order} onClose={onClose} />
           <OrderActions order={order} />
           {order.threadId ? (
             <Button asChild variant="outline">

@@ -177,7 +177,9 @@ export class PrismaWhatsappAiStore implements IWhatsappAiStore {
                       : null,
                   note: "Metadata only, file contents not available",
                 })
-              : entry.body;
+              : entry.direction === "INBOUND"
+                ? `${JSON.stringify({ messageId: entry.id, type: "text" })}\n${entry.body}`
+                : entry.body;
           const text = content.slice(0, Math.min(4096, remaining));
           remaining -= text.length;
           return text
@@ -223,6 +225,7 @@ export class PrismaWhatsappAiStore implements IWhatsappAiStore {
           context: snapshot.business.contextPublished,
           agentName: snapshot.agent.name,
           tone: snapshot.agent.tone,
+          responseLanguage: snapshot.agent.responseLanguage,
           instructions: snapshot.agent.instructions,
           greeting: snapshot.agent.greeting,
           firstReply: !previousReply,
@@ -300,7 +303,16 @@ export class PrismaWhatsappAiStore implements IWhatsappAiStore {
         return null;
       }
       if (options?.fallbackReason) {
-        // An accepted fallback is not an accepted order summary from this job.
+        // An accepted fallback is not an accepted order/address summary from this job.
+        await tx.whatsappAddressAction.updateMany({
+          where: {
+            businessId: work.businessId,
+            threadId: work.threadId,
+            jobId: work.id,
+            isDeleted: false,
+          },
+          data: { isDeleted: true },
+        });
         await tx.order.updateMany({
           where: {
             businessId: work.businessId,

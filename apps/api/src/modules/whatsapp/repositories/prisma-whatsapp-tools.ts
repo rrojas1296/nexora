@@ -1,5 +1,5 @@
 import { PrismaService } from "../../../database/prisma.service.js";
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable, Logger } from "@nestjs/common";
 import { randomBytes, randomUUID } from "node:crypto";
 import { Prisma, type PrismaClient } from "../../../database/generated/client.js";
 import type { AiReplyWork } from "../contracts/whatsapp-ai-store.js";
@@ -7,16 +7,50 @@ import type { AiToolCall, IAiToolExecutor, AiToolResult } from "../contracts/ai-
 import { toolDefinitions, toolSchemas } from "../dto/whatsapp-tools.js";
 import { findAutomationAgent } from "./prisma-whatsapp-ai-agent.js";
 import { orderInclude, orderView, type CommerceOrder } from "./whatsapp-order-view.js";
+import { productSearchTerms } from "./whatsapp-product-search.js";
+import { CommerceError } from "../../../common/commerce/commerce.js";
+import { customerAddress } from "../../clients/repositories/client-address-store.js";
+import { runAddressTool } from "./whatsapp-address-tools.js";
+import { ToolInputError } from "./whatsapp-tool-error.js";
+import { readGoogleMapsMessageBody, googleMapsMessageLocation } from "./google-maps-message.js";
+import {
+  GOOGLE_MAPS_LINK_RESOLVER,
+  GoogleMapsLinkError,
+  type IGoogleMapsLinkResolver,
+} from "../contracts/google-maps-link-resolver.js";
+import {
+  parseGoogleMapsLocation,
+  type GoogleMapsLocation,
+} from "../models/google-maps-location.js";
+
+type PreparedMapsMessage = { messageId: string; body: string; location: GoogleMapsLocation };
 
 type Tx = Prisma.TransactionClient;
 
-class ToolInputError extends Error {}
+const paymentStatusLabels: Record<"es" | "en", Record<string, string>> = {
+  es: {
+    PENDING: "Pendiente",
+    IN_REVIEW: "En revisión",
+    VALIDATED: "Validado",
+    REJECTED: "Rechazado",
+  },
+  en: {
+    PENDING: "Pending",
+    IN_REVIEW: "Under review",
+    VALIDATED: "Validated",
+    REJECTED: "Rejected",
+  },
+};
 
 @Injectable()
 export class PrismaWhatsappTools implements IAiToolExecutor {
+  private readonly logger = new Logger(PrismaWhatsappTools.name);
   private readonly client: PrismaClient;
   readonly definitions = toolDefinitions;
-  constructor(prismaService: PrismaService) {
+  constructor(
+    prismaService: PrismaService,
+    @Inject(GOOGLE_MAPS_LINK_RESOLVER) private readonly mapsResolver: IGoogleMapsLinkResolver,
+  ) {
     this.client = prismaService.client;
   }
 
@@ -32,6 +66,8 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
     }
     if (!schema.safeParse(args).success) return { data: { error: "INVALID_ARGUMENTS" } };
     try {
+      const preparation = await this.prepareMapsMessage(work, call, args);
+      if (preparation && "cached" in preparation) return preparation.cached;
       return await this.client.$transaction(
         async (tx) => {
           await tx.$queryRaw`SELECT "id" FROM "Businesses" WHERE "id" = ${work.businessId}::uuid FOR NO KEY UPDATE`;
@@ -50,7 +86,7 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
               throw new ToolInputError("CALL_ID_CONFLICT");
             return previous.result as unknown as AiToolResult;
           }
-          const result = await this.run(tx, work, call.name, args);
+          const result = await this.run(tx, work, call.name, args, preparation?.source ?? null);
           await tx.whatsappToolExecution.create({
             data: {
               businessId: work.businessId,
@@ -65,9 +101,109 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
         { timeout: 10_000 },
       );
     } catch (error) {
-      if (error instanceof ToolInputError) return { data: { error: error.message } };
+      if (error instanceof GoogleMapsLinkError) return { data: { error: error.code } };
+      if (error instanceof ToolInputError || error instanceof CommerceError)
+        return { data: { error: error.message } };
+      // Never log Prisma messages/stacks: they can contain arguments and personal data.
+      const code =
+        error instanceof Prisma.PrismaClientValidationError
+          ? "PRISMA_VALIDATION"
+          : error instanceof Prisma.PrismaClientKnownRequestError && /^P\d{4}$/.test(error.code)
+            ? error.code
+            : "UNEXPECTED_TOOL_ERROR";
+      this.logger.error({
+        event: "whatsapp_ai_tool_failed",
+        jobId: work.id,
+        tool: call.name,
+        code,
+      });
       throw error;
     }
+  }
+
+  private async prepareMapsMessage(
+    work: AiReplyWork,
+    call: AiToolCall,
+    input: unknown,
+  ): Promise<{ cached: AiToolResult } | { source: PreparedMapsMessage | null } | null> {
+    const messageId =
+      call.name === "read_google_maps_location"
+        ? toolSchemas.read_google_maps_location.parse(input).messageId
+        : call.name === "set_delivery_details"
+          ? toolSchemas.set_delivery_details.parse(input).locationMessageId
+          : null;
+    if (!messageId) return null;
+    const preflight = await this.client.$transaction<
+      { cached: AiToolResult } | { source: { messageId: string; body: string } | null }
+    >(
+      async (tx) => {
+        await tx.$queryRaw`SELECT "id" FROM "Businesses" WHERE "id" = ${work.businessId}::uuid FOR NO KEY UPDATE`;
+        await this.validateWork(tx, work);
+        const previous = await tx.whatsappToolExecution.findUnique({
+          where: {
+            businessId_jobId_callId: {
+              businessId: work.businessId,
+              jobId: work.id,
+              callId: call.id,
+            },
+          },
+        });
+        if (previous) {
+          if (previous.isDeleted || previous.name !== call.name)
+            throw new ToolInputError("CALL_ID_CONFLICT");
+          return { cached: previous.result as unknown as AiToolResult };
+        }
+        if (call.name === "set_delivery_details") {
+          const args = toolSchemas.set_delivery_details.parse(input);
+          if (args.mode !== "DELIVERY" || args.savedAddressId)
+            throw new ToolInputError("AMBIGUOUS_DESTINATION");
+          const order = await this.order(tx, work, args.orderId, args.version, true);
+          const customer = await this.customer(tx, work);
+          if (order.clientId !== customer.id) throw new ToolInputError("CUSTOMER_REQUIRED");
+        }
+        const message = await tx.whatsappInboundMessage.findFirst({
+          where: {
+            id: messageId,
+            businessId: work.businessId,
+            threadId: work.threadId,
+            direction: "INBOUND",
+            isDeleted: false,
+          },
+          select: { type: true, body: true },
+        });
+        if (!message) throw new ToolInputError("LOCATION_NOT_FOUND");
+        if (message.type !== "text") {
+          if (call.name === "read_google_maps_location")
+            throw new ToolInputError("MAPS_MESSAGE_NOT_FOUND");
+          return { source: null };
+        }
+        return { source: { messageId, body: message.body } };
+      },
+      { timeout: 10_000 },
+    );
+    if ("cached" in preflight) return { cached: preflight.cached };
+    if (!preflight.source) return { source: null };
+    const parsed = parseGoogleMapsLocation(preflight.source.body);
+    let location: GoogleMapsLocation;
+    if (parsed.ok) location = parsed.location;
+    else if (parsed.reason === "MAPS_SHORT_URL_UNSUPPORTED") {
+      // No transaction or business lock is held while contacting Google.
+      const short = preflight.source.body
+        .match(/https?:\/\/[^\s<>"']+/gi)![0]!
+        .replace(/[.,;]+$/, "");
+      location = googleMapsMessageLocation(await this.mapsResolver.resolve(short));
+    } else throw new ToolInputError(parsed.reason);
+    return { source: { ...preflight.source, location } };
+  }
+
+  private preparedMapsLocation(
+    messageId: string,
+    body: string,
+    source: PreparedMapsMessage | null,
+  ) {
+    if (!source || source.messageId !== messageId || source.body !== body)
+      throw new ToolInputError("MAPS_MESSAGE_CHANGED");
+    return source.location;
   }
 
   private async validateWork(tx: Tx, work: AiReplyWork) {
@@ -157,6 +293,7 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
     work: AiReplyWork,
     name: string,
     input: unknown,
+    mapsSource: PreparedMapsMessage | null,
   ): Promise<AiToolResult> {
     const scope = { businessId: work.businessId, active: true, isDeleted: false };
     if (name === "search_products" || name === "get_product") {
@@ -165,18 +302,18 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
           ? { id: toolSchemas.get_product.parse(input).productId }
           : (() => {
               const { query, availableOnly } = toolSchemas.search_products.parse(input);
-              const term = query.replace(/[\\%_]/g, "\\$&");
+              const terms = productSearchTerms(query);
+              if (query && !terms.length) throw new ToolInputError("INVALID_SEARCH_QUERY");
               return {
                 ...(availableOnly ? { stock: { gt: 0 } } : {}),
-                ...(term
-                  ? {
-                      OR: [
-                        { name: { contains: term, mode: "insensitive" as const } },
-                        { sku: { contains: term, mode: "insensitive" as const } },
-                        { category: { contains: term, mode: "insensitive" as const } },
-                      ],
-                    }
-                  : {}),
+                AND: terms.map((term) => ({
+                  OR: [
+                    { name: { contains: term, mode: "insensitive" as const } },
+                    { sku: { contains: term, mode: "insensitive" as const } },
+                    { brand: { contains: term, mode: "insensitive" as const } },
+                    { category: { contains: term, mode: "insensitive" as const } },
+                  ],
+                })),
               };
             })();
       const products = await tx.product.findMany({
@@ -203,6 +340,20 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
             price: product.price.toFixed(2),
             available: product.stock > 0,
           })),
+        },
+      };
+    }
+    if (name === "read_google_maps_location") {
+      const { messageId } = toolSchemas.read_google_maps_location.parse(input);
+      return {
+        data: {
+          location: this.preparedMapsLocation(
+            messageId,
+            await readGoogleMapsMessageBody(tx, work, messageId),
+            mapsSource,
+          ),
+          requiresCustomerConfirmation: true,
+          addressVerified: false,
         },
       };
     }
@@ -266,6 +417,12 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
       }
       return { data: { customer: customer ? { id: customer.id, name: customer.name } : null } };
     }
+    if (
+      ["list_customer_addresses", "request_address_change", "confirm_address_change"].includes(name)
+    ) {
+      const customer = await this.customer(tx, work);
+      return runAddressTool(tx, work, customer.id, name, input);
+    }
     if (name === "get_order_draft") {
       const { orderId } = toolSchemas.get_order_draft.parse(input);
       if (orderId) return { data: { order: orderView(await this.order(tx, work, orderId)) } };
@@ -294,13 +451,13 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
       const items = args.items.map((item) => {
         const product = products.find((entry) => entry.id === item.productId)!;
         if (product.stock < item.quantity) throw new ToolInputError("INSUFFICIENT_STOCK");
+        // The nested order relation supplies businessId through its composite FK.
         return {
-          businessId: work.businessId,
           productId: product.id,
           productName: product.name,
           quantity: item.quantity,
           unitPrice: product.price,
-        };
+        } satisfies Prisma.OrderItemUncheckedCreateWithoutOrderInput;
       });
       let id: string;
       if (args.orderId) {
@@ -319,6 +476,12 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
             confirmationToken: null,
             confirmationJobId: null,
             items: { create: items },
+            deliveryFee: null,
+            deliveryQuotedBy: null,
+            deliveryQuotedAt: null,
+            deliveryQuoteNote: "",
+            deliveryQuoteStatus:
+              existing.deliveryMode === "DELIVERY" ? "PENDING_HUMAN" : "NOT_REQUIRED",
           },
         });
       } else {
@@ -348,7 +511,25 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
     }
     if (name === "set_delivery_details") {
       const args = toolSchemas.set_delivery_details.parse(input);
-      await this.order(tx, work, args.orderId, args.version, true);
+      const order = await this.order(tx, work, args.orderId, args.version, true);
+      const customer = await this.customer(tx, work);
+      if (order.clientId !== customer.id) throw new ToolInputError("CUSTOMER_REQUIRED");
+      if ((args.savedAddressId === null) !== (args.savedAddressVersion === null))
+        throw new ToolInputError("ADDRESS_VERSION_REQUIRED");
+      if (
+        args.savedAddressId &&
+        (args.mode !== "DELIVERY" || args.address || args.reference || args.locationMessageId)
+      )
+        throw new ToolInputError("AMBIGUOUS_DESTINATION");
+      const saved = args.savedAddressId
+        ? await customerAddress(
+            tx,
+            work.businessId,
+            customer.id,
+            args.savedAddressId,
+            args.savedAddressVersion!,
+          )
+        : null;
       const location = args.locationMessageId
         ? await tx.whatsappInboundMessage.findFirst({
             where: {
@@ -357,26 +538,56 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
               threadId: work.threadId,
               isDeleted: false,
               direction: "INBOUND",
-              type: "location",
-              locationLatitude: { not: null },
-              locationLongitude: { not: null },
+              OR: [
+                {
+                  type: "location",
+                  locationLatitude: { not: null },
+                  locationLongitude: { not: null },
+                },
+                { type: "text" },
+              ],
             },
             omit: { mediaData: true },
           })
         : null;
       if (args.locationMessageId && !location) throw new ToolInputError("LOCATION_NOT_FOUND");
-      if (args.mode === "DELIVERY" && !args.address && !location)
+      const destinationLocation =
+        location?.type === "text"
+          ? this.preparedMapsLocation(location.id, location.body, mapsSource)
+          : location
+            ? {
+                address: location.locationAddress,
+                latitude: location.locationLatitude,
+                longitude: location.locationLongitude,
+              }
+            : null;
+      if (args.mode === "DELIVERY" && !args.address && !destinationLocation && !saved)
         throw new ToolInputError("DELIVERY_DESTINATION_REQUIRED");
       await tx.order.update({
         where: { id: args.orderId },
         data: {
           deliveryMode: args.mode,
           deliveryAddress:
-            args.mode === "DELIVERY" ? args.address || location?.locationAddress || "" : "",
-          deliveryReference: args.mode === "DELIVERY" ? args.reference : "",
-          deliveryLatitude: args.mode === "DELIVERY" ? (location?.locationLatitude ?? null) : null,
+            args.mode === "DELIVERY"
+              ? saved
+                ? [saved.address, saved.district, saved.city, saved.country]
+                    .filter(Boolean)
+                    .join(", ")
+                : destinationLocation?.address || args.address || ""
+              : "",
+          deliveryReference: args.mode === "DELIVERY" ? (saved?.reference ?? args.reference) : "",
+          deliveryLatitude:
+            args.mode === "DELIVERY"
+              ? (saved?.latitude ?? destinationLocation?.latitude ?? null)
+              : null,
           deliveryLongitude:
-            args.mode === "DELIVERY" ? (location?.locationLongitude ?? null) : null,
+            args.mode === "DELIVERY"
+              ? (saved?.longitude ?? destinationLocation?.longitude ?? null)
+              : null,
+          deliveryFee: null,
+          deliveryQuotedBy: null,
+          deliveryQuotedAt: null,
+          deliveryQuoteNote: "",
           deliveryQuoteStatus: args.mode === "DELIVERY" ? "PENDING_HUMAN" : "NOT_REQUIRED",
           version: { increment: 1 },
           confirmationToken: null,
@@ -443,6 +654,7 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
       const order = await this.order(tx, work, args.orderId, args.version, true);
       const customer = await this.customer(tx, work);
       if (order.clientId !== customer.id) throw new ToolInputError("CUSTOMER_REQUIRED");
+      this.validateDeliveryQuote(order);
       await this.validatePrices(tx, work, order);
       const token = randomBytes(5).toString("hex").toUpperCase();
       await tx.order.update({
@@ -450,19 +662,26 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
         data: { confirmationToken: token, confirmationJobId: work.id },
       });
       const view = orderView(order);
+      const english = work.input.responseLanguage === "en";
+      const command = `${english ? "CONFIRM" : "CONFIRMAR"} ${token}`;
       const text = [
-        `Pedido / Order: ${order.reference}`,
+        `${english ? "Order" : "Pedido"}: ${order.reference}`,
         ...view.items.map(
           (item) =>
             `${item.quantity} × ${item.name}: ${new Prisma.Decimal(item.unitPrice).mul(item.quantity).toFixed(2)} ${order.currency}`,
         ),
         `Subtotal: ${view.subtotal} ${order.currency}`,
         order.deliveryMode === "DELIVERY"
-          ? `Delivery: ${order.deliveryAddress}\n${order.deliveryReference}\n${order.deliveryLatitude !== null ? `${order.deliveryLatitude}, ${order.deliveryLongitude}` : ""}\nTarifa y cobertura pendientes de revisión / Fee and coverage pending review. Subtotal excludes delivery.`
-          : "Recojo / Pickup",
-        `Pago / Payment: ${order.paymentStatus}. Un voucher no acredita el pago / A voucher does not verify payment.`,
-        `Sin reserva de stock / Stock not reserved.`,
-        `Para confirmar este pedido pendiente, responde exactamente / To confirm this pending order, reply exactly:\nCONFIRMAR ${token}`,
+          ? `${english ? "Delivery" : "Entrega"}: ${order.deliveryAddress}\n${order.deliveryReference}\n${order.deliveryLatitude !== null ? `${order.deliveryLatitude}, ${order.deliveryLongitude}` : ""}\n${english ? "Delivery fee" : "Costo de envío"}: ${view.deliveryFee} ${order.currency}\n${order.deliveryQuoteNote}`
+          : english
+            ? "Pickup"
+            : "Recojo",
+        `${english ? "Total" : "Total"}: ${view.total} ${order.currency}`,
+        english
+          ? `Payment: ${paymentStatusLabels.en[order.paymentStatus] ?? "Status requires human review"}. A voucher does not verify payment.`
+          : `Pago: ${paymentStatusLabels.es[order.paymentStatus] ?? "Estado requiere revisión humana"}. Un comprobante no acredita el pago.`,
+        english ? "Stock not reserved." : "Sin reserva de stock.",
+        `${english ? "To confirm this pending order, reply exactly:" : "Para confirmar este pedido pendiente, responde exactamente:"}\n${command}`,
       ].join("\n");
       if (text.length > 4096) throw new ToolInputError("SUMMARY_TOO_LONG");
       return { data: { order: view }, finalText: text };
@@ -483,18 +702,29 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
             idempotencyKey: order.confirmationJobId,
           },
         },
+        include: { inboxMessage: true },
       });
       const job = await tx.whatsappAiReplyJob.findUniqueOrThrow({
         where: { id: work.id },
         include: { triggerMessage: { select: { body: true, type: true, receivedAt: true } } },
       });
+      // Use the command actually sent, even if the administrator changed language afterwards.
+      const command = summary?.inboxMessage?.body.split("\n").at(-1);
       if (
         summary?.status !== "ACCEPTED" ||
+        summary.isDeleted ||
+        !summary.inboxMessage ||
+        summary.inboxMessage.isDeleted ||
+        summary.inboxMessage.threadId !== work.threadId ||
+        summary.inboxMessage.direction !== "OUTBOUND" ||
+        (command !== `CONFIRMAR ${order.confirmationToken}` &&
+          command !== `CONFIRM ${order.confirmationToken}`) ||
         job.triggerMessage.type !== "text" ||
         job.triggerMessage.receivedAt <= summary.updatedAt ||
-        job.triggerMessage.body.trim() !== `CONFIRMAR ${order.confirmationToken}`
+        job.triggerMessage.body.trim() !== command
       )
         throw new ToolInputError("EXPLICIT_CONFIRMATION_REQUIRED");
+      this.validateDeliveryQuote(order);
       await this.validatePrices(tx, work, order);
       await tx.order.update({
         where: { id: order.id },
@@ -508,10 +738,27 @@ export class PrismaWhatsappTools implements IAiToolExecutor {
       });
       return {
         data: { order: orderView(await this.order(tx, work, order.id)), stockReserved: false },
-        finalText: `Pedido registrado / Order registered: ${order.reference}. Pago y entrega según el estado del resumen; no implica pago acreditado ni despacho / Payment and delivery remain subject to the summary status; this does not mean payment verified or dispatched.`,
+        finalText:
+          work.input.responseLanguage === "en"
+            ? `Order registered: ${order.reference}. Payment and delivery remain subject to the summary status; this does not mean payment verified or dispatched.`
+            : `Pedido registrado: ${order.reference}. Pago y entrega según el estado del resumen; no implica pago acreditado ni despacho.`,
       };
     }
     return { data: { error: "UNKNOWN_TOOL" } };
+  }
+
+  private validateDeliveryQuote(order: CommerceOrder) {
+    if (
+      order.deliveryMode === "DELIVERY" &&
+      (order.deliveryQuoteStatus !== "QUOTED" ||
+        order.deliveryFee === null ||
+        order.deliveryFee.isNegative())
+    )
+      throw new ToolInputError(
+        order.deliveryQuoteStatus === "REJECTED"
+          ? "DELIVERY_NO_COVERAGE"
+          : "DELIVERY_QUOTE_REQUIRED",
+      );
   }
 
   private async validatePrices(tx: Tx, work: AiReplyWork, order: CommerceOrder) {

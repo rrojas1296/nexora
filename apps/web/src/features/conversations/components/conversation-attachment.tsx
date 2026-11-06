@@ -1,6 +1,6 @@
 "use client";
 
-import { MapPin } from "lucide-react";
+import { DeliveryAddressCard } from "@/features/orders/components/delivery-address-card";
 import { useTranslations } from "next-intl";
 import type { InboxMessage, InboxScope } from "../schemas/inbox-schema";
 import { PrivateAttachment } from "./private-attachment";
@@ -15,22 +15,20 @@ export function ConversationAttachment({
   message: InboxMessage;
 }) {
   const t = useTranslations("ConversationCommerce");
+  const d = useTranslations("Delivery");
   if (message.direction !== "INBOUND") return null;
   if (message.location)
     return (
-      <div className="my-2 space-y-1 text-xs leading-6">
-        <p className="flex items-center gap-2 font-medium">
-          <MapPin className="size-4" aria-hidden="true" />
-          {t("location")}
-        </p>
-        {message.location.name ? <p className="break-words">{message.location.name}</p> : null}
-        {message.location.address ? (
-          <p className="break-words">{message.location.address}</p>
-        ) : null}
-        <p dir="ltr">
-          {message.location.latitude}, {message.location.longitude}
-        </p>
-        <p className="text-muted-foreground">{t("locationHint")}</p>
+      <div className="my-2">
+        <DeliveryAddressCard
+          title={d("sharedLocation")}
+          address={message.location.address || message.location.name || ""}
+          reference={message.location.address ? (message.location.name ?? "") : ""}
+          latitude={message.location.latitude}
+          longitude={message.location.longitude}
+        >
+          <p className="text-xs leading-6 text-muted-foreground">{t("locationHint")}</p>
+        </DeliveryAddressCard>
       </div>
     );
   if (!["image", "document"].includes(message.type)) return null;
