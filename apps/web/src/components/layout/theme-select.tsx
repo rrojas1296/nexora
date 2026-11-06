@@ -17,7 +17,7 @@ export function ThemeSelect() {
         if (isThemePreference(value)) setPreference(value);
       }}
       size="sm"
-      className="w-fit max-w-36 rounded-full bg-card/60 text-xs"
+      className="w-fit max-w-36 bg-card/60 text-xs"
       options={themePreferences.map((value) => ({ value, label: t(value) }))}
     />
   );

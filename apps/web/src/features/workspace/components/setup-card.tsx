@@ -18,7 +18,7 @@ export function SetupCard() {
       <p className="mt-3 text-xs leading-6 text-muted-foreground">{t("setupHint")}</p>
       <Link
         href="/businesses/configuration"
-        className="mt-5 inline-flex rounded-full bg-secondary px-4 py-2.5 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="mt-5 inline-flex h-9 items-center rounded-xl bg-secondary px-4 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         {t("configuration")}
       </Link>

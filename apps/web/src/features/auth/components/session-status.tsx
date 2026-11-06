@@ -27,7 +27,7 @@ export function SessionStatus({ failed = false, retry }: { failed?: boolean; ret
           {retry ? <Button onClick={retry}>{t("retry")}</Button> : null}
           <Link
             href="/login"
-            className="rounded-full border px-4 py-2 text-sm focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex h-9 items-center rounded-xl border px-4 text-sm focus-visible:ring-2 focus-visible:ring-ring"
           >
             {t("loginAction")}
           </Link>

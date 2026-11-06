@@ -6,6 +6,7 @@ import { useId, useRef, useState } from "react";
 import { useController, type Control } from "react-hook-form";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { inputClassName } from "@/components/ui/input-field";
 import { cn } from "@/lib/utils/cn";
 import { useValidationMessage } from "@/features/demo/hooks/use-validation-message";
 import { productInputSchema, type ProductInput } from "../schemas/product-schema";
@@ -153,7 +154,7 @@ export function ProductImageInput({
             <Button
               variant="secondary"
               size="icon"
-              className="absolute top-2 right-2 size-8"
+              className="absolute top-2 right-2"
               aria-label={t("imageRemove")}
               disabled={blocked}
               onClick={() => {
@@ -251,7 +252,7 @@ export function ProductImageInput({
                   disabled={blocked}
                   aria-describedby={`${id}-hint ${id}-message`}
                   aria-invalid={!!message}
-                  className="h-10 min-w-0 flex-1 rounded-xl border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+                  className={cn(inputClassName, "min-w-0 flex-1")}
                   onChange={(event) => {
                     setDraft(event.target.value);
                     setError(null);

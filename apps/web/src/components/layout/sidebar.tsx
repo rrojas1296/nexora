@@ -35,7 +35,7 @@ export function Sidebar() {
           aria-label={collapsed ? t("expand") : t("collapse")}
           aria-expanded={!collapsed}
           title={collapsed ? t("expand") : t("collapse")}
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-sidebar-muted outline-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+          className="flex size-9 shrink-0 items-center justify-center rounded-xl text-sidebar-muted outline-none hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         >
           {collapsed ? (
             <PanelLeftOpen className="size-3.5" aria-hidden="true" />
@@ -71,7 +71,7 @@ export function Sidebar() {
             </div>
             <Link
               href="/help"
-              className="flex items-center justify-between rounded-xl border border-sidebar-border bg-sidebar-accent/50 px-3 py-3 text-xs outline-none hover:border-sidebar-muted focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              className="flex h-9 items-center justify-between rounded-xl border border-sidebar-border bg-sidebar-accent/50 px-3 text-xs outline-none hover:border-sidebar-muted focus-visible:ring-2 focus-visible:ring-sidebar-ring"
             >
               {nav("help")}
               <ArrowUpRight className="size-3.5 text-sidebar-muted" aria-hidden="true" />

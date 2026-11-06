@@ -2,7 +2,7 @@
 
 import { useId, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
-import { fieldClassName } from "@/components/ui/input-field";
+import { inputClassName } from "@/components/ui/input-field";
 
 export function ListToolbar({
   search,
@@ -29,7 +29,7 @@ export function ListToolbar({
           value={search}
           onChange={(event) => onSearch(event.target.value)}
           placeholder={t("searchPlaceholder")}
-          className={fieldClassName}
+          className={inputClassName}
           maxLength={100}
         />
       </div>

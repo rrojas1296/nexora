@@ -65,7 +65,7 @@ export function ChangePasswordForm({ withCredentials = false }: { withCredential
         ) : null}
         <p className="border-t pt-5 text-xs leading-6 text-muted-foreground">{t("logoutNotice")}</p>
         <div className="flex flex-wrap items-center gap-4">
-          <Button type="submit" disabled={isSubmitting} className="h-11 w-full sm:w-auto">
+          <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
             {isSubmitting ? (
               <LoaderCircle
                 className="animate-spin motion-reduce:animate-none"

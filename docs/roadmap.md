@@ -1,5 +1,13 @@
 # Roadmap de implementación
 
+## Controles uniformes rounded-xl / h-9 (implementado)
+
+- Se eliminan los overrides personalizados de radios del tema para recuperar la escala nativa: la elección final es `rounded-xl`, `0.75rem` (12 px con raíz de 16 px), sin personalizar tokens.
+- Inputs de una línea, buscadores, selector de archivo visible, selects y botones comparten `rounded-xl` y altura `h-9`; botón icon conserva `size-9` y sm solo difiere en tipografía/espaciado horizontal. Menú select `rounded-xl`, opciones `h-9`.
+- Se retiran overrides de píldora y alturas distintas en tema/idioma, acceso/contraseña, imagen de producto y referencia de pedido; controles locales de conexión WhatsApp y enlaces tipo botón siguen la misma escala.
+- Textarea mantiene sus filas/altura multilínea con `rounded-xl`; checkbox, inputs ocultos y tarjetas/filas clicables compuestas conservan dimensiones propias. Sin cambiar datos, lógica, colores, temas ni dependencias. Se conserva el cambio previo en el layout de la línea de pedido.
+- Verificación estática: lint, formato, tipos y build; sin tests, navegador/smoke ni servicios externos. Ver [design-system.md](./design-system.md).
+
 ## Enlaces cortos de Google Maps del celular (implementado)
 
 - `maps.app.goo.gl/<token>` y `goo.gl/maps/<token>` ya se intentan resolver mediante provider con interfaz/Symbol, sin clave ni Embed. Largos conservan parser local; nunca @ centro como destino ni geocodificación.

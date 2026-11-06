@@ -28,7 +28,7 @@ export function OrderLineField({
   const error = form.formState.errors.items?.[index];
   return (
     <div className="grid items-end gap-3 rounded-2xl border p-4 sm:grid-cols-5">
-      <div className="space-y-2 sm:col-span-3">
+      <div className="flex flex-col gap-2 sm:col-span-3">
         <label htmlFor={`product-${index}`} className="block text-xs font-medium">
           {t("product")}
         </label>

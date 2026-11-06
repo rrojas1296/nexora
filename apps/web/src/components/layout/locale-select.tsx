@@ -30,7 +30,7 @@ export function LocaleSelect() {
           }
         }}
         size="sm"
-        className="w-fit max-w-36 rounded-full bg-card/60 text-xs"
+        className="w-fit max-w-36 bg-card/60 text-xs"
         options={routing.locales.map((value) => ({ value, label: labels(value) }))}
       />
       <output className="sr-only" aria-live="polite">

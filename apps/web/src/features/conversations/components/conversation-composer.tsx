@@ -81,7 +81,7 @@ export function ConversationComposer({
           aria-invalid={!!form.formState.errors.body}
           aria-describedby={`${id}-hint ${id}-error`}
           placeholder={t("composePlaceholder")}
-          className="w-full resize-y rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary read-only:cursor-not-allowed read-only:opacity-60"
+          className="w-full resize-y rounded-xl border bg-background px-4 py-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary read-only:cursor-not-allowed read-only:opacity-60"
         />
         <p id={`${id}-error`} className="text-xs text-destructive">
           {form.formState.errors.body ? t("invalidText") : null}

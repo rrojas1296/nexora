@@ -6,9 +6,11 @@ import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/cn";
 
 export const fieldClassName =
-  "w-full rounded-xl border border-input bg-background/70 px-3 py-2.5 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive";
+  "w-full rounded-xl border border-input bg-background/70 px-3 py-2 text-sm text-foreground outline-none placeholder:text-muted-foreground/70 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive";
 
 type InputFieldProps = ComponentProps<"input"> & { label: string; error?: string; hint?: string };
+
+export const inputClassName = cn(fieldClassName, "h-9 py-1");
 
 export function InputField({ label, error, hint, id, className, type, ...props }: InputFieldProps) {
   const generatedId = useId();
@@ -28,7 +30,7 @@ export function InputField({ label, error, hint, id, className, type, ...props }
           type={isPassword && visible ? "text" : type}
           aria-invalid={Boolean(error)}
           aria-describedby={error ? `${fieldId}-error` : hint ? `${fieldId}-hint` : undefined}
-          className={cn(fieldClassName, isPassword && "pr-12", className)}
+          className={cn(inputClassName, isPassword && "pr-12", className)}
         />
         {isPassword ? (
           <button
@@ -38,7 +40,7 @@ export function InputField({ label, error, hint, id, className, type, ...props }
             aria-pressed={visible}
             disabled={props.disabled}
             onClick={() => setVisible((current) => !current)}
-            className="absolute inset-y-0 right-1 my-auto flex size-9 items-center justify-center rounded-lg text-muted-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60"
+            className="absolute inset-y-0 right-1 my-auto flex size-9 items-center justify-center rounded-xl text-muted-foreground outline-none hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-60"
           >
             {visible ? (
               <EyeOff className="size-4" aria-hidden="true" />

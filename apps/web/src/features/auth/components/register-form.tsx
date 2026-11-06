@@ -93,7 +93,7 @@ export function RegisterForm() {
             {errors.root.message}
           </p>
         ) : null}
-        <Button type="submit" disabled={isSubmitting} className="h-11 w-full">
+        <Button type="submit" disabled={isSubmitting} className="w-full">
           {isSubmitting ? (
             <LoaderCircle className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
           ) : (

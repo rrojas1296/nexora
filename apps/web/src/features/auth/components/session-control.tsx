@@ -44,7 +44,7 @@ export function SessionControl() {
   return (
     <div className="flex min-w-0 flex-col items-end gap-1">
       <div
-        className="flex min-w-0 items-center gap-1 rounded-full border bg-card/60 pl-3"
+        className="flex min-w-0 items-center gap-1 rounded-xl border bg-card/60 pl-3"
         aria-busy={busy}
       >
         <Link
@@ -59,7 +59,7 @@ export function SessionControl() {
           href="/settings/password"
           title={security("title")}
           aria-label={security("title")}
-          className="flex size-9 items-center justify-center rounded-full text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex size-9 items-center justify-center rounded-xl text-muted-foreground outline-none hover:bg-accent hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
         >
           <KeyRound className="size-3.5" aria-hidden="true" />
         </Link>

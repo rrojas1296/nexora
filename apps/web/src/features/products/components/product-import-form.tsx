@@ -89,7 +89,7 @@ export function ProductImportForm({ categories }: { categories: readonly { name:
           <input
             type="file"
             accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            className="block w-full rounded-xl border bg-background p-3 text-sm file:mr-4 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-2 file:text-foreground"
+            className="block h-9 w-full rounded-xl border bg-background text-sm file:mr-4 file:h-full file:rounded-xl file:border-0 file:bg-muted file:px-3 file:text-foreground"
             disabled={reading || attempted}
             onChange={async (event) => {
               const file = event.currentTarget.files?.[0];

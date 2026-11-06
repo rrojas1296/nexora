@@ -16,7 +16,7 @@ import { useWhatsappAuthorization } from "../hooks/use-whatsapp-authorization";
 import { whatsappErrorKey } from "../services/whatsapp-error";
 
 const buttonClass =
-  "inline-flex min-h-10 items-center justify-center gap-2 rounded-full border px-4 py-2 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-9 items-center justify-center gap-2 rounded-xl border px-4 py-2 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
 
 export function WhatsappConnectionPanel({ scope }: { scope: WhatsappScope }) {
   const t = useTranslations("WhatsappConnection");

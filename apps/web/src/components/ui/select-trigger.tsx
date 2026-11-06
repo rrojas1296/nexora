@@ -16,7 +16,7 @@ export function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "group flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-input bg-background/70 px-3 text-left text-sm text-foreground outline-none transition-colors hover:border-ring/50 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive aria-invalid:focus-visible:ring-destructive/25 data-placeholder:text-muted-foreground/70 data-[size=default]:h-11 data-[size=sm]:h-8 [&_[data-slot=select-value]]:truncate",
+        "group flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-input bg-background/70 px-3 text-left text-sm text-foreground outline-none transition-colors hover:border-ring/50 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/25 disabled:cursor-not-allowed disabled:opacity-60 aria-invalid:border-destructive aria-invalid:focus-visible:ring-destructive/25 data-placeholder:text-muted-foreground/70 [&_[data-slot=select-value]]:truncate",
         className,
       )}
       {...props}

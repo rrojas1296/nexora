@@ -33,7 +33,7 @@ export function SidebarNavigation({
                     title={compact ? t(key) : undefined}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex min-h-10 items-center gap-3 rounded-lg px-3 text-xs outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring motion-reduce:transition-none",
+                      "relative flex h-9 items-center gap-3 rounded-xl px-3 text-xs outline-none transition-colors hover:bg-sidebar-accent focus-visible:ring-2 focus-visible:ring-sidebar-ring motion-reduce:transition-none",
                       compact && "justify-center px-0",
                       active
                         ? "bg-sidebar-accent text-sidebar-accent-foreground before:absolute before:inset-y-3 before:left-0 before:w-0.5 before:rounded-full before:bg-sidebar-ring"

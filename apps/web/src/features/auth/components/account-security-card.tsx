@@ -15,7 +15,7 @@ export function AccountSecurityCard() {
       </div>
       <Link
         href="/settings/password"
-        className="inline-flex min-h-10 items-center gap-2 rounded-full border px-4 py-2 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex h-9 items-center gap-2 rounded-xl border px-4 py-2 text-sm outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring"
       >
         <KeyRound className="size-4" aria-hidden="true" />
         {password("title")}

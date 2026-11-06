@@ -87,7 +87,7 @@ export function OrdersScreen() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-auto whitespace-normal break-all text-left"
+                  className="text-left"
                   onClick={() => setSelectedId(order.id)}
                   aria-label={`${t("detail")}: ${order.reference}`}
                 >
